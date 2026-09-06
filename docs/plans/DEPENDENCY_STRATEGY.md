@@ -2,7 +2,7 @@
 
 ## Principle
 
-ShuETL should own pipeline-operation semantics while delegating scheduling, persistence, retries, filesystems, and optional worker mechanics to mature libraries.
+ShuETL should own pipeline-operation semantics while delegating scheduling, persistence, retries, pagination, filesystems, and optional worker mechanics to mature libraries.
 
 > **Own the contracts; reuse the mechanics.**
 
@@ -10,6 +10,7 @@ ShuETL should own pipeline-operation semantics while delegating scheduling, pers
 
 ```text
 fastapi
+fastapi-pagination
 pydantic
 pydantic-settings
 sqlmodel
@@ -19,6 +20,16 @@ apscheduler>=3.11,<4
 tenacity
 etlantic
 ```
+
+## fastapi-pagination
+
+Use `fastapi-pagination` for collection endpoints such as pipelines, schedules, runs, run events, and artifacts rather than implementing a custom pagination framework.
+
+ShuETL owns the domain records, filtering semantics, authorization, and stable API behavior. `fastapi-pagination` owns pagination mechanics and SQLModel/SQLAlchemy integration.
+
+Prefer explicit, bounded page-size defaults and maximums. Cursor/keyset pagination may be adopted for high-volume histories where supported and appropriate.
+
+Do not expose dependency-specific implementation details outside ShuETL's documented API contract.
 
 ## APScheduler
 
@@ -83,6 +94,7 @@ Allowed default examples:
 
 ```text
 FastAPI
+fastapi-pagination
 Pydantic
 SQLModel
 SQLAlchemy

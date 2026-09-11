@@ -41,31 +41,12 @@ def verify(wheel: Path) -> None:
         raise FileNotFoundError(sqlite_example)
     with tempfile.TemporaryDirectory(prefix=f"shuetl-{VERSION}-wheel-") as temp:
         temp_root = Path(temp)
-        venv_dir = temp_root / "venv"
         work_dir = temp_root / "work"
         work_dir.mkdir()
         uv = shutil.which("uv")
         if uv is None:
             raise RuntimeError("uv is required for clean-wheel verification")
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-        _run(
-            [uv, "venv", "--python", python_version, "--seed", str(venv_dir)],
-            cwd=work_dir,
-            env=os.environ.copy(),
-        )
-        python = _python(venv_dir)
-        _run(
-            [str(python), "-m", "pip", "install", f"{wheel}[test]"],
-            cwd=work_dir,
-            env={**os.environ, "PYTHONPATH": "", "PYTHONNOUSERSITE": "1"},
-        )
-        # Install the optional provider in a second explicit extra step so the
-        # clean-wheel gate exercises the published SQLite dependency boundary.
-        _run(
-            [str(python), "-m", "pip", "install", f"{wheel}[sqlite]"],
-            cwd=work_dir,
-            env={**os.environ, "PYTHONPATH": "", "PYTHONNOUSERSITE": "1"},
-        )
         isolated_example = work_dir / example.name
         isolated_sqlite_example = work_dir / sqlite_example.name
         shutil.copy2(example, isolated_example)
@@ -76,8 +57,30 @@ def verify(wheel: Path) -> None:
             "PYTHONNOUSERSITE": "1",
             "SHUETL_EXPECT_INSTALLED": "1",
         }
-        _run([str(python), str(isolated_example)], cwd=work_dir, env=env)
-        _run([str(python), str(isolated_sqlite_example)], cwd=work_dir, env=env)
+
+        def verify_environment(name: str, example_path: Path, sqlite: bool) -> None:
+            venv_dir = temp_root / f"venv-{name}"
+            _run(
+                [uv, "venv", "--python", python_version, "--seed", str(venv_dir)],
+                cwd=work_dir,
+                env=os.environ.copy(),
+            )
+            python = _python(venv_dir)
+            _run(
+                [str(python), "-m", "pip", "install", f"{wheel}[test]"],
+                cwd=work_dir,
+                env=env,
+            )
+            if sqlite:
+                _run(
+                    [str(python), "-m", "pip", "install", f"{wheel}[sqlite]"],
+                    cwd=work_dir,
+                    env=env,
+                )
+            _run([str(python), str(example_path)], cwd=work_dir, env=env)
+
+        verify_environment("core", isolated_example, sqlite=False)
+        verify_environment("sqlite", isolated_sqlite_example, sqlite=True)
 
 
 def main(argv: list[str] | None = None) -> int:

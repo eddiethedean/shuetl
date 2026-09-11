@@ -6,10 +6,15 @@ import inspect
 from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlsplit
 
-from etlantic.control_plane import Authorizer
+from etlantic.control_plane import (
+    Authorizer,
+    DefinitionRepository,
+    EventStore,
+    SubmissionStore,
+)
 from etlantic.control_plane.memory import (
     MemoryDefinitionRepository,
     MemoryEventStore,
@@ -39,11 +44,11 @@ class LocalProviderBundle:
     settings: ShuETLSettings
     api: ETLanticAPI
     authorizer: Authorizer
-    definitions: Any
-    submissions: Any
-    events: Any
-    provider: str
-    development_only: bool
+    definitions: DefinitionRepository
+    submissions: SubmissionStore
+    events: EventStore
+    provider: Literal["memory", "sqlite"]
+    development_only: Literal[True]
     _engine: Any = field(default=None, repr=False, compare=False)
     _state: _BundleState = field(
         default_factory=_BundleState, repr=False, compare=False

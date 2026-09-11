@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import re
+import runpy
 import sqlite3
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Literal, get_type_hints
 
 import pytest
-from etlantic.control_plane.memory import MemoryAuthorizer
+from etlantic.control_plane import DefinitionRepository, EventStore, SubmissionStore
+from etlantic.control_plane.memory import MemoryAuthorizer, MemoryDefinitionRepository
 from etlantic_fastapi.auth import principal_from_header, static_context_factory
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from scripts import check_clean_wheel
 
 import shuetl
 from shuetl import (
@@ -18,6 +23,7 @@ from shuetl import (
     LocalProviderBundle,
     ShuETLSettings,
     compatibility,
+    diagnostics,
     providers,
 )
 from shuetl.cli import main
@@ -231,6 +237,31 @@ def test_sol_005_doctor_text_contains_every_json_fact() -> None:
         assert fact in text
 
 
+def test_sol_005_sqlite_doctor_reports_sqlalchemy_version(
+    tmp_path: Path, monkeypatch
+) -> None:
+    versions = {
+        "shuetl": "0.3.0",
+        "etlantic": "0.51.0",
+        "etlantic-fastapi": "0.51.0",
+        "etlantic-sqlmodel": "0.51.0",
+        "fastapi": "0.141.1",
+        "pydantic": "2.13.5",
+        "pydantic-settings": "2.15.0",
+        "sqlalchemy": "2.0.52",
+    }
+    monkeypatch.setattr(diagnostics, "installed_versions", lambda: versions)
+    monkeypatch.setattr(diagnostics, "validate_core", lambda: versions)
+    report = DoctorReport.inspect(
+        _settings(
+            provider="sqlite",
+            database_url=f"sqlite:///{tmp_path / 'missing.db'}",
+        )
+    )
+    assert report.versions["etlantic-sqlmodel"] == "0.51.0"
+    assert report.versions["sqlalchemy"] == "2.0.52"
+
+
 def test_sol_005_cli_redacts_unexpected_internal_errors(monkeypatch, capsys) -> None:
     sentinel = "review-internal-sentinel"
 
@@ -261,6 +292,75 @@ def test_sol_006_required_sqlite_example_exists() -> None:
     assert (root / "examples/phase_0_3_sqlite.py").is_file()
 
 
+def test_sol_006_memory_quickstart_uses_owned_definition_and_host_identity(
+    monkeypatch,
+) -> None:
+    root = Path(__file__).resolve().parents[2]
+    definitions: list[str] = []
+    requests: list[tuple[str, dict[str, str]]] = []
+    original_put = MemoryDefinitionRepository.put
+    original_get = TestClient.get
+
+    def record_put(
+        self,
+        ctx,
+        definition_id: str,
+        document: dict[str, Any],
+    ) -> None:
+        definitions.append(definition_id)
+        original_put(self, ctx, definition_id, document)
+
+    def record_get(self, url: str, **kwargs: Any):
+        requests.append((url, kwargs.get("headers", {})))
+        return original_get(self, url, **kwargs)
+
+    monkeypatch.setattr(MemoryDefinitionRepository, "put", record_put)
+    monkeypatch.setattr(TestClient, "get", record_get)
+    runpy.run_path(str(root / "examples/phase_0_3_quickstart.py"), run_name="__main__")
+
+    assert definitions
+    assert any(
+        url.startswith("/etl/v1/") and headers.get("X-Principal") == "alice"
+        for url, headers in requests
+    )
+
+
+def test_sol_006_sqlite_example_leaves_file_creation_to_upstream(
+    monkeypatch,
+) -> None:
+    root = Path(__file__).resolve().parents[2]
+
+    def reject_direct_touch(self, *args: Any, **kwargs: Any) -> None:
+        raise AssertionError("SQLite example directly creates the database file")
+
+    monkeypatch.setattr(Path, "touch", reject_direct_touch)
+    runpy.run_path(str(root / "examples/phase_0_3_sqlite.py"), run_name="__main__")
+
+
+def test_sol_006_clean_wheel_uses_separate_core_and_sqlite_environments(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls: list[list[str]] = []
+
+    def record(command: list[str], *, cwd: Path, env: dict[str, str]) -> None:
+        del cwd, env
+        calls.append(command)
+
+    monkeypatch.setattr(check_clean_wheel.shutil, "which", lambda name: "/usr/bin/uv")
+    monkeypatch.setattr(check_clean_wheel, "_run", record)
+    check_clean_wheel.verify(tmp_path / "shuetl-0.3.0-py3-none-any.whl")
+
+    venv_commands = [command for command in calls if command[1:2] == ["venv"]]
+    memory_run = next(
+        command for command in calls if command[-1].endswith("phase_0_3_quickstart.py")
+    )
+    sqlite_run = next(
+        command for command in calls if command[-1].endswith("phase_0_3_sqlite.py")
+    )
+    assert len(venv_commands) == 2
+    assert memory_run[0] != sqlite_run[0]
+
+
 def test_sol_007_readme_documents_the_complete_settings_contract() -> None:
     root = Path(__file__).resolve().parents[2]
     readme = (root / "README.md").read_text(encoding="utf-8")
@@ -275,3 +375,21 @@ def test_sol_007_readme_documents_the_complete_settings_contract() -> None:
         "SHUETL_PROVIDER_CONNECT_TIMEOUT_SECONDS",
     ):
         assert setting in readme
+
+
+def test_sol_007_readme_documents_doctor_status_and_exit_contract() -> None:
+    root = Path(__file__).resolve().parents[2]
+    readme = (root / "README.md").read_text(encoding="utf-8").lower()
+    for fact in ("pass", "warn", "fail", "skip", "remediation"):
+        assert fact in readme
+    for code in (0, 1, 2):
+        assert re.search(rf"exit(?: code)?\s+`?{code}`?", readme)
+
+
+def test_sol_008_bundle_public_annotations_match_the_typed_contract() -> None:
+    hints = get_type_hints(LocalProviderBundle)
+    assert hints["definitions"] is DefinitionRepository
+    assert hints["submissions"] is SubmissionStore
+    assert hints["events"] is EventStore
+    assert hints["provider"] == Literal["memory", "sqlite"]
+    assert hints["development_only"] == Literal[True]

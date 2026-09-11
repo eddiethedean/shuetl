@@ -37,6 +37,9 @@ bundle = LocalProviderBundle.create(
     ),
     principal_dependency=principal_from_header,
 )
+# The application owns this definition; the request below exercises it through
+# the mounted, authenticated ETLantic API.
+bundle.definitions.put(context, "demo", {"name": "demo", "fingerprint": "fp-demo"})
 integration = ShuETL(api=bundle.api)
 app = FastAPI(lifespan=integration.lifespan)
 integration.mount(app, prefix=settings.api_prefix)
@@ -44,7 +47,10 @@ integration.mount(app, prefix=settings.api_prefix)
 if __name__ == "__main__":
     try:
         with TestClient(app) as client:
-            response = client.get("/etl/health")
+            response = client.get(
+                "/etl/v1/definitions",
+                headers={"X-Principal": "alice"},
+            )
             response.raise_for_status()
         print(f"mounted {len(app.routes)} routes; provider={bundle.provider}")
     finally:

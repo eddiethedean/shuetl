@@ -17,7 +17,6 @@ from shuetl import LocalProviderBundle, ShuETL, ShuETLSettings
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="shuetl-0.3-sqlite-") as directory:
         database = Path(directory) / "shuetl.db"
-        database.touch()
         database_url = f"sqlite+pysqlite:///{database}"
 
         # Provisioning is an explicit operator step, outside bundle startup.

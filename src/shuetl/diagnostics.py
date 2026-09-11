@@ -266,7 +266,8 @@ class DoctorReport(BaseModel):
             | {
                 name: value
                 for name, value in versions.items()
-                if name.startswith("etlantic-") and name not in CORE_REQUIREMENTS
+                if (name.startswith("etlantic-") and name not in CORE_REQUIREMENTS)
+                or (provider == "sqlite" and name in SQLITE_REQUIREMENTS)
             },
             configured_capabilities=sorted(configured),
             available_capabilities=sorted(available),

@@ -175,10 +175,16 @@ shuetl doctor --format json
 shuetl --version
 ```
 
+Doctor checks report `pass`, `warn`, `fail`, or `skip`. The overall report is
+`pass` when no required check fails; each failed check includes a safe
+remediation message. Exit `0` indicates a passing report, exit `1` indicates a
+failed required check, and exit `2` indicates command-line usage or unexpected internal
+errors. Text and JSON formats contain the same redacted facts.
+
 To run the local evidence gate:
 
 ```bash
-uv sync --locked --all-groups --extra test
+uv sync --locked --all-groups --extra test --extra sqlite
 uv run python scripts/capture_openapi.py
 uv run python scripts/check_release.py
 ```

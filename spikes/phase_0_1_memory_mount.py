@@ -218,7 +218,7 @@ def run() -> None:
         "etlantic-fastapi",
         "fastapi",
         "pydantic",
-        "httpx",
+        "httpx2",
     ):
         version = metadata.version(distribution)
         print(f"{distribution}={version}")

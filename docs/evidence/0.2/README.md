@@ -15,9 +15,9 @@ so the evidence contains no machine-specific locations or secrets.
 | etlantic-fastapi import origin | installed wheel `etlantic_fastapi` |
 | FastAPI import origin | installed wheel `fastapi` |
 | Pydantic import origin | installed wheel `pydantic` |
-| HTTPX import origin | installed test extra `httpx` |
-| SHA-256 wheel | `4cf33f0c676813af1e754c18ccf5171e1d2f31704e27c10bed308b8417d1dc12` |
-| SHA-256 sdist | `e5bf38d77cca431adad972a316abad1fef1016cdb2daf3267934ac650514a515` |
+| HTTPX import origin | installed test extra `httpx2` |
+| SHA-256 wheel | `d3ddba2e89609ade7360df226d7d1e63c8ea1dec0284ab4b09053ee279cb0a20` |
+| SHA-256 sdist | `219a76bc1811a492e91132ac180bd27222ed8f45fbfae7ea82852b2d07ec3d5c` |
 
 ## Gates
 

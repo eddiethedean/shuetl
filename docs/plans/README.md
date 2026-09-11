@@ -72,6 +72,8 @@ merged into or replaced by `etlantic-fastapi` rather than duplicate it.
 - [FASTAPI_STRATEGY.md](FASTAPI_STRATEGY.md) — router, DI, lifespan, and application factory behavior
 - [MVP.md](MVP.md) — first shippable integration scope and acceptance criteria
 - [ROADMAP.md](ROADMAP.md) — staged delivery after the integration boundary is proven
+- [PHASE_0_1.md](PHASE_0_1.md) — executable boundary-proof plan and release gate
+- [PHASE_0_1_EXECUTION.md](PHASE_0_1_EXECUTION.md) — concrete 0.1 tasks, files, commands, and gates
 - [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) — decisions and blocking ADRs
 
 ## Infrastructure baseline

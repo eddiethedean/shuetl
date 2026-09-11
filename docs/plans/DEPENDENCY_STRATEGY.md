@@ -21,7 +21,7 @@ etlantic
 etlantic-fastapi
 ```
 
-The exact version bounds are fixed in the Phase 0 compatibility ADR. The initial
+The exact version bounds are fixed in the Phase 0.1 compatibility ADR. The initial
 target is a lockstep ETLantic 0.51.x package train rather than unbounded 0.x
 compatibility.
 

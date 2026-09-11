@@ -61,11 +61,16 @@ but it must be labeled separately.
 Prove that ShuETL solves a real composition problem without duplicating
 ETLantic or `etlantic-fastapi`.
 
+The detailed execution plan, evidence format, and stop conditions are defined
+in [PHASE_0_1.md](PHASE_0_1.md). Phase 0.1 is an evidence release; it does not
+ship the public composition facade planned for 0.2.
+
 ### Deliverables
 
 - Create the package skeleton, build metadata, typed-package marker, test
   layout, documentation entry point, and CI baseline.
-- Inventory public contracts in the selected ETLantic release train:
+- Inventory public contracts from installed packages in the selected ETLantic
+  release train:
   definitions, registry, submissions, durable work, schedules, events, reports,
   artifacts, authorization, SQLModel stores, FastAPI routes, and runtime roles.
 - Produce a feature ownership matrix naming the authoritative package for every
@@ -73,21 +78,26 @@ ETLantic or `etlantic-fastapi`.
 - Build a disposable spike that:
   - constructs an ETLantic API with memory providers;
   - mounts it in an ordinary FastAPI application;
-  - exercises at least one definition and submission request;
-  - generates OpenAPI without ShuETL shadow schemas.
+  - reads a seeded definition and accepts an idempotent submission through
+    upstream HTTP routes;
+  - generates normalized OpenAPI evidence without ShuETL shadow schemas.
 - Record ADRs for:
-  - ShuETL versus `etlantic-fastapi` ownership;
+  - ShuETL versus `etlantic-fastapi` ownership and the merge trigger;
   - initial ETLantic/FastAPI/Python compatibility range;
   - direct and optional dependency boundaries;
   - whether the facade accepts prebuilt providers, constructs a reference graph,
     or supports both;
-  - the criteria that would cause ShuETL to merge upstream.
+  - the 0.2 lifespan and problem-handler composition boundary;
+  - the 0.2 route-selection behavior.
 - Add import-boundary checks preventing direct use of ETLantic implementation
   libraries such as APScheduler, Tenacity, SQLModel, or Alembic in ShuETL core.
+- Build and install the wheel in a clean environment, then run the spike against
+  declared dependencies rather than a sibling source checkout.
 
 ### Explicit non-goals
 
 - No stable public API.
+- No production implementation retained from the disposable spike.
 - No PostgreSQL production claim.
 - No custom routes for runs, schedules, artifacts, or events.
 - No ShuETL database models or migrations.
@@ -95,14 +105,25 @@ ETLantic or `etlantic-fastapi`.
 
 ### Exit gate
 
-- [ ] The memory-provider spike works through `etlantic-fastapi`.
+- [ ] Wheel and sdist build, include `py.typed`, and the wheel imports in a clean
+      environment.
+- [ ] The memory-provider spike works under a prefix through public
+      `etlantic-fastapi` APIs from installed distributions.
+- [ ] A definition read and repeated idempotent submission return the expected
+      upstream durable-accept results, including `202` and one canonical
+      acceptance identity.
 - [ ] The ownership matrix has no unexplained overlapping semantic owner.
-- [ ] OpenAPI contains upstream ETLantic schemas rather than copied ShuETL
-      models.
-- [ ] Import-boundary tests fail on prohibited implementation dependencies.
+- [ ] The public-contract inventory records owner, public import path, maturity,
+      and version evidence for every upstream dependency needed through 0.2.
+- [ ] Normalized OpenAPI evidence preserves upstream operation IDs and schema
+      references rather than copied ShuETL models.
+- [ ] Boundary tests fail on representative prohibited imports and shadow-model
+      fixtures while accepting approved public composition imports.
 - [ ] The distinct value of ShuETL is stated in one paragraph and validated by
       at least one working FastAPI integration.
-- [ ] All blocking Phase 0 ADRs have owners and decisions.
+- [ ] The six ADRs required to begin 0.2 are accepted and linked from a
+      reproducible release-evidence index.
+- [ ] No unresolved blocking upstream gap remains.
 
 If the boundary cannot be defended at this gate, stop and contribute the
 integration improvements directly to `etlantic-fastapi`.

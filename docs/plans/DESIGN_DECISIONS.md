@@ -101,16 +101,31 @@ projects should merge rather than maintain two competing integration surfaces.
 
 ## Open ADRs
 
-The following decisions must close during Phase 0:
+### Blocking Phase 0.1
 
-1. exact public constructor and settings shape;
-2. whether ShuETL accepts only prebuilt ETLantic providers, constructs the
-   reference graph, or supports both;
-3. lifespan composition API for existing FastAPI applications;
-4. exact local and production route-selection presets;
-5. initial ETLantic/FastAPI compatibility range;
-6. gateway, scheduler, and worker CLI/process entry points;
-7. capability/readiness diagnostic schema;
-8. package-boundary exit test versus `etlantic-fastapi`;
-9. supported PostgreSQL driver and provider configuration;
-10. policy for invoking provider-owned migrations outside application startup.
+These decisions must close before work intended to survive into 0.2 is merged:
+
+1. ShuETL versus `etlantic-fastapi` ownership, the package-boundary exit test,
+   and the merge trigger;
+2. initial Python, ETLantic, `etlantic-fastapi`, FastAPI, and Pydantic
+   compatibility policy;
+3. direct and optional dependency boundaries;
+4. whether the 0.2 facade accepts only a prebuilt `ETLanticAPI`, constructs a
+   reference provider graph, or supports both;
+5. lifespan and problem-handler composition for existing FastAPI applications;
+6. route-selection behavior for 0.2.
+
+### Deferred until first use
+
+These are required by the named later release, not by the 0.1 boundary proof:
+
+1. exact settings constructor and configuration precedence — 0.3;
+2. capability/readiness diagnostic schema — 0.3;
+3. supported PostgreSQL driver and provider configuration — 0.4;
+4. policy for invoking provider-owned migrations outside startup — 0.4;
+5. gateway, scheduler, and worker CLI/process entry points — 0.6;
+6. production route-selection presets, if distinct from the upstream surface —
+   no later than 0.6.
+
+Deferral does not authorize an implicit implementation decision. If earlier
+work needs one of these choices, promote its ADR into the current release gate.

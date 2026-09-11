@@ -17,7 +17,7 @@ so the evidence contains no machine-specific locations or secrets.
 | Pydantic import origin | installed wheel `pydantic` |
 | HTTPX import origin | installed test extra `httpx` |
 | SHA-256 wheel | `99f41d10983511c330b7603e9dd2203b87e580ac19452c4882cdcb3f6a296b9e` |
-| SHA-256 sdist | `81b26716ad63ee6a62763788c468fabe814837ffe579c4c235af17d764bfbde5` |
+| SHA-256 sdist | `6ad21d309dba9577f31ddaf56597ae98e9a906f886095aecf5d0cfc0baadd806` |
 
 ## Gates
 

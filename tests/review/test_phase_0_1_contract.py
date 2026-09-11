@@ -185,7 +185,10 @@ def test_recorded_artifact_hashes_match_a_fresh_build(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
     )
-    index = (ROOT / "docs" / "evidence" / "0.1" / "README.md").read_text(
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    version = project["project"]["version"]
+    evidence_version = ".".join(version.split(".")[:2])
+    index = (ROOT / "docs" / "evidence" / evidence_version / "README.md").read_text(
         encoding="utf-8"
     )
     recorded = dict(

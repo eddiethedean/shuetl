@@ -5,19 +5,18 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Literal
-from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ._secrets import _database_url_value
 from .compatibility import (
     CORE_REQUIREMENTS,
     SQLITE_REQUIREMENTS,
     installed_versions,
     validate_core,
 )
-from .providers import SQLITE_HEAD, LocalProviderBundle
+from .providers import SQLITE_HEAD, LocalProviderBundle, _sqlite_path
 from .settings import ShuETLSettings
 
 CheckStatus = Literal["pass", "warn", "fail", "skip"]
@@ -276,14 +275,32 @@ class DoctorReport(BaseModel):
 
     def render_text(self) -> str:
         lines = [
+            f"schema: {self.schema_}",
             f"status: {self.status}",
-            f"provider: {self.provider or 'unknown'}",
             f"profile: {self.profile or 'unknown'}",
+            f"role: {self.role or 'unknown'}",
+            f"provider: {self.provider or 'unknown'}",
+            f"identity: {self.identity or 'unknown'}",
+            f"api_prefix: {self.api_prefix or 'unknown'}",
+            f"route_preset: {self.route_preset or 'unknown'}",
             f"development_only: {str(self.development_only).lower()}",
+            f"database_configured: {str(self.database_configured).lower()}",
+            f"database_driver: {self.database_driver or 'none'}",
+            "versions:",
         ]
         lines.extend(
-            f"{check.id}: {check.status} — {check.summary}" for check in self.checks
+            f"  {name}: {value or 'missing'}" for name, value in self.versions.items()
         )
+        lines.append(
+            "configured_capabilities: " + ", ".join(self.configured_capabilities)
+        )
+        lines.append(
+            "available_capabilities: " + ", ".join(self.available_capabilities)
+        )
+        for check in self.checks:
+            lines.append(f"{check.id}: {check.status} — {check.summary}")
+            if check.remediation:
+                lines.append(f"{check.id}.remediation: {check.remediation}")
         return "\n".join(lines)
 
 
@@ -299,13 +316,9 @@ def _inspect_sqlite_schema(
             "SQLite database file is not configured.",
             "Set SHUETL_DATABASE_URL.",
         )
-    parsed = urlsplit(database_url.get_secret_value())
-    raw_path = parsed.path
-    path = (
-        Path("/" + raw_path.lstrip("/"))
-        if raw_path.startswith("//")
-        else Path(raw_path.lstrip("/"))
-    )
+    raw_url = _database_url_value(database_url)
+    assert raw_url is not None
+    path = _sqlite_path(raw_url)
     if not path.is_file():
         return (
             "fail",
@@ -320,9 +333,20 @@ def _inspect_sqlite_schema(
         )
 
         engine = create_sqlite_engine(
-            database_url.get_secret_value(),
+            raw_url,
             connect_args={"timeout": settings.provider_connect_timeout_seconds},
         )
+        from sqlalchemy import inspect as inspect_engine
+
+        if (
+            "etlantic_sqlmodel_schema_version"
+            not in inspect_engine(engine).get_table_names()
+        ):
+            return (
+                "fail",
+                "SQLite schema is not provisioned.",
+                f"Provision the database at {SQLITE_HEAD}.",
+            )
         version = current_version(engine)
     except Exception:
         return (

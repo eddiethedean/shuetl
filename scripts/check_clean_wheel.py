@@ -1,4 +1,4 @@
-"""Verify the Phase 0.2 quickstart from an isolated wheel installation."""
+"""Verify Phase 0.3 memory and SQLite examples from an isolated wheel."""
 
 from __future__ import annotations
 
@@ -33,9 +33,12 @@ def find_wheel(dist: Path) -> Path:
 
 def verify(wheel: Path) -> None:
     wheel = wheel.resolve()
-    example = ROOT / "examples" / "phase_0_2_quickstart.py"
+    example = ROOT / "examples" / "phase_0_3_quickstart.py"
+    sqlite_example = ROOT / "examples" / "phase_0_3_sqlite.py"
     if not example.exists():
         raise FileNotFoundError(example)
+    if not sqlite_example.exists():
+        raise FileNotFoundError(sqlite_example)
     with tempfile.TemporaryDirectory(prefix=f"shuetl-{VERSION}-wheel-") as temp:
         temp_root = Path(temp)
         venv_dir = temp_root / "venv"
@@ -56,8 +59,17 @@ def verify(wheel: Path) -> None:
             cwd=work_dir,
             env={**os.environ, "PYTHONPATH": "", "PYTHONNOUSERSITE": "1"},
         )
+        # Install the optional provider in a second explicit extra step so the
+        # clean-wheel gate exercises the published SQLite dependency boundary.
+        _run(
+            [str(python), "-m", "pip", "install", f"{wheel}[sqlite]"],
+            cwd=work_dir,
+            env={**os.environ, "PYTHONPATH": "", "PYTHONNOUSERSITE": "1"},
+        )
         isolated_example = work_dir / example.name
+        isolated_sqlite_example = work_dir / sqlite_example.name
         shutil.copy2(example, isolated_example)
+        shutil.copy2(sqlite_example, isolated_sqlite_example)
         env = {
             **os.environ,
             "PYTHONPATH": "",
@@ -65,6 +77,7 @@ def verify(wheel: Path) -> None:
             "SHUETL_EXPECT_INSTALLED": "1",
         }
         _run([str(python), str(isolated_example)], cwd=work_dir, env=env)
+        _run([str(python), str(isolated_sqlite_example)], cwd=work_dir, env=env)
 
 
 def main(argv: list[str] | None = None) -> int:

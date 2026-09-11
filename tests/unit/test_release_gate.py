@@ -18,5 +18,14 @@ def test_release_gate_bootstraps_locked_test_environment(monkeypatch) -> None:
     assert [label for label, _ in calls[:3]] == ["lock", "sync", "format"]
     assert calls[1] == (
         "sync",
-        [uv, "sync", "--locked", "--all-groups", "--extra", "test"],
+        [
+            uv,
+            "sync",
+            "--locked",
+            "--all-groups",
+            "--extra",
+            "test",
+            "--extra",
+            "sqlite",
+        ],
     )

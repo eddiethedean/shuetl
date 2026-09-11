@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal, cast
 from urllib.parse import urlsplit
 
 from pydantic import (
@@ -17,6 +17,7 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
+from ._secrets import _database_url_value
 from .integration import _validate_prefix
 
 
@@ -27,17 +28,16 @@ class ShuETLSettings(BaseSettings):
         frozen=True,
         extra="forbid",
         populate_by_name=True,
+        case_sensitive=True,
         env_prefix="SHUETL_",
         env_file=None,
         secrets_dir=None,
     )
 
-    profile: Literal["local"] = Field("local", validation_alias="SHUETL_PROFILE")
-    role: Literal["gateway"] = Field("gateway", validation_alias="SHUETL_ROLE")
-    provider: Literal["memory", "sqlite"] = Field(
-        "memory", validation_alias="SHUETL_PROVIDER"
-    )
-    identity: Literal["host"] = Field("host", validation_alias="SHUETL_IDENTITY")
+    profile: Literal["local"] = Field(validation_alias="SHUETL_PROFILE")
+    role: Literal["gateway"] = Field(validation_alias="SHUETL_ROLE")
+    provider: Literal["memory", "sqlite"] = Field(validation_alias="SHUETL_PROVIDER")
+    identity: Literal["host"] = Field(validation_alias="SHUETL_IDENTITY")
     api_prefix: str = Field("/etl", validation_alias="SHUETL_API_PREFIX")
     route_preset: Literal["complete"] = Field(
         "complete", validation_alias="SHUETL_ROUTE_PRESET"
@@ -64,8 +64,19 @@ class ShuETLSettings(BaseSettings):
         if self.provider == "sqlite":
             if self.database_url is None:
                 raise ValueError("sqlite provider requires database_url")
-            _validate_sqlite_url(self.database_url.get_secret_value())
+            raw_url = _database_url_value(self.database_url)
+            assert raw_url is not None
+            _validate_sqlite_url(raw_url)
         return self
+
+    def __init__(self, **data: Any) -> None:
+        """Convert explicitly supplied secrets before Pydantic builds errors."""
+
+        for key in ("database_url", "SHUETL_DATABASE_URL"):
+            value = data.get(key)
+            if isinstance(value, str):
+                data[key] = SecretStr(value)
+        super().__init__(**data)
 
     @property
     def database_driver(self) -> Literal["sqlite"] | None:
@@ -81,16 +92,29 @@ class ShuETLSettings(BaseSettings):
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         del settings_cls, dotenv_settings, file_secret_settings
-        return init_settings, env_settings
+
+        def redacted_env_settings() -> dict[str, Any]:
+            values = env_settings()
+            for key in ("database_url", "SHUETL_DATABASE_URL"):
+                value = values.get(key)
+                if isinstance(value, str):
+                    values[key] = SecretStr(value)
+            return values
+
+        return init_settings, cast(PydanticBaseSettingsSource, redacted_env_settings)
 
 
 def _validate_sqlite_url(value: str) -> None:
     """Reject network, credentialed, URI, and in-memory SQLite URLs."""
 
-    if not isinstance(value, str) or not value.startswith("sqlite:"):
+    if not isinstance(value, str) or not value.startswith("sqlite"):
         raise ValueError("database_url must be a local sqlite URL")
     parsed = urlsplit(value)
-    if parsed.scheme != "sqlite" or parsed.query or parsed.fragment:
+    if (
+        parsed.scheme not in {"sqlite", "sqlite+pysqlite"}
+        or parsed.query
+        or parsed.fragment
+    ):
         raise ValueError("database_url must not contain query or fragment components")
     if parsed.username or parsed.password or parsed.hostname:
         raise ValueError("database_url must not contain credentials or a host")

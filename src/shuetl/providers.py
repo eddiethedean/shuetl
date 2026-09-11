@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Lock
@@ -17,8 +18,9 @@ from etlantic.control_plane.memory import (
 from etlantic_fastapi import ETLanticAPI
 from etlantic_fastapi.auth import ContextFactory, PrincipalDependency
 
+from ._secrets import _database_url_value
 from .compatibility import validate_core, validate_sqlite
-from .errors import ProviderReadinessError
+from .errors import CapabilityError, CompatibilityError, ProviderReadinessError
 from .settings import ShuETLSettings
 
 SQLITE_HEAD = "004_schedules_0_47"
@@ -58,10 +60,14 @@ class LocalProviderBundle:
     ) -> LocalProviderBundle:
         """Build a local API using caller-provided identity and authorization."""
 
-        if not callable(authorizer) and not hasattr(authorizer, "authorize"):
+        if not isinstance(authorizer, Authorizer):
             raise TypeError("authorizer must implement authorize")
-        if not callable(context_factory) or not callable(principal_dependency):
-            raise TypeError("context_factory and principal_dependency must be callable")
+        if not _accepts_positional(context_factory, 2):
+            raise TypeError("context_factory must accept principal and request")
+        if not _accepts_positional(principal_dependency, 1):
+            raise TypeError("principal_dependency must accept request")
+        if type(settings) is not ShuETLSettings:
+            raise TypeError("settings must be a ShuETLSettings instance")
 
         engine: Any = None
         try:
@@ -77,7 +83,8 @@ class LocalProviderBundle:
                     raise ProviderReadinessError(
                         "SQLite database configuration is missing"
                     )
-                raw_url = database_url.get_secret_value()
+                raw_url = _database_url_value(database_url)
+                assert raw_url is not None
                 database_path = _sqlite_path(raw_url)
                 if not database_path.exists() or not database_path.is_file():
                     raise ProviderReadinessError("SQLite database file is not ready")
@@ -93,6 +100,15 @@ class LocalProviderBundle:
                     raw_url,
                     connect_args={"timeout": settings.provider_connect_timeout_seconds},
                 )
+                from sqlalchemy import inspect as inspect_engine
+
+                if (
+                    "etlantic_sqlmodel_schema_version"
+                    not in inspect_engine(engine).get_table_names()
+                ):
+                    raise ProviderReadinessError(
+                        "SQLite schema is not provisioned at the required head"
+                    )
                 if current_version(engine) != SQLITE_HEAD:
                     raise ProviderReadinessError(
                         "SQLite schema is not at the required head"
@@ -121,7 +137,7 @@ class LocalProviderBundle:
                 development_only=True,
                 _engine=engine,
             )
-        except ProviderReadinessError:
+        except (ProviderReadinessError, CompatibilityError, CapabilityError):
             if engine is not None:
                 engine.dispose()
             raise
@@ -150,9 +166,19 @@ class LocalProviderBundle:
 def _sqlite_path(value: str) -> Path:
     parsed = urlsplit(value)
     raw_path = parsed.path
-    if value.startswith("sqlite:////"):
+    if raw_path.startswith("//"):
         return Path("/" + raw_path.lstrip("/"))
     return Path(raw_path.lstrip("/"))
+
+
+def _accepts_positional(value: Any, count: int) -> bool:
+    if not callable(value):
+        return False
+    try:
+        inspect.signature(value).bind(*([object()] * count))
+    except (TypeError, ValueError):
+        return False
+    return True
 
 
 __all__ = ["LocalProviderBundle", "SQLITE_HEAD"]

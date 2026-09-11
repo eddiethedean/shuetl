@@ -30,10 +30,12 @@ def _installed(name: str) -> str | None:
 def installed_versions() -> dict[str, str | None]:
     """Return the stable core and optional package inventory."""
 
-    values = {name: _installed(name) for name in CORE_REQUIREMENTS}
+    values = {
+        name: _installed(name) for name in (*CORE_REQUIREMENTS, *SQLITE_REQUIREMENTS)
+    }
     for dist in distributions():
         name = str(dist.metadata["Name"] or "").lower()
-        if name.startswith("etlantic-"):
+        if name.startswith("etlantic-") or name in SQLITE_REQUIREMENTS:
             values[name] = dist.version
     return dict(sorted(values.items()))
 
@@ -73,6 +75,6 @@ def validate_sqlite() -> dict[str, str | None]:
     if missing:
         raise CapabilityError(
             "SQLite capability is unavailable; install "
-            "`shuetl[sqlite]==0.3.0`: " + ", ".join(missing)
+            '`pip install "shuetl[sqlite]==0.3.0"`: ' + ", ".join(missing)
         )
     return versions

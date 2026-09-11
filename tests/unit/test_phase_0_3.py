@@ -17,7 +17,13 @@ from shuetl.cli import main
 
 def test_settings_constructor_overrides_environment(monkeypatch) -> None:
     monkeypatch.setenv("SHUETL_API_PREFIX", "/from-env")
-    settings = ShuETLSettings(api_prefix="/from-init")  # type: ignore[call-arg]
+    settings = ShuETLSettings(
+        profile="local",
+        role="gateway",
+        provider="memory",
+        identity="host",
+        api_prefix="/from-init",
+    )
     assert settings.api_prefix == "/from-init"
     assert settings.model_dump() == {
         "profile": "local",
@@ -32,9 +38,13 @@ def test_settings_constructor_overrides_environment(monkeypatch) -> None:
 
 def test_memory_bundle_uses_exact_upstream_stores_and_closes() -> None:
     bundle = LocalProviderBundle.create(
-        ShuETLSettings(),  # type: ignore[call-arg]
+        ShuETLSettings(
+            profile="local", role="gateway", provider="memory", identity="host"
+        ),
         authorizer=MemoryAuthorizer(),
-        context_factory=static_context_factory,  # type: ignore[arg-type]
+        context_factory=static_context_factory(
+            tenant_id="tenant-a", workspace_id="workspace-a"
+        ),
         principal_dependency=principal_from_header,
     )
     try:
@@ -52,7 +62,9 @@ def test_memory_bundle_uses_exact_upstream_stores_and_closes() -> None:
 
 def test_doctor_json_is_stable_and_redacted() -> None:
     report = DoctorReport.inspect(
-        ShuETLSettings(database_url=None),  # type: ignore[call-arg]
+        ShuETLSettings(
+            profile="local", role="gateway", provider="memory", identity="host"
+        ),
     )
     payload = json.loads(report.model_dump_json(by_alias=True))
     assert payload["schema"] == "shuetl.doctor/1"
@@ -73,6 +85,6 @@ def test_doctor_json_is_stable_and_redacted() -> None:
 
 def test_cli_version_and_json(capsys) -> None:
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.strip() == "0.3.0"
-    assert main(["doctor", "--format", "json"]) == 0
+    assert capsys.readouterr().out.strip() == "shuetl 0.3.0"
+    assert main(["doctor", "--format", "json"]) == 1
     assert json.loads(capsys.readouterr().out)["schema"] == "shuetl.doctor/1"

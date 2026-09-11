@@ -17,15 +17,19 @@ def main(argv: list[str] | None = None) -> int:
     doctor.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
     if args.version:
-        print(importlib.metadata.version("shuetl"))
+        print(f"shuetl {importlib.metadata.version('shuetl')}")
         return 0
     if args.command == "doctor":
-        report = DoctorReport.inspect()
-        if args.format == "json":
-            print(report.model_dump_json(by_alias=True, indent=2))
-        else:
-            print(report.render_text())
-        return 1 if report.status == "fail" else 0
+        try:
+            report = DoctorReport.inspect()
+            if args.format == "json":
+                print(report.model_dump_json(by_alias=True, indent=2))
+            else:
+                print(report.render_text())
+            return 1 if report.status == "fail" else 0
+        except Exception:
+            print("shuetl doctor failed", file=sys.stderr)
+            return 2
     parser.print_help(sys.stderr)
     return 2
 

@@ -11,13 +11,13 @@ def test_package_metadata_and_minimal_surface() -> None:
     assert metadata.version("shuetl") == "0.3.0"
     assert shuetl.__all__ == (
         "ShuETL",
-        "ShuETLError",
-        "InvalidPrefixError",
-        "MountConflictError",
         "ShuETLSettings",
         "LocalProviderBundle",
         "DoctorReport",
         "DiagnosticCheck",
+        "ShuETLError",
+        "InvalidPrefixError",
+        "MountConflictError",
         "CompatibilityError",
         "CapabilityError",
         "ProviderReadinessError",

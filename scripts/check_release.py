@@ -30,7 +30,16 @@ def main(argv: list[str] | None = None) -> int:
     run_step("lock", [uv, "lock", "--check"])
     run_step(
         "sync",
-        [uv, "sync", "--locked", "--all-groups", "--extra", "test"],
+        [
+            uv,
+            "sync",
+            "--locked",
+            "--all-groups",
+            "--extra",
+            "test",
+            "--extra",
+            "sqlite",
+        ],
     )
     run_step("format", [*uv_run, "ruff", "format", "--check", "."])
     run_step("lint", [*uv_run, "ruff", "check", "."])

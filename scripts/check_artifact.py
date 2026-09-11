@@ -21,6 +21,7 @@ ALLOWED_WHEEL_FILES = {
     "shuetl/errors.py",
     "shuetl/integration.py",
     "shuetl/compatibility.py",
+    "shuetl/_secrets.py",
     "shuetl/settings.py",
     "shuetl/providers.py",
     "shuetl/diagnostics.py",

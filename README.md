@@ -54,8 +54,7 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL 0.3.0 is [published on PyPI](https://pypi.org/project/shuetl/0.3.0/).
-This release provides a typed FastAPI facade for local development and
+ShuETL 0.3.0 is the current development release. It provides a typed FastAPI facade for local development and
 automated tests. It accepts a prebuilt
 `etlantic_fastapi.ETLanticAPI`; the 0.3 local bundle additionally wires exact
 upstream memory providers and an opt-in, pre-provisioned SQLite profile.
@@ -65,7 +64,9 @@ The complete design pack is in [`docs/plans/`](docs/plans/README.md).
 
 The implementation contracts are in
 [`docs/plans/PHASE_0_1_EXECUTION.md`](docs/plans/PHASE_0_1_EXECUTION.md) and
-[`docs/plans/PHASE_0_2_EXECUTION.md`](docs/plans/PHASE_0_2_EXECUTION.md).
+[`docs/plans/PHASE_0_2_EXECUTION.md`](docs/plans/PHASE_0_2_EXECUTION.md), with
+the Phase 0.3 contract in
+[`docs/plans/PHASE_0_3_EXECUTION.md`](docs/plans/PHASE_0_3_EXECUTION.md).
 
 ## Install
 
@@ -138,6 +139,35 @@ provisioned and migrated by upstream tooling before the bundle is created.
 ShuETL never migrates, creates tables, executes pipelines, or accepts anonymous
 identity. The host supplies the authorizer, context factory, principal
 dependency, and closes the bundle.
+
+### Settings contract
+
+The supported settings are:
+
+| Environment variable | Meaning | Default |
+| --- | --- | --- |
+| `SHUETL_PROFILE` | Deployment profile; currently `local` | required |
+| `SHUETL_ROLE` | Runtime role; currently `gateway` | required |
+| `SHUETL_PROVIDER` | `memory` or `sqlite` | required |
+| `SHUETL_IDENTITY` | Host-supplied identity mode; currently `host` | required |
+| `SHUETL_API_PREFIX` | Mount prefix | `/etl` |
+| `SHUETL_ROUTE_PRESET` | Route set; currently `complete` | `complete` |
+| `SHUETL_DATABASE_URL` | Existing local SQLite file URL | none |
+| `SHUETL_PROVIDER_CONNECT_TIMEOUT_SECONDS` | SQLite connection timeout | `2.0` |
+
+The four required values fail closed when omitted. Constructor arguments take
+precedence over environment variables. Names are case-sensitive and only the
+listed `SHUETL_*` environment variables are read; dotenv files, secret files,
+and structured configuration sources are not consulted. Database URLs are
+redacted from representations and diagnostics. The host owns bundle cleanup
+and must call `close()` during application shutdown.
+
+SQLite is local-only: use an absolute or relative file URL with the `sqlite` or
+`sqlite+pysqlite` driver, and provision the file to migration head
+`004_schedules_0_47` with ETLantic's upstream tooling before startup. ShuETL
+does not create tables or run migrations. The local memory and SQLite profiles
+are development-only; production durability, authentication, scheduling, and
+worker operation remain outside this package.
 
 ```bash
 shuetl doctor

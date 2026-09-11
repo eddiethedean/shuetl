@@ -1,0 +1,81 @@
+[project]
+name = "shuetl"
+version = "0.1.0"
+description = "FastAPI composition boundary proof for ETLantic."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11,<3.14"
+authors = [{ name = "Odo Matthews", email = "odosmatthews@gmail.com" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+test = [
+    "etlantic==0.51.0",
+    "etlantic-fastapi==0.51.0",
+    "fastapi>=0.115,<1",
+    "httpx>=0.27,<1",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.390,<2",
+    "pytest>=8,<9",
+    "ruff>=0.11,<1",
+]
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shuetl"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/spikes",
+    "/scripts",
+    "/docs",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/pyproject.toml",
+    "/uv.lock",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+src = ["src", "scripts", "spikes", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/boundary/fixtures/**/*.py" = ["F401"]
+
+[tool.pyright]
+include = ["src", "scripts", "spikes", "tests"]
+exclude = ["tests/boundary/fixtures"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+reportMissingTypeStubs = "none"
+
+[tool.uv]
+package = true

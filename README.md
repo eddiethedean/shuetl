@@ -49,9 +49,22 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL is currently in the architecture and planning phase.
+ShuETL is in the 0.1 boundary-proof implementation phase. The package is
+intentionally inert while the published ETLantic 0.51.0 composition seam is
+verified; the usable `ShuETL` facade begins in 0.2.
 
 The complete design pack is in [`docs/plans/`](docs/plans/README.md).
+
+The implementation contract and release gate are in
+[`docs/plans/PHASE_0_1_EXECUTION.md`](docs/plans/PHASE_0_1_EXECUTION.md).
+
+To run the local evidence gate:
+
+```bash
+uv sync --locked --all-groups --extra test
+uv run python scripts/capture_openapi.py
+uv run python scripts/check_release.py
+```
 
 ## Planned ShuETL capabilities
 

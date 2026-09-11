@@ -1,0 +1,56 @@
+"""Capture or verify normalized Phase 0.1 OpenAPI evidence."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from spikes.phase_0_1_memory_mount import (  # noqa: E402
+    assert_openapi_parity,
+    build_direct_app,
+    build_embedded_app,
+    build_graph,
+)
+
+DEFAULT_OUTPUT = ROOT / "docs" / "evidence" / "0.1" / "openapi.normalized.json"
+
+
+def capture() -> dict[str, Any]:
+    """Build both apps and return the normalized upstream contract."""
+
+    graph = build_graph()
+    return assert_openapi_parity(build_embedded_app(graph), build_direct_app())
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="compare with the committed artifact instead of writing it",
+    )
+    args = parser.parse_args(argv)
+    actual = capture()
+    encoded = json.dumps(actual, indent=2, sort_keys=True) + "\n"
+    if args.check:
+        expected = args.output.read_text(encoding="utf-8")
+        if expected != encoded:
+            raise SystemExit(f"OpenAPI evidence differs: {args.output}")
+        print(f"OpenAPI evidence verified: {args.output}")
+        return 0
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(encoded, encoding="utf-8")
+    print(f"OpenAPI evidence written: {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

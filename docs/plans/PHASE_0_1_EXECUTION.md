@@ -351,8 +351,10 @@ the touched-surface boundary remain intact.
 │   └── phase_0_1_memory_mount.py
 ├── scripts/
 │   ├── check_boundaries.py
+│   ├── check_artifact.py
 │   ├── check_clean_wheel.py
 │   ├── capture_openapi.py
+│   ├── check_evidence.py
 │   └── check_release.py
 ├── tests/
 │   ├── boundary/

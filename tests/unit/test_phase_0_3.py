@@ -17,7 +17,7 @@ from shuetl.cli import main
 
 def test_settings_constructor_overrides_environment(monkeypatch) -> None:
     monkeypatch.setenv("SHUETL_API_PREFIX", "/from-env")
-    settings = ShuETLSettings(api_prefix="/from-init")
+    settings = ShuETLSettings(api_prefix="/from-init")  # type: ignore[call-arg]
     assert settings.api_prefix == "/from-init"
     assert settings.model_dump() == {
         "profile": "local",
@@ -32,9 +32,9 @@ def test_settings_constructor_overrides_environment(monkeypatch) -> None:
 
 def test_memory_bundle_uses_exact_upstream_stores_and_closes() -> None:
     bundle = LocalProviderBundle.create(
-        ShuETLSettings(),
+        ShuETLSettings(),  # type: ignore[call-arg]
         authorizer=MemoryAuthorizer(),
-        context_factory=static_context_factory,
+        context_factory=static_context_factory,  # type: ignore[arg-type]
         principal_dependency=principal_from_header,
     )
     try:
@@ -52,7 +52,7 @@ def test_memory_bundle_uses_exact_upstream_stores_and_closes() -> None:
 
 def test_doctor_json_is_stable_and_redacted() -> None:
     report = DoctorReport.inspect(
-        ShuETLSettings(database_url=None),
+        ShuETLSettings(database_url=None),  # type: ignore[call-arg]
     )
     payload = json.loads(report.model_dump_json(by_alias=True))
     assert payload["schema"] == "shuetl.doctor/1"

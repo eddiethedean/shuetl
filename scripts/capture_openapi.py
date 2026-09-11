@@ -1,10 +1,11 @@
-"""Capture or verify normalized Phase 0.2 OpenAPI evidence."""
+"""Capture or verify normalized OpenAPI evidence."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +23,16 @@ from spikes.phase_0_1_memory_mount import (  # noqa: E402
 
 from shuetl import ShuETL  # noqa: E402
 
-DEFAULT_OUTPUT = ROOT / "docs" / "evidence" / "0.2" / "openapi.normalized.json"
+VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))[
+    "project"
+]["version"]
+DEFAULT_OUTPUT = (
+    ROOT
+    / "docs"
+    / "evidence"
+    / ".".join(str(VERSION).split(".")[:2])
+    / "openapi.normalized.json"
+)
 
 
 def capture() -> dict[str, Any]:

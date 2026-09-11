@@ -75,7 +75,7 @@ def check(evidence: Path | None = None) -> list[str]:
         rows = [line for line in section.splitlines() if line.startswith("| AC-")]
         expected = {
             f"AC-{number:03d}"
-            for number in range(1, (37 if evidence_dir.name == "0.2" else 23))
+            for number in range(1, (37 if evidence_dir.name == "0.2" else 43))
         }
         seen: dict[str, str] = {}
         for row in rows:
@@ -113,7 +113,7 @@ def check(evidence: Path | None = None) -> list[str]:
         digest = hashlib.sha256(artifacts[0].read_bytes()).hexdigest()
         if recorded_hashes.get(kind) != digest:
             errors.append(f"recorded {kind} SHA-256 does not match built artifact")
-    max_criterion = 36 if evidence_dir.name == "0.2" else 22
+    max_criterion = 36 if evidence_dir.name == "0.2" else 42
     for number in range(1, max_criterion + 1):
         criterion = f"AC-{number:03d}"
         if criterion not in text:

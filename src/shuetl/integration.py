@@ -19,6 +19,7 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.routing import Mount, Route, WebSocketRoute
 
+from .compatibility import validate_core
 from .errors import InvalidPrefixError, MountConflictError
 
 _PREFIX_SEGMENT: Final = r"[A-Za-z0-9._~-]+"
@@ -184,6 +185,7 @@ class ShuETL:
     __slots__ = ("_api",)
 
     def __init__(self, *, api: ETLanticAPI) -> None:
+        validate_core()
         if not isinstance(api, ETLanticAPI):
             raise TypeError("api must be an etlantic_fastapi.ETLanticAPI instance")
         self._api = api

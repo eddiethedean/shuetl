@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0 — Local provider bundle and diagnostics (2026-09-11)
+
+- Added immutable `ShuETLSettings` with strict `SHUETL_*` configuration and
+  local SQLite URL validation.
+- Added `LocalProviderBundle` for exact ETLantic memory or pre-provisioned
+  SQLite stores with explicit host identity and idempotent cleanup.
+- Added deterministic, redacted `shuetl doctor` text/JSON diagnostics and the
+  `shuetl --version` command.
+- Added an optional `shuetl[sqlite]` dependency set pinned to the ETLantic
+  0.51 provider train.
+
 ## 0.2.0 — FastAPI composition facade (2026-09-11)
 
 - Added the typed `ShuETL` facade for embedding or creating ETLantic FastAPI

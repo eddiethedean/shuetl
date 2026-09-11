@@ -1,6 +1,6 @@
 [project]
 name = "shuetl"
-version = "0.2.0"
+version = "0.3.0"
 description = "Typed FastAPI composition facade for ETLantic."
 readme = "README.md"
 license = "MIT"
@@ -21,6 +21,7 @@ dependencies = [
     "etlantic-fastapi==0.51.0",
     "fastapi==0.141.1",
     "pydantic==2.13.5",
+    "pydantic-settings==2.15.0",
 ]
 
 [project.urls]
@@ -33,6 +34,13 @@ Issues = "https://github.com/eddiethedean/shuetl/issues"
 test = [
     "httpx2==2.12.0",
 ]
+sqlite = [
+    "etlantic-sqlmodel==0.51.0",
+    "sqlalchemy==2.0.52",
+]
+
+[project.scripts]
+shuetl = "shuetl.cli:main"
 
 [dependency-groups]
 dev = [
@@ -65,6 +73,7 @@ include = [
 exclude = [
     "/docs/evidence/0.1/README.md",
     "/docs/evidence/0.2/README.md",
+    "/docs/evidence/0.3/README.md",
 ]
 
 [tool.pytest.ini_options]

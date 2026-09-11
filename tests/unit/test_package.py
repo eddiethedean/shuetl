@@ -1,4 +1,4 @@
-"""Tests for the Phase 0.2 package contract."""
+"""Tests for the Phase 0.3 package contract."""
 
 from __future__ import annotations
 
@@ -8,16 +8,23 @@ import shuetl
 
 
 def test_package_metadata_and_minimal_surface() -> None:
-    assert metadata.version("shuetl") == "0.2.0"
+    assert metadata.version("shuetl") == "0.3.0"
     assert shuetl.__all__ == (
         "ShuETL",
         "ShuETLError",
         "InvalidPrefixError",
         "MountConflictError",
+        "ShuETLSettings",
+        "LocalProviderBundle",
+        "DoctorReport",
+        "DiagnosticCheck",
+        "CompatibilityError",
+        "CapabilityError",
+        "ProviderReadinessError",
     )
     assert shuetl.ShuETL
     assert shuetl.ShuETLError
     assert shuetl.InvalidPrefixError
     assert shuetl.MountConflictError
-    for provisional_name in ("ShuETLSettings", "ProviderBundle", "create_app", "mount"):
+    for provisional_name in ("ProviderBundle", "create_app", "mount"):
         assert not hasattr(shuetl, provisional_name)

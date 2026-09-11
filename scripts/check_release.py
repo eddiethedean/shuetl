@@ -1,4 +1,4 @@
-"""Run the complete local Phase 0.2 release gate."""
+"""Run the complete local Phase 0.3 release gate."""
 
 from __future__ import annotations
 
@@ -6,9 +6,12 @@ import argparse
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+RELEASE_SERIES = ".".join(str(PROJECT["project"]["version"]).split(".")[:2])
 
 
 def run_step(label: str, command: list[str]) -> None:
@@ -39,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
             "python",
             "scripts/check_boundaries.py",
             "--openapi",
-            "docs/evidence/0.2/openapi.normalized.json",
+            f"docs/evidence/{RELEASE_SERIES}/openapi.normalized.json",
         ],
     )
     run_step("tests", [*uv_run, "pytest", "-q"])
@@ -57,10 +60,10 @@ def main(argv: list[str] | None = None) -> int:
             "python",
             "scripts/check_evidence.py",
             "--evidence",
-            "docs/evidence/0.2",
+            f"docs/evidence/{RELEASE_SERIES}",
         ],
     )
-    print("Phase 0.2 release gate passed")
+    print(f"Phase {RELEASE_SERIES} release gate passed")
     return 0
 
 

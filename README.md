@@ -54,12 +54,12 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL 0.2.0 is [published on PyPI](https://pypi.org/project/shuetl/0.2.0/).
+ShuETL 0.3.0 is [published on PyPI](https://pypi.org/project/shuetl/0.3.0/).
 This release provides a typed FastAPI facade for local development and
 automated tests. It accepts a prebuilt
-`etlantic_fastapi.ETLanticAPI`; the
-host remains responsible for providers and their lifecycle. In-memory providers
-are process-local and are not a production durability claim.
+`etlantic_fastapi.ETLanticAPI`; the 0.3 local bundle additionally wires exact
+upstream memory providers and an opt-in, pre-provisioned SQLite profile.
+Both profiles are development-only and are not a production durability claim.
 
 The complete design pack is in [`docs/plans/`](docs/plans/README.md).
 
@@ -70,7 +70,9 @@ The implementation contracts are in
 ## Install
 
 ```bash
-python -m pip install "shuetl==0.2.0"
+python -m pip install "shuetl==0.3.0"
+# Optional pre-provisioned SQLite provider
+python -m pip install "shuetl[sqlite]==0.3.0"
 ```
 
 ## Quickstart
@@ -129,10 +131,19 @@ or control characters. `InvalidPrefixError` reports invalid prefixes. Mounting
 raises `MountConflictError` before mutation when reserved state, handlers, route
 namespaces, or operation IDs collide; resolve the host conflict before retrying.
 
-This release does not construct or own providers, execute ETLantic work, or
-provide production deployment orchestration. It is intended for local
-development and automated tests, and the in-memory provider examples are
-process-local.
+Phase 0.3 adds immutable `ShuETLSettings`, `LocalProviderBundle`, and the
+redacted `shuetl doctor` preflight CLI. Settings use `SHUETL_*` environment
+variables; constructor values override the environment. SQLite files must be
+provisioned and migrated by upstream tooling before the bundle is created.
+ShuETL never migrates, creates tables, executes pipelines, or accepts anonymous
+identity. The host supplies the authorizer, context factory, principal
+dependency, and closes the bundle.
+
+```bash
+shuetl doctor
+shuetl doctor --format json
+shuetl --version
+```
 
 To run the local evidence gate:
 

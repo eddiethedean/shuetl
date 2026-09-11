@@ -23,8 +23,8 @@
 | HTTPX import origin | temporary environment site-packages (clean-wheel) |
 | Evidence environment | isolated wheel installation; normalized origins contain no absolute paths |
 | Source checkout | `PYTHONPATH` empty; clean-wheel runs outside checkout |
-| SHA-256 wheel | `07945576ee12d978e5fc785fa3303d38d41481c07fca6dc39158dc483d2ff948` |
-| SHA-256 sdist | `c8d00d91aece5d404a368e917086b9aa5064d66457a43ccc4470151d46c8b743` |
+| SHA-256 wheel | `10c639a6ba8edfcc9785fcda907c0fb046e135ee4311148cee21c57c291d3865` |
+| SHA-256 sdist | `e76bb00052916157d3782dc7f5e2f24db635ffddf7307fbb487a22e43f2d9c75` |
 | ShuETL GitHub issues | none open at planning/implementation baseline |
 | Upstream follow-up | [ETLantic #130](https://github.com/eddiethedean/etlantic/issues/130), non-blocking docstring drift |
 

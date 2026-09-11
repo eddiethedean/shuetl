@@ -1,5 +1,10 @@
 # ShuETL
 
+[![PyPI version](https://img.shields.io/pypi/v/shuetl.svg)](https://pypi.org/project/shuetl/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/shuetl.svg)](https://pypi.org/project/shuetl/)
+[![CI](https://github.com/eddiethedean/shuetl/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/shuetl/actions/workflows/ci.yml)
+[![License](https://img.shields.io/pypi/l/shuetl.svg)](https://github.com/eddiethedean/shuetl/blob/main/LICENSE)
+
 **ShuETL** *(pronounced “shuttle”)* is the opinionated FastAPI integration and
 deployment package for ETLantic.
 
@@ -49,7 +54,8 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL is in the 0.1 boundary-proof implementation phase. The package is
+ShuETL 0.1.0 is [published on PyPI](https://pypi.org/project/shuetl/0.1.0/).
+This release is the 0.1 boundary-proof implementation phase: the package is
 intentionally inert while the published ETLantic 0.51.0 composition seam is
 verified; the usable `ShuETL` facade begins in 0.2.
 

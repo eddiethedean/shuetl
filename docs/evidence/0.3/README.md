@@ -17,8 +17,8 @@ This index records the reproducible local proof for the Phase 0.3 contract.
 | Gate A | PASS |
 | Gate B | PASS |
 | Gate C | PASS |
-| SHA-256 wheel | `e89ae02c97d9f36707dab294709410d518a8f2a16f0dac5b4ee12c77ba4f32f3` |
-| SHA-256 sdist | `fdfda5cb4dd997b0a6c78d983f39de1d5ddfb8f8a278c7f40e883a8bd762f218` |
+| SHA-256 wheel | `70ee1aa2e685f4e7aeebe0502910ed4dc24436374ab0bc6c212d028048d3f383` |
+| SHA-256 sdist | `984fb02638c37718ab1c96ec0387bd17397ad4297c904d983b9c816857ce14e8` |
 
 ## Acceptance results
 
@@ -77,5 +77,4 @@ facade contract; Phase 0.3 adds local composition without changing upstream
 routes or semantics. The integration burden remains in ShuETL's composition
 layer, while public composition hooks stay injected and no copied route or
 pipeline model is introduced. This is materially easier to maintain than a
-parallel control-plane implementation and no behavior is contributed to
-`etlantic-fastapi`.
+parallel control-plane implementation and no behavior is contributed to `etlantic-fastapi`.

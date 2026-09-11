@@ -81,7 +81,7 @@ class LocalProviderBundle:
                 database_path = _sqlite_path(raw_url)
                 if not database_path.exists() or not database_path.is_file():
                     raise ProviderReadinessError("SQLite database file is not ready")
-                from etlantic_sqlmodel import (
+                from etlantic_sqlmodel import (  # type: ignore[import-not-found]
                     SQLModelDefinitionRepository,
                     SqlModelEventStore,
                     SQLModelSubmissionStore,

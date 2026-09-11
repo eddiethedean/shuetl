@@ -1,181 +1,150 @@
-# ShuETL API Design
+# ShuETL API Composition
 
-## Principles
+## Principle
 
-- REST-first;
-- FastAPI/OpenAPI-native;
-- asynchronous job semantics for pipeline execution;
-- stable IDs and slugs;
-- no long-running execution tied to a single HTTP request;
-- structured error models;
-- bounded result payloads.
+ShuETL mounts and configures ETLantic's authoritative FastAPI surface. It does
+not maintain parallel endpoint implementations or duplicate request/response
+models.
 
-## Pipelines
+`etlantic-fastapi` owns the normative:
 
-```http
-POST   /pipelines
-GET    /pipelines
-GET    /pipelines/{pipeline_id}
-PATCH  /pipelines/{pipeline_id}
-DELETE /pipelines/{pipeline_id}
+- route paths and operation IDs;
+- HTTP methods and status codes;
+- request, response, and problem-detail schemas;
+- durable-accept semantics;
+- authorization ordering and non-enumeration behavior;
+- idempotency and optimistic-concurrency headers;
+- SSE formatting, cursors, replay, and retention-gap behavior.
+
+ShuETL owns how that router is composed into a host application.
+
+## Public composition surfaces
+
+ShuETL should provide two integration styles.
+
+### Mount into an existing application
+
+```python
+app = FastAPI(lifespan=integration.lifespan)
+integration.mount(app, prefix="/etl")
 ```
 
-Deletion should normally archive/disable rather than destroy historical records.
+Mounting must:
 
-## Pipeline versions
+- preserve ETLantic operation IDs and schema identities;
+- support a configurable path prefix without rewriting route meaning;
+- compose with, rather than replace, host middleware and lifespan behavior;
+- require explicit principal and context dependencies for protected profiles;
+- install or document required exception handlers;
+- avoid duplicate route registration.
 
-```http
-POST /pipelines/{pipeline_id}/versions
-GET  /pipelines/{pipeline_id}/versions
-GET  /pipelines/{pipeline_id}/versions/{version_id}
+### Create an application
 
-POST /pipelines/{pipeline_id}/versions/{version_id}/activate
+```python
+app = integration.create_app()
 ```
 
-Creation from #119 inference can later be surfaced as an authoring endpoint, but MVP may require explicit registered pipeline definitions.
+The factory is a convenience for dedicated deployments. It should produce the
+same ETLantic API contract as mounting into an existing host.
 
-## Runs
+## Exposed ETLantic capabilities
 
-```http
-POST /pipelines/{pipeline_id}/runs
-GET  /pipelines/{pipeline_id}/runs
-GET  /runs/{run_id}
-POST /runs/{run_id}/cancel
-POST /runs/{run_id}/retry
-```
+Depending on configured providers, the mounted API may expose ETLantic
+operations for:
 
-Trigger response:
+- definitions and registry revisions;
+- validation and planning;
+- durable run submission and cancellation requests;
+- submission/run status, attempts, and recovery information;
+- schedules and firing history;
+- events and resumable SSE;
+- reports, diagnostics, and artifact metadata;
+- readiness and liveness;
+- policy, approval, audit, or other optional control-plane surfaces.
 
-```json
-{
-  "id": "run_01...",
-  "pipeline_id": "pipe_01...",
-  "pipeline_version_id": "pv_01...",
-  "status": "PENDING"
-}
-```
+This list is capability-oriented, not a promise that ShuETL implements each
+operation. An endpoint is exposed only when the required ETLantic contract and
+provider are present and supported by the selected ShuETL compatibility profile.
 
-HTTP `202 Accepted` is appropriate when execution is queued.
+## No parallel convenience API
 
-## Schedules
+ShuETL must not add aliases such as `/pipelines/{id}/runs` when ETLantic's
+authoritative route uses a different resource vocabulary. Convenience belongs in
+Python configuration or a generated client, not a second HTTP contract.
 
-```http
-POST   /pipelines/{pipeline_id}/schedules
-GET    /pipelines/{pipeline_id}/schedules
-GET    /schedules/{schedule_id}
-PATCH  /schedules/{schedule_id}
-DELETE /schedules/{schedule_id}
+Pipeline-specific generated routes are out of scope unless ETLantic defines a
+canonical route-generation contract.
 
-POST /schedules/{schedule_id}/enable
-POST /schedules/{schedule_id}/disable
-```
+## Durable submission
 
-## Results
+ShuETL preserves upstream submission behavior:
 
-```http
-GET /runs/{run_id}/artifacts
-GET /runs/{run_id}/artifacts/{artifact_id}
-```
+- the API returns `202 Accepted` only after durable acceptance;
+- callers use the upstream idempotency mechanism;
+- retries of the same accepted request do not create a second logical
+  submission;
+- a client disconnect does not own execution lifetime;
+- the response is an ETLantic submission/run record, not a ShuETL wrapper.
 
-Large artifacts should return metadata/reference information rather than stream arbitrary datasets by default.
+## Authorization
 
-## ETLantic operational surfaces
+The host-authenticated principal is adapted into ETLantic's control-plane
+context. The authoritative ETLantic authorizer and route/service checks decide
+access.
 
-As ETLantic exposes these capabilities publicly, ShuETL can project them:
+ShuETL must preserve:
 
-```http
-POST /pipelines/{pipeline_id}/preflight
-GET  /pipelines/{pipeline_id}/health
-GET  /pipelines/{pipeline_id}/drift
-GET  /pipelines/{pipeline_id}/lineage
-GET  /pipelines/{pipeline_id}/contract
-```
-
-ShuETL must consume ETLantic's authoritative records rather than implement parallel analysis.
-
-## API-triggered parameters
-
-A run may accept bounded parameter values:
-
-```json
-{
-  "parameters": {
-    "business_date": "2026-09-06"
-  }
-}
-```
-
-Only parameters declared by the pipeline/version may be accepted.
-
-Unknown parameter names should fail validation.
-
-## Generated pipeline-specific endpoints
-
-Potential later capability:
-
-```http
-POST /p/customers/run
-GET  /p/customers/status
-```
-
-This should be generated from registered pipeline metadata, not hand-authored duplication.
+- authorization before existence-sensitive lookup;
+- resource-scoped actions;
+- tenant/workspace/environment scope where configured;
+- consistent `403` versus opaque `404` behavior;
+- authorization of list filters, pagination, event streams, and artifact
+  metadata;
+- fail-closed behavior when required policy services are unavailable.
 
 ## OpenAPI
 
-FastAPI's generated OpenAPI is a core ShuETL feature.
+The generated OpenAPI document must come from the mounted
+`etlantic-fastapi` routes and models.
 
-Pipeline schemas, schedule payloads, run states, and structured error responses should be represented with Pydantic models and automatically documented.
+ShuETL tests:
 
-## Identity-aware API behavior
+- prefix-safe route generation;
+- stable operation IDs;
+- normal and error responses;
+- security requirements;
+- `202 Accepted` submission;
+- SSE media types and documented resume inputs;
+- absence of ShuETL shadow schemas for ETLantic records.
 
-When an external identity provider is installed, ShuETL endpoints should resolve the current principal through provider/FastAPI dependencies and enforce permissions at the service boundary.
+ShuETL-specific configuration models do not need to become public HTTP schemas.
 
-Examples:
+## Streaming
 
-```text
-POST /pipelines/{id}/runs
-  requires: shuetl.pipeline.run
+When ETLantic SSE support is configured, ShuETL exposes it unchanged.
 
-PATCH /schedules/{id}
-  requires: shuetl.schedule.manage
+ShuETL is responsible for deployment guidance covering proxy buffering,
+keep-alives, connection limits, graceful shutdown, and authentication lifetime.
+It does not define another event envelope or cursor.
 
-POST /runs/{id}/cancel
-  requires: shuetl.run.cancel
-```
+## Health and readiness
 
-The exact authentication mechanism remains external to ShuETL.
+Use the authoritative adapter's liveness and readiness surfaces where available.
+ShuETL contributes provider checks and deployment diagnostics through supported
+extension hooks rather than creating conflicting health endpoints.
 
-Run records should preserve:
+Readiness should fail when a required provider, schema revision, execution role,
+or compatibility constraint is unavailable. Liveness must not claim that runs
+can be accepted.
 
-```text
-triggering_principal_id
-execution_service_account_id
-```
+## API compatibility
 
-when those concepts are available.
+ShuETL publishes:
 
-Neither principal objects nor authorization decisions should be serialized into ETLantic pipeline definitions.
+- the ETLantic and `etlantic-fastapi` release range it supports;
+- any mounted-route selection profile;
+- a checked OpenAPI snapshot for each supported release train;
+- upgrade notes for intentional upstream API changes.
 
-## Pydantic-driven API contracts
-
-FastAPI request/response schemas should be defined once as Pydantic models and reused by Python service/client surfaces where practical.
-
-Run-parameter schemas should be Pydantic/JSON-Schema compatible so invalid parameters fail before durable execution begins.
-
-## Live run events
-
-Add a first-class SSE endpoint:
-
-```http
-GET /runs/{run_id}/events
-```
-
-using typed Pydantic `RunEvent` records.
-
-## Outbound webhook contracts
-
-Use FastAPI OpenAPI webhooks to describe optional outbound callbacks for run completion/failure and other operational events.
-
-## Response semantics
-
-Manual/API-triggered run creation returns `202 Accepted` with a typed durable run record rather than waiting for execution.
+ShuETL does not promise stability beyond the upstream contract it pins and
+tests.

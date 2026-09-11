@@ -1,111 +1,146 @@
-# Scheduling and Runtime
+# Scheduling and Runtime Composition
 
-## Scheduling model
+## Principle
 
-Schedules create runs. They do not own execution.
+ETLantic owns scheduling and runtime semantics. ShuETL configures and operates
+ETLantic scheduler, worker, and external-runtime interfaces through a FastAPI
+deployment.
 
-```text
-Scheduler
-   ↓
-Find due schedule
-   ↓
-Create durable Run(PENDING)
-   ↓
-Advance next_run_at transactionally
-   ↓
-Executor claims run
-```
+ShuETL does not define:
 
-This avoids duplicate execution and keeps the scheduler lightweight.
+- another schedule or firing model;
+- trigger calculation;
+- overlap or misfire semantics;
+- a run state machine;
+- claim, lease, fencing, retry, cancellation, or recovery behavior;
+- an executor protocol competing with ETLantic's runtime contracts.
 
-## Trigger types
-
-MVP should support cron, interval, and one-time/date triggers.
-
-## Timezones
-
-Every schedule must have an explicit timezone. Do not infer server-local time as persistent schedule semantics.
-
-## Scheduler implementation
-
-APScheduler is the MVP timing dependency, but ShuETL keeps its persistent schedule model independent of APScheduler objects. The database remains authoritative.
-
-## Duplicate prevention
-
-A transaction or lease must guarantee multiple service replicas cannot create duplicate runs for the same schedule occurrence. Prefer PostgreSQL row locking, advisory locks, unique `(schedule_id, scheduled_for)` constraints, or a scheduler leader lease over process-local flags.
-
-## Concurrency policies
-
-Support a small explicit set such as `ALLOW`, `FORBID`, `REPLACE`, and `QUEUE`, with MVP likely beginning with `ALLOW` and `FORBID`.
-
-## Misfire policy
-
-Support explicit `SKIP`, `RUN_ONCE`, and later `CATCH_UP` behavior. Unbounded catch-up is never the default.
-
-## Run execution
-
-The executor claims runs through durable state transitions:
+## Scheduling flow
 
 ```text
-PENDING → CLAIMED → RUNNING → SUCCEEDED / FAILED
+ETLantic ScheduleRecord
+        ↓
+ETLantic scheduler evaluates due time
+        ↓
+ETLantic FiringRecord with canonical logical key
+        ↓
+ETLantic durable submission
+        ↓
+ETLantic worker or supported external execution host
 ```
 
-A heartbeat supports stale-run detection in multi-worker deployments.
+ShuETL supplies settings, provider instances, process entry points, health
+checks, and deployment documentation for this flow.
 
-## Retry policy
+## Capability requirements
 
-Retries use explicit policy: max attempts, backoff strategy, initial/max delay, and retryable error codes. Retry history is auditable.
+Before enabling schedule routes or a scheduler role, ShuETL verifies that the
+selected ETLantic package set provides:
 
-## Cancellation
+- the expected schedule and firing schema versions;
+- a persistent ScheduleStore suitable for the deployment profile;
+- durable submission and idempotency support;
+- an execution role capable of consuming accepted work;
+- compatible migration state;
+- explicit timezone, DST, overlap, misfire, and catch-up behavior.
 
-MVP can cancel `PENDING` runs immediately and mark `RUNNING` runs as cancellation requested. Forceful interruption may be deferred.
+If a requirement is absent, scheduling is unavailable. ShuETL must not fall back
+to process-local timing in a production profile.
 
-## Execution isolation
+## Runtime roles
 
-Initial execution may use internal asyncio tasks, executor pools, or dedicated threads/processes. CPU-heavy/failure-prone work can later move to isolated workers without changing public run semantics.
+### Gateway
 
-## Long-running HTTP request rule
+The gateway hosts FastAPI and accepts authorized control-plane requests. It
+commits durable submissions but does not execute pipeline work in the request or
+with FastAPI `BackgroundTasks`.
 
-Never execute the pipeline directly inside the trigger request. `POST` creates a durable run and returns `202 Accepted`; clients poll or subscribe to status.
+### Scheduler
 
-## Scheduled execution identity
+The scheduler runs ETLantic's scheduler service against the configured schedule
+and durable-work stores. ShuETL may provide a configuration wrapper or process
+entry point, but not a separate scheduling loop.
 
-Schedules do not own credentials. A scheduled run resolves the pipeline version's explicit service account, checks credential grants, resolves secrets just in time, and only then invokes ETLantic.
+### Worker
 
-Authorization/credential failures must block before unsafe external I/O.
+The worker runs ETLantic's worker/execution service. It resolves the immutable
+definition/plan/profile revision and executes through ETLantic's runtime.
 
-## Scheduler library strategy
+### External execution host
 
-Use APScheduler 3.11.x for timing mechanics while keeping ShuETL's database model authoritative. Use Tenacity or backend-native retry primitives rather than custom backoff loops.
+An external host implements a supported ETLantic submission/poll/cancel/report
+contract. ShuETL only configures the adapter.
 
-`LocalExecutor` remains core; Dramatiq is the preferred first optional distributed adapter, with Celery as a later compatibility backend.
+## Local-development profile
 
-## FastAPI lifespan ownership
+A development-only convenience mode may start ETLantic's in-process scheduler
+and worker alongside FastAPI.
 
-Scheduler and local executor startup/shutdown belong in FastAPI lifespan.
+Requirements:
 
-## BackgroundTasks prohibition
+- it is explicitly labeled local/development;
+- one-process limitations are visible in readiness/capability output;
+- shutdown is graceful where upstream permits;
+- it never becomes an implicit production fallback;
+- tests do not confuse in-memory acceptance with durable production acceptance.
 
-Do not run ETLantic pipelines with FastAPI `BackgroundTasks`. It is limited to small, non-durable post-response work.
+## Production reference profile
 
-## SQL-backed execution baseline
+Run gateway, scheduler, and worker as separate supervised processes, even when
+they use the same Python environment or container image.
 
-The baseline requires no broker or external scheduler:
+The default reference may remain SQL-only if ETLantic's selected providers
+support coordination through PostgreSQL. A message broker is optional, but
+process isolation is not equivalent to adding an external orchestration
+platform.
+
+## Crash and recovery guarantees
+
+ShuETL documents and tests the guarantees made by the selected ETLantic
+providers. It must not strengthen those claims in marketing or API
+documentation.
+
+Production qualification should exercise:
+
+- gateway failure before and after durable acceptance;
+- scheduler restart around firing creation;
+- worker loss before and after external side effects;
+- lease expiry and stale-worker fencing;
+- cancellation during queued, leased, and running states;
+- idempotent resubmission;
+- report/event publication failure;
+- database disconnect and recovery;
+- mixed-version rolling deployment where supported.
+
+Exactly-once external effects must never be inferred from exactly-once firing or
+submission identity. Sink idempotency and reconciliation remain explicit
+ETLantic/runtime concerns.
+
+## Retries and cancellation
+
+ShuETL exposes ETLantic retry, cancellation, replay, and repair capabilities as
+provided. It does not wrap them in a second policy model.
+
+If an upstream execution mode cannot interrupt work safely, ShuETL must expose
+that limitation rather than reporting cancellation as completed.
+
+## Dependencies
+
+Scheduling and retry libraries are implementation details of ETLantic or its
+providers. ShuETL should not depend directly on APScheduler, Tenacity, Dramatiq,
+Celery, or equivalent libraries unless ShuETL introduces a narrowly scoped
+integration that ETLantic does not own and an ADR approves it.
+
+## Operational commands
+
+ShuETL may offer ergonomic commands such as:
 
 ```text
-APScheduler in application process
-        ↓
-SQL Schedule state
-        ↓
-SQL Run(PENDING)
-        ↓
-LocalExecutor claims run
-        ↓
-RUNNING
-        ↓
-SUCCEEDED / FAILED
+shuetl serve --role gateway
+shuetl serve --role scheduler
+shuetl serve --role worker
+shuetl doctor
 ```
 
-For PostgreSQL multi-process deployments, prefer row locks, `FOR UPDATE`, `SKIP LOCKED`, advisory locks, leases, and unique constraints before introducing a required broker.
-
-Dramatiq/Celery/Redis/RabbitMQ remain optional scale-out backends.
+These commands configure and invoke ETLantic roles. They do not implement
+parallel runtime engines.

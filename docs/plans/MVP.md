@@ -1,147 +1,176 @@
 # ShuETL MVP
 
-## MVP objective
+## Objective
 
-Ship the smallest useful system that lets a developer deploy ETLantic pipelines as a persistent, schedulable FastAPI service.
+Ship the smallest useful integration that lets a FastAPI developer configure,
+mount, and operate ETLantic's existing control-plane capabilities without
+learning or manually wiring every provider package.
 
-## Required capabilities
+The MVP proves composition value. It does not reimplement ETLantic features.
 
-### Pipeline registration
+## Supported baseline
 
-A trusted application can register an ETLantic pipeline.
+The first implementation targets one explicit, lockstep ETLantic release train,
+initially ETLantic 0.51.x and matching optional packages. Support expands only
+after compatibility tests exist.
+
+## Required ShuETL capabilities
+
+### Configuration
+
+Provide a typed `ShuETLSettings` model covering:
+
+- deployment profile and role;
+- API prefix and route-selection preset;
+- local versus relational store selection;
+- database connection reference;
+- identity/principal dependency requirements;
+- enabled optional providers;
+- operational bounds accepted by upstream providers.
+
+Settings must not reproduce ETLantic domain configuration.
+
+### Composition facade
+
+Provide one `ShuETL` facade that can either:
+
+- accept a preconstructed, supported ETLantic API/provider graph; or
+- construct the reference graph from explicit ShuETL settings.
+
+The facade mounts the authoritative `etlantic-fastapi` router and composes
+required exception handlers and lifespan behavior.
+
+### Host application integration
 
 ```python
-shuetl.register(
-    name="customers",
-    pipeline=customer_pipeline,
-)
+integration = ShuETL.from_settings(settings)
+app = FastAPI(lifespan=integration.lifespan)
+integration.mount(app)
 ```
 
-Registration persists a versioned definition or authoritative reference.
+Mounting into an existing FastAPI app and creating a dedicated app must expose
+the same ETLantic contracts.
 
-### Pipeline versioning
+### Local-development profile
 
-- immutable versions;
-- one active version;
-- historical runs retain their exact version.
+Offer a clearly labeled local profile using supported ETLantic memory or SQLite
+providers and, where supported, in-process development roles.
 
-### FastAPI integration
+This profile optimizes for a quick first run. It is not the production default.
 
-Provide a router or application factory.
+### Production reference profile
 
-```python
-app.include_router(shuetl.router)
-```
+Document and test:
 
-### Manual runs
+- PostgreSQL-backed ETLantic providers;
+- a FastAPI gateway role;
+- separate ETLantic scheduler and worker roles;
+- schema and package compatibility checks;
+- no required Redis/RabbitMQ/Kafka when the chosen ETLantic SQL provider does
+  not require them.
 
-```http
-POST /pipelines/{id}/runs
-```
+### Capability and readiness diagnostics
 
-creates a durable `PENDING` run and returns `202`.
+Provide a `shuetl doctor` command or equivalent API that reports:
 
-### Scheduled runs
+- installed and supported package versions;
+- selected deployment profile and role;
+- configured provider capabilities;
+- database connectivity and provider schema compatibility;
+- missing identity/authorization requirements;
+- whether the topology is development-only or production-supported.
 
-Support cron and interval schedules stored in the database.
+### Identity bridge
 
-### Scheduler
+Accept a host FastAPI principal dependency and adapt it into the supported
+ETLantic control-plane context. Core tests use a fake provider. AuthMate is not
+required for the MVP.
 
-A single scheduler instance creates due runs.
+### Upstream feature exposure
 
-### Local executor
+When the required ETLantic providers are configured, the mounted API exposes the
+upstream operations for definitions, validation/planning, durable submission,
+runs, schedules, events, reports, and artifacts.
 
-Execute pending runs within the ShuETL deployment.
-
-### Run history
-
-Expose:
-
-```http
-GET /runs
-GET /runs/{id}
-```
-
-with status and bounded ETLantic reports.
-
-### Result registry
-
-Persist small bounded outputs inline and external result/artifact references.
-
-### SQLite and PostgreSQL
-
-SQLite is the developer default. PostgreSQL is the production reference backend.
+ShuETL adds no alternative routes or domain models for those operations.
 
 ## MVP acceptance criteria
 
-- [ ] ShuETL can be mounted into a normal FastAPI app.
-- [ ] A trusted code-defined ETLantic pipeline can be registered and persisted.
-- [ ] Updating a pipeline creates a new immutable version.
-- [ ] A manual HTTP trigger returns a durable run ID before execution completes.
-- [ ] The local executor can claim and execute a pending run.
-- [ ] Cron and interval schedules survive application restarts.
-- [ ] Duplicate scheduled runs are prevented for the same schedule occurrence.
-- [ ] Run status survives application restart.
-- [ ] Historical runs preserve the pipeline version used.
-- [ ] ETLantic run reports can be persisted in bounded form.
-- [ ] Large pipeline outputs are represented by artifact references rather than forced into the control DB.
-- [ ] SQLite works locally.
-- [ ] PostgreSQL is covered by integration tests.
-- [ ] OpenAPI documents all public endpoints/models.
-- [ ] No arbitrary Python source can be uploaded and executed through the API.
+### Boundary
 
-## External identity compatibility requirement
+- [ ] ShuETL imports and uses ETLantic public models and protocols directly.
+- [ ] No ShuETL `Pipeline`, `Run`, `Schedule`, `Attempt`, `Event`,
+      `Artifact`, `Executor`, or retry-policy model exists.
+- [ ] ShuETL owns no control-plane database tables or migrations.
+- [ ] A source check prevents accidental copies of selected ETLantic schema
+      identifiers or domain models.
 
-- [ ] Stable authorization, service-account, credential-resolution, and audit protocols exist.
-- [ ] ShuETL can run without AuthMate in explicitly configured local/development mode.
-- [ ] AuthMate plugs in without ShuETL importing AuthMate internals.
-- [ ] Manual runs preserve the triggering principal when supplied.
-- [ ] Scheduled runs execute as an explicit service account when identity integration is enabled.
-- [ ] Credential references are persisted; resolved secrets are never stored in pipeline definitions.
-- [ ] Loss of service-account/credential authorization blocks a run before unsafe external I/O.
-- [ ] A reference integration test covers FastAPI + Hedron + AuthMate + ShuETL + ETLantic.
+### FastAPI composition
 
-## Dependency requirements
+- [ ] A normal FastAPI app can mount ShuETL under a configurable prefix.
+- [ ] A dedicated application factory exposes the same route/OpenAPI contract.
+- [ ] ETLantic operation IDs, response models, problem details, and SSE media
+      types remain intact.
+- [ ] Existing host lifespan and middleware can be composed safely.
+- [ ] No ETLantic pipeline executes in a request or FastAPI
+      `BackgroundTasks`.
 
-- [ ] APScheduler 3.11.x provides trigger/timing mechanics.
-- [ ] ShuETL's database remains authoritative for Schedule/Run state.
-- [ ] Tenacity handles bounded retry/backoff mechanics.
-- [ ] Distributed execution is not required for MVP.
-- [ ] Artifact filesystem support is optional behind fsspec/UPath.
+### Providers and compatibility
 
-## Pydantic requirements
+- [ ] The supported ETLantic release range is explicit and enforced.
+- [ ] Mismatched ETLantic package trains fail during construction or startup.
+- [ ] Missing optional providers produce typed capability/readiness diagnostics.
+- [ ] Local memory/SQLite configuration completes one documented example.
+- [ ] PostgreSQL reference configuration is covered by integration tests.
+- [ ] Provider-owned migrations are used; ShuETL does not infer DDL.
 
-- [ ] Schedule triggers use discriminated Pydantic unions.
-- [ ] Run/executor/artifact configuration uses typed Pydantic contracts.
-- [ ] Run parameters are validated through Pydantic-compatible schemas.
-- [ ] `pydantic-settings` owns operational configuration.
-- [ ] Public API models never expose SQLAlchemy/APScheduler/backend-specific types.
-- [ ] Generated JSON Schema/OpenAPI derives from the same public contracts.
+### End-to-end behavior
 
-## SQLModel requirements
+- [ ] A canonical ETLantic definition can be registered through the mounted API.
+- [ ] A manual submission returns the upstream durable record and `202` only
+      after durable acceptance.
+- [ ] Status, events, report, and artifact metadata round-trip without lossy
+      ShuETL translation.
+- [ ] A configured ETLantic schedule produces a canonical firing and durable
+      submission without a ShuETL scheduling loop.
+- [ ] Restart and idempotent-resubmission tests exercise upstream durability
+      through ShuETL.
 
-- [ ] Core persisted control-plane entities use SQLModel where appropriate.
-- [ ] Run-claiming and scheduler-lock semantics may use direct SQLAlchemy.
-- [ ] Public API/config models remain separate when persistence fields should not be exposed.
+### Security
 
-## FastAPI requirements
+- [ ] Production configuration fails closed without principal and authorizer
+      integration.
+- [ ] Development-only unauthenticated behavior requires explicit selection.
+- [ ] Authorization occurs before existence-sensitive lookup and list/event
+      filtering.
+- [ ] Secrets and credentials never enter ShuETL settings output, diagnostics,
+      logs, or API wrappers.
+- [ ] Arbitrary Python source, import paths, and package installation are not
+      accepted through ShuETL.
 
-- [ ] FastAPI lifespan starts/stops scheduler/local executor resources.
-- [ ] DI composes sessions, identity, credentials, executor, artifact, and publisher services.
-- [ ] Manual run creation returns `202 Accepted`.
-- [ ] `BackgroundTasks` is not used for pipeline execution.
-- [ ] Typed SSE run-event streaming is supported or explicitly scheduled for the first operational release.
-- [ ] Outbound webhook contracts are documented through OpenAPI where enabled.
-- [ ] Stable custom exception handlers/error envelopes exist.
-- [ ] Dependency overrides support full integration tests.
+### Operations
 
-## SQL-only infrastructure acceptance
+- [ ] `shuetl doctor` distinguishes liveness, readiness, capability, and
+      production support.
+- [ ] Gateway, scheduler, and worker roles can use the same pinned installation
+      while running as separate supervised processes.
+- [ ] The production guide documents shutdown, migrations, backup/restore,
+      rolling upgrades, and provider-specific residual risks.
 
-- [ ] ShuETL core production functionality requires only FastAPI + relational SQL.
-- [ ] SQLite supports local development.
-- [ ] PostgreSQL is the production reference backend.
-- [ ] Scheduler runs in-process.
-- [ ] LocalExecutor runs without Redis/RabbitMQ/Celery/Dramatiq.
-- [ ] SQL is authoritative for schedules, runs, coordination, and history.
-- [ ] Object storage is not required.
-- [ ] Distributed workers/brokers remain optional scale-out adapters.
+## Explicitly deferred
+
+- AuthMate and Hedron reference adapters;
+- operator UI;
+- additional ETLantic release trains;
+- cloud/external execution presets;
+- broker-backed deployment presets;
+- custom ShuETL persistence;
+- domain-level extension registries;
+- pipeline-specific convenience endpoints.
+
+## MVP stop condition
+
+If the implementation cannot remain a thin composition of
+`etlantic-fastapi` and public ETLantic providers, pause and decide whether the
+needed changes belong upstream or whether ShuETL should merge into
+`etlantic-fastapi`.

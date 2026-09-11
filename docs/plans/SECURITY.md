@@ -2,62 +2,130 @@
 
 ## Security posture
 
-ShuETL is a control plane capable of triggering data movement and therefore must be secure by default.
+ShuETL exposes a control plane capable of triggering data movement. Its security
+responsibility is to preserve and correctly compose host and ETLantic security
+boundaries—not to create a second identity or secret system.
 
-## Authentication
+## Responsibility split
 
-MVP should support pluggable FastAPI authentication rather than embedding one identity provider. Auth may be explicitly disabled for local development, but production documentation should strongly discourage unauthenticated deployment.
+### Host application or identity provider
+
+- authenticates users and workloads;
+- validates tokens, sessions, or trusted proxy identity;
+- supplies an immutable principal;
+- owns credential issuance and revocation;
+- owns TLS, top-level middleware, CORS, CSRF where applicable, and proxy trust.
+
+### ETLantic
+
+- defines control-plane principal/context and authorization contracts;
+- owns action/resource semantics for ETLantic operations;
+- enforces durable-submission and runtime trust rules;
+- owns secret references, plugin allowlists, execution envelopes, redaction,
+  artifact authorization, and audit evidence contracts.
+
+### ShuETL
+
+- adapts host identity into ETLantic's public context;
+- requires explicit security configuration for production profiles;
+- wires the authoritative ETLantic authorizer and providers;
+- preserves authorization and non-enumeration behavior through mounting;
+- validates that selected providers satisfy the deployment profile;
+- documents residual risks and secure deployment requirements.
+
+## Secure defaults
+
+Production mode must fail closed when:
+
+- no authenticated principal adapter is configured;
+- no conforming ETLantic authorizer is configured;
+- a required policy, registry, submission, event, schedule, or artifact provider
+  is unavailable;
+- package or database schema compatibility cannot be established;
+- an execution host lacks required trust/capability evidence;
+- a configured plugin or destination is not allowlisted.
+
+An unauthenticated mode may exist only under an explicit local-development
+profile. It must not be selected by missing configuration.
 
 ## Authorization
 
-Define resource-oriented permissions for pipelines, schedules, runs, artifacts, and admin operations. Internal permission checks should support fine-grained RBAC even if MVP begins with coarse viewer/operator/admin roles.
+ShuETL does not define its own permission namespace for ETLantic resources. It
+uses ETLantic's action/resource contracts and preserves service-level checks.
 
-## Pipeline-definition security
+Mounting and presentation must not weaken:
 
-If pipeline definitions can contain executable Python references, arbitrary remote creation becomes code-execution territory. MVP should prefer trusted code-registered pipelines or declarative ETLantic definitions known to be safe to deserialize. Do not accept arbitrary Python source uploads through the API.
+- authorization before resource lookup;
+- tenant/workspace/environment scoping;
+- list filtering before pagination;
+- event-stream and cursor authorization;
+- artifact metadata and access authorization;
+- cancellation, retry, replay, and administrative action checks.
+
+## Code and plugin trust
+
+ShuETL accepts only ETLantic-supported canonical definition forms and trusted
+application registration paths.
+
+The public API must not accept arbitrary Python source, import paths, package
+installation, plugin entry points, filesystem paths, or network destinations
+unless an upstream ETLantic contract explicitly permits and validates them.
+
+Mutually untrusted code must run in separate processes or containers.
 
 ## Secrets
 
-Database records contain secret references, not plaintext resolved secrets. The persistence model must never require embedding resolved credentials in pipeline definitions.
+ShuETL configuration contains secret references or provider configuration, not
+resolved pipeline credentials.
 
-## Result security
+Secret values must not enter:
 
-Artifact metadata should support classification, owner, expiration, and access-policy metadata where appropriate.
+- ShuETL settings serialization or diagnostics;
+- pipeline definitions or plans;
+- HTTP request/response models;
+- logs, events, reports, or audit metadata;
+- schedule records;
+- compatibility or readiness reports.
 
-## Auditability
-
-Audit pipeline version creation/activation, schedule changes, manual triggers, cancellations, retries, and artifact access where appropriate.
-
-## Network exposure
-
-Follow FastAPI deployment best practices: HTTPS termination, restrictive CORS, configurable docs endpoints, and explicitly trusted proxy headers.
+Resolution occurs inside the authorized ETLantic execution boundary through an
+upstream secret/resource provider.
 
 ## Denial-of-service controls
 
-Bound request sizes, inline results, stored reports, schedule frequency, concurrent run creation, and pagination.
+ShuETL configures and tests upstream bounds for:
 
-## Multi-tenancy
+- request and parameter size;
+- pagination and list filters;
+- event-stream duration and concurrency;
+- inline report/artifact previews;
+- submission rate and concurrency;
+- schedule frequency and catch-up;
+- execution capacity.
 
-True tenant isolation is out of scope for MVP, but the data model should leave a clean future path to workspace/tenant scoping.
+If the selected providers cannot enforce required production bounds, readiness
+fails.
 
-## External identity integration
+## Auditability
 
-ShuETL exposes a provider-neutral security integration surface. AuthMate is the reference implementation, not a required dependency.
+Security and operational events use ETLantic audit/event contracts. ShuETL may
+attach bounded composition metadata such as deployment role and package
+versions, but it does not maintain a competing audit log.
 
-### Authorization
+## Migration and startup safety
 
-Protected operations use generic ShuETL resource/action names such as `shuetl.pipeline`, `shuetl.schedule`, `shuetl.run`, `shuetl.artifact`, and actions like `shuetl.pipeline.run`, `shuetl.schedule.manage`, `shuetl.run.cancel`, and `shuetl.artifact.read`.
+ShuETL does not infer or automatically apply production DDL. It verifies provider
+schema compatibility and either invokes a documented provider migration command
+or stops with an actionable diagnostic.
 
-### Service-account execution
+## Security testing
 
-Scheduled/background runs execute as an explicit service account instead of inheriting credentials from the human who created a schedule. Disabled/revoked execution identities must block runs before unsafe I/O.
+The integration suite must cover:
 
-### Credential resolution
-
-Pipeline definitions persist credential references only. At runtime the service account is authorized, the credential resolver obtains temporary secret material, and ETLantic receives it only for the duration needed.
-
-ShuETL never silently falls back to application-global credentials if an explicit binding fails.
-
-### UI versus server enforcement
-
-Hedron or another UI may hide/disable controls based on authorization, but ShuETL APIs/services independently enforce the permission. Presentation state is never an authorization boundary.
+- missing and invalid identity;
+- authorization before lookup;
+- cross-scope list, cursor, SSE, and artifact access;
+- provider outage fail-closed behavior;
+- redaction across errors, logs, OpenAPI examples, events, and readiness output;
+- malicious definitions, parameters, URIs, and plugin identifiers;
+- gateway/worker role separation;
+- incompatible package and database schema rejection.

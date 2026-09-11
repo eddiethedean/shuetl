@@ -2,72 +2,100 @@
 
 ## Principle
 
-ShuETL should use Pydantic as the canonical public contract layer for pipeline-control metadata and API boundaries.
+Pydantic models follow semantic ownership.
 
-> **Pydantic is the contract layer; SQLAlchemy is the persistence layer; ETLantic owns pipeline semantics.**
+> **ETLantic models describe ETLantic; ShuETL models describe ShuETL
+> composition.**
 
-## Use Pydantic for
+## Reuse ETLantic models
 
-- Pipeline records exposed by ShuETL;
-- PipelineVersion metadata;
-- Schedule definitions;
-- trigger configurations;
-- Run and RunAttempt records;
-- artifact metadata;
-- executor configuration;
-- retry/concurrency/misfire policies;
-- identity-provider references;
-- API requests/responses;
-- event payloads;
-- application settings;
-- JSON Schema/OpenAPI generation.
+ShuETL uses the public Pydantic-compatible contracts supplied by ETLantic and
+`etlantic-fastapi` for:
 
-## Discriminated unions
+- definitions and revisions;
+- validation and plans;
+- submissions, runs, attempts, and recovery;
+- schedules and firings;
+- reports, events, diagnostics, and artifacts;
+- control-plane identity and authorization context;
+- executor/provider configuration where publicly exposed upstream.
 
-Use tagged unions for extensible configuration:
+ShuETL must not subclass or copy these models solely to rename fields, add a
+`shuetl` schema name, or make them easier to serialize.
 
-```python
-ScheduleTrigger = CronTrigger | IntervalTrigger | DateTrigger
-ExecutorConfig = LocalExecutorConfig | DramatiqExecutorConfig | CeleryExecutorConfig
-ArtifactLocation = InlineArtifact | FileArtifact | ExternalArtifact
-```
+## ShuETL models
 
-Each union should use stable discriminator fields.
+ShuETL may use Pydantic for:
 
-## Validation
+- `ShuETLSettings`;
+- deployment-profile and role selection;
+- provider configuration references;
+- FastAPI mount options;
+- compatibility reports;
+- capability and readiness diagnostics;
+- optional adapter settings.
 
-Use Pydantic validators for cron/trigger payload structure, mutually exclusive fields, version-policy invariants, retry limits, concurrency policy, artifact bounds, parameter schemas, and service-account/credential reference shape.
+These models should be small, versioned when externally persisted, and free of
+resolved credentials.
 
-Do not scatter these checks across route handlers.
+## Configuration
 
-## Pipeline parameters
+`pydantic-settings` may load environment, file, or explicitly supplied
+configuration for ShuETL integration concerns.
 
-Allow pipeline/run parameters to be described by Pydantic models or JSON Schema-compatible contracts.
+Configuration must:
 
-ShuETL should validate run parameters before creating/executing a run.
+- distinguish missing values from deliberate local defaults;
+- reject development-only settings in production profiles;
+- avoid logging database credentials or secret values;
+- validate mutually exclusive provider choices;
+- leave ETLantic profile, plan, retry, schedule, and runtime validation to
+  ETLantic.
 
-## Settings
+## Validation boundary
 
-Use `pydantic-settings` for database URLs, scheduler configuration, executor settings, artifact backends, API prefixes, and operational limits.
+ShuETL validates composition facts, including:
+
+- compatible package versions;
+- required provider presence;
+- deployment-role consistency;
+- identity/authorizer requirements;
+- database/provider configuration shape;
+- route-prefix and mounting conflicts.
+
+It does not repeat validation already performed by ETLantic. Upstream validation
+errors and diagnostics pass through without translation into new error codes.
 
 ## Serialization
 
-Persist structured snapshots using stable Pydantic serialization where appropriate, while avoiding coupling database schema design to raw serialized model blobs when relational structure is needed.
+ShuETL configuration and diagnostic serialization must be deterministic and
+redacted.
 
-## TypeAdapter
+ETLantic records use their upstream serializers and schema identifiers. Avoid
+`model_dump()` followed by validation into a look-alike ShuETL class; that
+creates an unnecessary compatibility boundary.
 
-Use `TypeAdapter` for validating plugin/provider payloads and adapter results without unnecessary wrapper models.
+## OpenAPI
 
-## JSON Schema
+OpenAPI schemas for ETLantic routes are generated from
+`etlantic-fastapi` models.
 
-Expose Pydantic-generated JSON Schema for schedule configuration, run parameters, executor configuration, and artifact metadata where useful to UIs/clients.
+ShuETL should add no shadow schemas. A compatibility test compares the mounted
+OpenAPI surface with the authoritative adapter, allowing only documented prefix,
+tag, and host-level additions.
 
-## Boundary with ETLantic
+## Persistence
 
-ShuETL must not duplicate ETLantic's Pydantic contract semantics. Where ETLantic already provides authoritative Pydantic-compatible records, ShuETL should consume or wrap them rather than re-implement validation.
+Pydantic models are not a reason for ShuETL to own persistence tables.
+ETLantic's selected provider controls persistence mapping and migrations.
 
-## SQLModel relationship
+## Compatibility testing
 
-Where a ShuETL entity is both a typed domain record and a relational row, SQLModel should be the first choice.
+Tests should prove:
 
-Do not merge persistence and API models when doing so would leak internal scheduler/executor fields or make versioned public contracts harder to evolve.
+- ETLantic objects retain their schema identifiers through ShuETL;
+- no field is lost or reinterpreted;
+- invalid upstream records fail in the upstream layer;
+- ShuETL settings errors are clearly distinguished from ETLantic domain
+  diagnostics;
+- serialized diagnostics never expose secrets.

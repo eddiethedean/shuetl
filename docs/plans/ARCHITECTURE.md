@@ -1,443 +1,280 @@
 # ShuETL Architecture
 
-## High-level architecture
+## Architectural statement
+
+ShuETL is an application integration layer over ETLantic's public control-plane
+and FastAPI packages.
+
+It must not become a second semantic layer between FastAPI and ETLantic.
 
 ```text
-                   ┌─────────────────────────┐
-                   │       FastAPI App       │
-                   │                         │
-                   │ REST / OpenAPI / Auth   │
-                   └────────────┬────────────┘
-                                │
-                     ┌──────────▼──────────┐
-                     │   ShuETL Service    │
-                     │                    │
-                     │ Pipeline Registry  │
-                     │ Version Manager    │
-                     │ Schedule Manager   │
-                     │ Run Manager        │
-                     │ Result Registry    │
-                     └───────┬─────┬──────┘
-                             │     │
-                    ┌────────▼┐   ┌▼────────────┐
-                    │Database │   │ Scheduler    │
-                    │         │   │              │
-                    │Metadata │   │ cron/interval│
-                    └─────────┘   └──────┬───────┘
-                                         │
-                               ┌─────────▼─────────┐
-                               │   Run Executor    │
-                               │                   │
-                               │ Load version      │
-                               │ Preflight         │
-                               │ ETLantic run      │
-                               │ Persist report    │
-                               └─────────┬─────────┘
-                                         │
-                               ┌─────────▼─────────┐
-                               │     ETLantic      │
-                               │                   │
-                               │ contracts         │
-                               │ planning          │
-                               │ execution         │
-                               │ reports           │
-                               └───────────────────┘
+Host FastAPI application
+        │
+        ▼
+ShuETL composition facade
+  configuration · provider wiring · capability/readiness checks
+        │
+        ▼
+etlantic-fastapi
+  authoritative routes · HTTP schemas · errors · SSE
+        │
+        ▼
+ETLantic public contracts and services
+  definitions · plans · submissions · schedules · events · reports
+        │
+        ├───────────────┐
+        ▼               ▼
+ETLantic stores     ETLantic execution roles
+memory / SQLModel   scheduler / worker / external runtime
 ```
 
-## Core components
+## Ownership rule
 
-### FastAPI application
+A feature exposed through ShuETL may be implemented by ETLantic. “ShuETL
+supports” means ShuETL selects, configures, exposes, documents, and tests that
+upstream capability; it does not imply a ShuETL implementation.
 
-Owns the HTTP lifecycle and exposes ShuETL routers.
+Before adding a ShuETL domain abstraction, answer:
 
-Possible composition:
+1. Does ETLantic already define the model, protocol, or behavior?
+2. Could the missing capability be added to an ETLantic provider package?
+3. Is the proposed code only FastAPI/application composition?
+
+Only the third category belongs directly in ShuETL. An exception requires an
+ADR describing why upstream reuse is impossible and how semantic drift is
+prevented.
+
+## Components
+
+### ShuETL facade
+
+The public ShuETL object should make composition concise while keeping providers
+explicit:
 
 ```python
 from fastapi import FastAPI
-from shuetl import ShuETL
+from shuetl import ShuETL, ShuETLSettings
 
-app = FastAPI()
+integration = ShuETL.from_settings(
+    ShuETLSettings.from_env(),
+    principal_dependency=current_principal,
+)
 
-shuetl = ShuETL(database_url="postgresql://...")
-app.include_router(shuetl.router)
+app = FastAPI(lifespan=integration.lifespan)
+integration.mount(app)
 ```
 
-A convenience factory may also be provided:
+The exact constructor remains an ADR. Regardless of syntax, the facade owns:
 
-```python
-app = shuetl.create_app()
-```
+- validated ShuETL integration settings;
+- construction or acceptance of ETLantic provider instances;
+- mounting the authoritative `etlantic-fastapi` router;
+- composition with a host lifespan without silently replacing it;
+- readiness and capability reporting;
+- deployment-role selection;
+- compatibility diagnostics.
 
-### Pipeline registry
+It does not own ETLantic records or execution semantics.
 
-Responsible for:
+### `etlantic-fastapi`
 
-- pipeline identity;
-- pipeline metadata;
-- version lookup;
-- active-version selection;
-- enabling/disabling pipelines;
-- resolving persisted ETLantic definitions.
+`etlantic-fastapi` remains authoritative for:
 
-### Pipeline version manager
+- ETLantic HTTP route paths and operation IDs;
+- request and response schemas;
+- durable-accept response semantics;
+- problem-detail/error representation;
+- authorization placement;
+- SSE event and resume behavior;
+- API-level idempotency and optimistic-concurrency requirements.
 
-Pipeline definitions must be immutable once used by a run.
+ShuETL may select routes, add a mount prefix or tags, and configure dependencies.
+It must not copy route implementations.
 
-A change creates a new version.
+### ETLantic contracts and services
+
+ETLantic remains authoritative for:
+
+- pipeline definitions, revisions, and fingerprints;
+- validation and resolved plans;
+- profiles, bindings, and plugin capability decisions;
+- submissions, attempts, leases, fencing, effects, and recovery;
+- schedules and logical firing identity;
+- retries, cancellation, timeouts, replay, and repair;
+- reports, events, diagnostics, and artifact references;
+- control-plane authorization context and provider protocols.
+
+ShuETL consumes these public contracts directly.
+
+### Providers
+
+ShuETL configures ETLantic provider implementations. Initial profiles should use:
+
+- ETLantic memory providers for tests and explicit local demos;
+- `etlantic-sqlmodel` reference stores for relational persistence;
+- PostgreSQL as the production reference database;
+- SQLite as a local-development option where supported;
+- ETLantic scheduler/worker roles or a supported external execution host.
+
+Provider migrations and schema compatibility remain owned by the provider
+package.
+
+### Host application
+
+The host owns:
+
+- authentication and principal creation;
+- top-level middleware, CORS, trusted proxies, and TLS termination;
+- application-wide lifespan composition;
+- deployment supervision and process scaling;
+- selection of identity, secrets, logging, and observability integrations;
+- business-specific pipeline definitions and runtime profiles.
+
+ShuETL supplies adapters and documented integration points without taking over
+the host.
+
+## Core flows
+
+### Definition registration
 
 ```text
-customers
-  v1
-  v2
-  v3  <- active
-```
-
-Schedules reference an active or pinned version according to explicit policy.
-
-### Schedule manager
-
-Stores recurring schedules durably.
-
-A schedule should contain:
-
-- target pipeline;
-- version policy;
-- cron/interval/date trigger;
-- timezone;
-- enabled state;
-- misfire policy;
-- concurrency policy;
-- optional parameter payload.
-
-### Scheduler
-
-The scheduler converts due schedules into durable run records.
-
-The scheduler does **not** directly execute pipeline semantics.
-
-```text
-Schedule due
-    ↓
-Create Run(PENDING)
-    ↓
-Executor claims run
-```
-
-This split prevents scheduling from being coupled to HTTP or pipeline execution.
-
-### Run manager
-
-Owns the run lifecycle:
-
-```text
-PENDING
-CLAIMED
-RUNNING
-SUCCEEDED
-FAILED
-CANCELLED
-```
-
-Potential future states:
-
-```text
-RETRY_WAIT
-TIMED_OUT
-SKIPPED
-BLOCKED
-```
-
-### Executor
-
-Loads an immutable pipeline version and executes it through ETLantic.
-
-Conceptual flow:
-
-```text
-Claim run
-  ↓
-Load pipeline version
-  ↓
-Resolve execution profile
-  ↓
-Optional preflight
-  ↓
-ETLantic.run(...)
-  ↓
-Persist run report
-  ↓
-Register result artifacts
-  ↓
-Finalize run
-```
-
-### Persistence layer
-
-Use SQLAlchemy 2.x as the default ORM/data-access layer.
-
-Support:
-
-- SQLite for local development;
-- PostgreSQL as the production reference backend.
-
-Database access should remain behind repository/service interfaces so a future backend can be added without changing public ShuETL APIs.
-
-## Deployment modes
-
-### Mode 1 — single service
-
-```text
-1 process
-FastAPI
-Scheduler
-Executor
-Database
-```
-
-Best for development and small deployments.
-
-### Mode 2 — replicated API with single scheduler leader
-
-```text
-FastAPI replica 1
-FastAPI replica 2
-FastAPI replica 3
-
-        │
-        ▼
-shared DB
-
-one elected scheduler
-one or more executors
-```
-
-Database-backed leases or advisory locks prevent duplicate scheduling.
-
-### Mode 3 — separated control and execution
-
-```text
-FastAPI control plane
+Application-defined ETLantic PipelineDefinition
         ↓
-durable run queue
+ShuETL facade validates configured capability
         ↓
-worker pool
+ETLantic definition/registry service
         ↓
-ETLantic
+ETLantic revision and fingerprint persisted by selected provider
 ```
 
-This must be a later extension, not a prerequisite for MVP.
+ShuETL never invents a second version or fingerprint.
 
-## Architectural rule
-
-The public run/schedule/pipeline model must not depend on whether execution is local or distributed.
-
-## External identity and credential provider boundary
-
-ShuETL must not own a general-purpose authentication framework.
-
-Instead, it consumes generic security protocols supplied by an external provider.
-
-Conceptual contracts:
-
-```python
-class AuthorizationProvider(Protocol):
-    async def authorize(
-        self,
-        principal: PrincipalRef,
-        action: str,
-        resource: ResourceRef,
-    ) -> AuthorizationDecision: ...
-
-class ServiceAccountProvider(Protocol):
-    async def get_service_account(
-        self,
-        service_account_id: str,
-    ) -> ServiceAccountRef: ...
-
-class CredentialResolver(Protocol):
-    async def resolve(
-        self,
-        principal: PrincipalRef,
-        credential_id: str,
-    ) -> ResolvedCredential: ...
-
-class AuditSink(Protocol):
-    async def record(self, event: SecurityAuditEvent) -> None: ...
-```
-
-ShuETL core should depend on these stable protocols, not AuthMate ORM or implementation types.
-
-### Reference composition
+### Manual submission
 
 ```text
-Hedron
-  presentation
-      │
-      ▼
-External Identity Provider
-  authentication
-  authorization
-  service accounts
-  credentials
-      │
-      ▼
-ShuETL
-  pipelines
-  schedules
-  runs
-      │
-      ▼
-ETLantic
+HTTP request
+  ↓ host authenticates principal
+ETLantic authorization context
+  ↓
+etlantic-fastapi submit route
+  ↓
+ETLantic durable acceptance transaction
+  ↓
+202 with canonical ETLantic submission/run record
+  ↓
+ETLantic worker or external execution host
 ```
 
-The reference implementation is AuthMate, but it must remain optional.
+Returning `202 Accepted` requires the upstream durable store to have accepted
+the work. ShuETL does not return a synthetic success while work is only in
+memory.
 
-### Execution identity
-
-Every production-capable pipeline should be able to declare an execution service account.
+### Scheduled submission
 
 ```text
-Human user
-  ↓ authorized to trigger
-Pipeline
-  ↓ executes as
-Service account
-  ↓ authorized to use
-Credential
+ETLantic schedule revision becomes due
+        ↓
+ETLantic scheduler creates one idempotent firing
+        ↓
+ETLantic durable submission
+        ↓
+ETLantic worker/execution host
 ```
 
-The triggering user and execution identity are distinct concepts and must both be persisted where applicable.
+ShuETL supplies configuration and process-entry integration. It does not
+recalculate trigger semantics or create its own run record.
 
-## Ecosystem composition principle
+## Capability and readiness model
 
-> **Independent by default, composable by contract.**
+ShuETL should expose a typed composition report that distinguishes:
 
-ShuETL is an independently deployable FastAPI-native package. It may compose with Hedron, AuthMate, or other FastAPI packages, but it must not require those application packages in core.
+- configured;
+- available;
+- ready;
+- unavailable because an optional provider is absent;
+- incompatible because package versions or capabilities do not align;
+- unsafe for the selected deployment profile.
 
-Cross-package interoperability must use:
+Capability discovery must not turn an absent upstream feature into an implicit
+fallback implementation.
 
-- public FastAPI routers and dependency injection;
-- stable Python protocols;
-- generic resource/principal references;
-- optional extras or adapter packages;
-- documented integration contracts.
+## Deployment profiles
 
-The full stack may be a supported reference deployment:
+### Local development
 
 ```text
-FastAPI
-├── Hedron
-├── AuthMate
+one process
+├── FastAPI
 ├── ShuETL
-└── ETLantic
+├── ETLantic in-process development scheduler/worker
+└── memory or SQLite providers
 ```
 
-without changing the package boundary that Hedron, AuthMate, and ShuETL are peers.
+This profile optimizes for setup speed. It must be labeled as development and
+must not imply crash isolation or multi-process safety.
 
-A proposed feature is an architectural smell if it requires ShuETL core to import Hedron, depend on AuthMate implementation internals, or make another application package mandatory when a public protocol can express the same contract.
-
-## Ecosystem composition rule
-
-**Independent by default, composable by contract.**
-
-ShuETL must not create direct core dependencies on Hedron or AuthMate. Integration should occur through:
-
-- FastAPI routers and dependency injection;
-- stable Python protocols;
-- generic principal/resource references;
-- optional adapters/extras;
-- shared compatibility tests.
-
-The full Hedron + AuthMate + ShuETL + ETLantic stack is a supported composition, not a required installation shape.
-
-If a future feature requires ShuETL core to import Hedron or provider-specific AuthMate implementation types, that should be treated as an architectural smell and reviewed through an ADR.
-
-## Dependency boundary
+### Production SQL-only reference
 
 ```text
-ShuETL domain/services
-   ├── APScheduler timing adapter
-   ├── SQLAlchemy persistence
-   ├── Tenacity retry mechanics
-   ├── fsspec/UPath artifact adapter
-   └── optional worker adapters
-       ├── Dramatiq
-       └── Celery
+same version-pinned application image
+├── gateway role: FastAPI + ShuETL + etlantic-fastapi
+├── scheduler role: ETLantic scheduler service
+├── worker role: ETLantic worker service
+└── PostgreSQL: selected ETLantic relational stores
 ```
 
-The public schedule/run/executor model remains stable regardless of implementation backend.
+No broker is required when the selected ETLantic durable provider supports SQL
+coordination. Gateway and execution roles are nevertheless separate supervised
+processes.
 
-## Pydantic contract layer
-
-ShuETL should maintain:
+### External execution
 
 ```text
-FastAPI
-  ↓
-Pydantic ShuETL contracts
-  ↓
-ShuETL services
-  ↓
-SQLAlchemy / scheduler / executor adapters
-  ↓
-ETLantic
+FastAPI + ShuETL
+        ↓
+ETLantic durable submission/provider contract
+        ↓
+supported external runtime or orchestrator
 ```
 
-Pydantic defines ShuETL's public control-plane records and configuration. ETLantic remains authoritative for pipeline semantics.
+Public ETLantic submission and report semantics remain unchanged.
 
-## SQLModel-first persistence strategy
+## Identity integration
 
-Use **SQLModel** by default where it cleanly unifies Pydantic domain models with relational persistence.
+The host resolves an authenticated principal. A ShuETL adapter converts the host
+identity into ETLantic's public principal/control-plane context and injects the
+configured ETLantic authorizer.
 
-> **Prefer SQLModel for ordinary persisted domain entities; use SQLAlchemy directly for advanced persistence mechanics.**
+AuthMate may be a reference adapter when implemented, but neither ShuETL nor
+ETLantic core depends on AuthMate ORM or token types.
 
-SQLAlchemy remains an underlying dependency and escape hatch for:
+## Migration boundary
 
-- complex joins/window queries;
-- explicit transaction/control-flow needs;
-- advisory locks / `SELECT ... FOR UPDATE`;
-- bulk operations;
-- engine/session configuration;
-- backend-specific features;
-- migration internals;
-- performance-critical paths that SQLModel does not express cleanly.
+ShuETL does not generate migrations for ETLantic-owned tables and does not
+subclass provider persistence models to add application columns.
 
-Alembic remains the migration tool.
+- ETLantic provider packages own their schemas and migrations.
+- Host applications own host-specific tables and migrations.
+- ShuETL may run read-only migration compatibility checks and invoke documented
+  provider upgrade APIs.
+- Production startup must fail clearly on an incompatible schema; it must not
+  auto-generate DDL from runtime model inspection.
 
-Do not force SQLModel into areas where a plain Pydantic model or direct SQLAlchemy Core/ORM model is clearer.
+## Packaging boundary
 
-## FastAPI runtime composition
+Keep direct ShuETL dependencies narrow. ETLantic implementation dependencies
+such as scheduling, retry, SQLModel, Alembic, and filesystem libraries should
+normally arrive through the selected ETLantic packages rather than being used
+directly by ShuETL.
 
-FastAPI lifespan starts/stops ShuETL's scheduler/local executor resources.
+## Architectural test
 
-DI composes sessions, identity, credentials, executors, artifact stores, and publishers.
+A valid ShuETL feature should still make sense when phrased as:
 
-Durable runs are explicitly decoupled from HTTP request lifetimes.
+> “Configure or expose ETLantic capability X through FastAPI.”
 
-## Infrastructure baseline
+If it instead reads:
 
-The default deployment architecture is:
+> “Define ShuETL's version of ETLantic capability X,”
 
-```text
-FastAPI application
-        +
-relational SQL database
-```
-
-No other service is required for core functionality.
-
-External infrastructure is always optional and must sit behind public provider/adapter contracts.
-
-Examples of optional extensions:
-
-```text
-Redis / RabbitMQ
-Kafka
-OpenSearch / Elasticsearch
-S3 / cloud object stores
-Vault / cloud secret managers
-external schedulers
-separate worker fleets
-```
-
-A future feature that makes one of these mandatory for normal operation requires an explicit architectural review and should be presumed to violate the ecosystem baseline.
+the feature is outside the intended boundary.

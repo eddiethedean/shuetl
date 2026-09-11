@@ -2,95 +2,130 @@
 
 ## Principle
 
-ShuETL should use FastAPI for API composition, DI, lifecycle, OpenAPI, event streaming, and testing while keeping durable pipeline execution outside request/background-task lifetimes.
+FastAPI is ShuETL's application integration substrate.
+`etlantic-fastapi` remains the authoritative implementation of ETLantic HTTP
+semantics.
 
-## Required FastAPI features
+## Composition, not route duplication
 
-### APIRouter
-Expose pipeline, schedule, run, artifact, and operational routers as composable modules.
+ShuETL uses the supported `etlantic-fastapi` application/router APIs. It does
+not copy route functions or build alternate Pydantic request/response models.
 
-### Dependency injection
-Use `Depends`/`Annotated` for:
+ShuETL may:
 
-- SQLModel/SQLAlchemy sessions;
-- identity/authorization provider;
-- credential resolver;
-- executor;
-- artifact store;
-- metadata publisher;
-- settings and request-scoped services.
+- mount the router under a configurable prefix;
+- select a documented upstream route preset;
+- inject supported provider instances;
+- connect host principal/context dependencies;
+- install or document required exception handlers;
+- compose readiness checks and lifespan resources.
 
-FastAPI dependency injection is the preferred runtime composition mechanism.
+## Existing application mode
 
-### Security()
-Use FastAPI `Security()` where scopes map cleanly to permissions such as `shuetl.pipeline.run`, while preserving service-level resource authorization.
-
-### Router-level dependencies
-Use broad router dependencies for authenticated/operator/admin surfaces.
-
-### yield dependencies
-Use `yield` dependencies for request-scoped sessions and short-lived external resources.
-
-### Lifespan
-FastAPI lifespan owns startup/shutdown of:
-
-- APScheduler timing engine;
-- local run-claim/executor loops;
-- long-lived provider clients;
-- optional worker/backend coordination resources.
-
-Do not use legacy startup-event patterns as the primary design.
-
-### SSE
-Provide first-class Server-Sent Events for run updates, e.g.:
-
-```http
-GET /runs/{run_id}/events
+```python
+app = FastAPI(lifespan=integration.lifespan)
+integration.mount(app)
 ```
 
-Events may include:
+Requirements:
 
-```text
-run.claimed
-run.started
-preflight.completed
-drift.detected
-artifact.registered
-run.succeeded
-run.failed
+- do not replace an existing host lifespan silently;
+- do not install duplicate middleware or exception handlers;
+- preserve host application state outside the ShuETL namespace;
+- detect conflicting prefixes or operation IDs;
+- support FastAPI dependency overrides in tests.
+
+The implementation should offer a documented lifespan-composition helper rather
+than requiring applications to copy internal startup logic.
+
+## Dedicated application mode
+
+```python
+app = integration.create_app()
 ```
 
-Use Pydantic event models and FastAPI's SSE response support.
+The factory owns the whole FastAPI application and may install recommended
+handlers and lifespan behavior. Its ETLantic routes and OpenAPI models must match
+existing-application mode.
 
-### OpenAPI webhooks
-Use FastAPI OpenAPI webhook declarations to document outbound notifications such as:
+## Dependency injection
 
-```text
-run.completed
-run.failed
-drift.detected
-pipeline.health.changed
-```
+FastAPI dependencies connect:
 
-Delivery remains a ShuETL concern; FastAPI documents the contract.
+- host-authenticated principal to ETLantic control-plane context;
+- ETLantic authorizer and stores to `etlantic-fastapi`;
+- request-scoped database sessions where required by the selected provider;
+- host logging/correlation context to supported upstream hooks.
 
-### BackgroundTasks
-`BackgroundTasks` may be used only for small post-response work such as notifications, audit writes, or cache invalidation.
+ShuETL dependencies must not become pipeline runtime resources or pass
+request-scoped sessions into ETLantic transformations.
 
-It must **not** execute ETLantic pipelines or own durable run execution.
+## Lifespan
 
-### Exception handling
-Use a stable ShuETL error envelope and custom exception handlers.
+ShuETL lifespan may:
 
-### OpenAPI
-Fully describe normal and error responses, `202 Accepted` run creation, security requirements, SSE endpoints, and webhook contracts.
+- initialize and close provider clients;
+- validate package and schema compatibility;
+- publish readiness state;
+- start explicitly selected local-development roles;
+- compose upstream lifespan behavior.
 
-### Testing
-Use dependency overrides for fake executors, identity providers, credential resolvers, artifact stores, publishers, and sessions.
+Production gateway lifespan must not start pipeline execution work unless an
+upstream provider explicitly qualifies that topology. The reference production
+profile runs scheduler and worker roles separately.
 
-## Do not misuse
+## Background tasks
 
-- No pipeline execution inside `BackgroundTasks`.
-- No request lifetime owns a long-running pipeline.
-- Prefer SSE over WebSockets for one-way run-status streams.
-- Do not let APScheduler/backend-specific objects leak into API models.
+FastAPI `BackgroundTasks` never owns ETLantic pipeline execution or durable
+dispatch. Small host-level response follow-up work may use it only when failure
+does not affect durable control-plane truth.
+
+## OpenAPI
+
+ShuETL preserves upstream:
+
+- operation IDs;
+- request/response schemas;
+- problem details;
+- security requirements;
+- `202 Accepted` semantics;
+- SSE media types and resume inputs.
+
+Tests compare the mounted schema with the supported
+`etlantic-fastapi` contract.
+
+## Streaming
+
+ShuETL exposes upstream SSE behavior and documents:
+
+- proxy buffering configuration;
+- keep-alives and timeouts;
+- connection limits;
+- graceful gateway shutdown;
+- authentication expiry and reauthorization;
+- cursor retention gaps.
+
+ShuETL does not implement a second event stream protocol.
+
+## Health and readiness
+
+Use upstream health/readiness routes when available. ShuETL contributes provider
+and compatibility signals through supported hooks.
+
+Liveness means the gateway process is running. Readiness means the configured
+profile can safely accept the operations it advertises.
+
+## Testing
+
+The FastAPI suite covers:
+
+- mounting and dedicated application modes;
+- prefixed deployment and reverse-proxy behavior;
+- lifespan composition and cleanup;
+- dependency overrides;
+- principal/context propagation;
+- authorization and non-enumeration;
+- OpenAPI parity;
+- SSE resume behavior;
+- missing/incompatible provider readiness;
+- confirmation that no execution runs in request or background-task lifetimes.

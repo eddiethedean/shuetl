@@ -2,142 +2,106 @@
 
 ## Purpose
 
-ShuETL must cleanly integrate with standalone FastAPI-native identity and credential systems without embedding identity management into ShuETL core.
+ShuETL connects a host application's authentication system to ETLantic's public
+control-plane authorization and execution-context contracts.
 
-AuthMate is the reference integration.
+It does not define a competing principal, authorization, service-account,
+credential, secret, or audit domain.
 
-## Core boundary
-
-```text
-Identity provider
-  authentication
-  authorization
-  service accounts
-  credentials
-  audit
-        │
-        ▼
-ShuETL
-  pipeline registry
-  versions
-  schedules
-  runs
-  artifacts
-        │
-        ▼
-ETLantic
-```
-
-## Required provider contracts
-
-ShuETL should define or depend on minimal public protocols for:
-
-- `PrincipalRef`
-- `ResourceRef`
-- `AuthorizationDecision`
-- `AuthorizationProvider`
-- `ServiceAccountProvider`
-- `CredentialResolver`
-- `AuditSink`
-
-These contracts must not expose provider-specific ORM types.
-
-## Resource namespace
-
-ShuETL owns permission/resource names such as:
+## Integration flow
 
 ```text
-shuetl.pipeline
-shuetl.pipeline_version
-shuetl.schedule
-shuetl.run
-shuetl.artifact
+Host identity system
+  authenticates request
+        ↓
+ShuETL identity adapter
+  maps trusted claims to ETLantic principal/context
+        ↓
+ETLantic authorizer
+  evaluates ETLantic action and resource
+        ↓
+etlantic-fastapi route/service
+        ↓
+ETLantic durable submission
+        ↓
+ETLantic execution boundary
+  resolves authorized runtime resources/secrets
 ```
 
-and action names such as:
+## Adapter contract
 
-```text
-shuetl.pipeline.read
-shuetl.pipeline.run
-shuetl.schedule.manage
-shuetl.run.cancel
-shuetl.artifact.read
-```
+ShuETL should accept the principal dependency and context/authorizer interfaces
+published by the supported `etlantic-fastapi` and ETLantic release.
 
-The identity provider evaluates these names but does not define ShuETL semantics.
+A host-specific adapter may:
 
-## Manual execution
+- validate that required issuer/subject identity is present;
+- map immutable host claims into ETLantic principal fields;
+- select tenant/workspace/environment only from server-authoritative membership
+  or routing information;
+- add correlation information;
+- reject unsupported or ambiguous identity.
 
-```text
-User
-  ↓ authenticate
-Authorize shuetl.pipeline.run
-  ↓
-Create Run(triggering_principal=user)
-  ↓
-Resolve pipeline service account
-  ↓
-Authorize credential use
-  ↓
-Resolve secrets
-  ↓
-Execute ETLantic
-```
+It must not:
 
-## Scheduled execution
+- trust caller-provided tenant or workspace identifiers without authorization;
+- serialize provider ORM objects into ETLantic records;
+- reinterpret an ETLantic authorization decision;
+- resolve pipeline secrets in the gateway;
+- silently substitute an application-global credential.
 
-```text
-Schedule
-  ↓
-Run
-  ↓
-Pipeline service account
-  ↓
-Credential authorization
-  ↓
-Secret resolution
-  ↓
-ETLantic
-```
+## Triggering and execution identities
 
-A schedule must never inherit a creator's credentials.
+ETLantic's canonical records distinguish the principal requesting a submission
+from the workload identity or service account used during execution.
 
-## Hedron composition
+ShuETL preserves both identities through the FastAPI boundary. It does not
+define new database fields or credential-binding semantics for them.
 
-Hedron may consume the same external provider to shape UI presentation.
+Scheduled work must never inherit the credentials of the user who created the
+schedule.
 
-For example, a Run button may be hidden when `shuetl.pipeline.run` is denied, while ShuETL independently enforces that permission at the API/service layer.
+## AuthMate
 
-This yields:
+AuthMate is a potential reference identity and credential adapter, not a core
+dependency and not an MVP prerequisite while it remains unimplemented.
 
-```text
-Hedron        -> presentation
-AuthMate      -> identity/security
-ShuETL        -> pipeline operations
-ETLantic      -> pipeline execution
-```
+An eventual AuthMate adapter must depend only on public APIs from both projects:
 
-all within one FastAPI deployment if desired.
+- AuthMate authenticates and supplies trusted principal/membership information;
+- the adapter constructs ETLantic control-plane context;
+- ETLantic authorizes ETLantic operations;
+- ETLantic runtime providers resolve execution credentials through an approved
+  integration contract.
 
-## Security rules
+ShuETL core must not import AuthMate persistence, token, or internal service
+types.
 
-- no resolved secrets in pipeline definitions;
-- no provider-specific identity objects serialized into ETLantic plans;
-- no UI-only authorization;
-- no silent fallback to global credentials;
-- deny/block on missing required security evidence in production;
-- secret resolution occurs as late as practical;
-- credential use is auditable;
-- disabling a service account or credential affects future runs immediately according to provider policy.
+## Other identity systems
 
-## Compatibility matrix
+The same boundary should support host implementations based on OIDC/OAuth2,
+sessions, API gateways, workload identity, or application-defined FastAPI
+dependencies.
 
-Required:
+ShuETL should publish adapter examples rather than embed a general-purpose
+identity provider.
 
-```text
-ShuETL standalone/local
-ShuETL + external identity provider
-ShuETL + AuthMate
-Hedron + ShuETL + AuthMate
-Hedron + ShuETL + AuthMate + ETLantic
-```
+## Local development
+
+Local unauthenticated or static-principal behavior must be explicit in
+`ShuETLSettings`, labeled development-only, and rejected by production
+readiness checks.
+
+## Compatibility testing
+
+Core MVP tests use a small fake host principal dependency and the supported
+ETLantic authorizer contract.
+
+Optional integration suites may later cover:
+
+- ShuETL + AuthMate;
+- Hedron + ShuETL + AuthMate;
+- the full Hedron + AuthMate + ShuETL + ETLantic application.
+
+Those suites validate adapters; they do not transfer ETLantic authorization
+semantics into ShuETL.

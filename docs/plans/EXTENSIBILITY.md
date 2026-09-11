@@ -2,169 +2,144 @@
 
 ## Principle
 
-> **Useful defaults, extensible by contract.**
+ShuETL is extensible at the composition boundary.
 
-Every major ShuETL control-plane capability should expose a stable, typed extension surface where practical. Applications may extend supported persistence metadata, pipeline/run parameters, schedule and executor configuration, artifacts, events, publishers, policies, and lifecycle behavior without forking ShuETL.
+> **Extend how ETLantic is configured and hosted; use ETLantic extension
+> contracts for what ETLantic means and does.**
 
-> **Extensions must not weaken durable execution invariants implicitly.**
+Broad domain-level extensibility in ShuETL would create a second plugin system
+and is intentionally out of scope.
 
-ShuETL remains authoritative for durable run identity/state transitions, schedule/run version binding, idempotency, concurrency policy, authorization boundaries, and secret-reference semantics.
+## Supported composition extensions
 
-## Extensible SQLModel metadata
+### Provider factories
 
-Expose non-table SQLModel bases for selected entities where host applications commonly need domain metadata.
-
-Potential supported bases:
-
-```text
-Pipeline metadata
-Schedule metadata
-Run metadata
-ResultArtifact metadata
-```
-
-Conceptually:
+Applications may register or supply factories that construct implementations of
+public ETLantic provider protocols from ShuETL settings.
 
 ```python
-class Pipeline(ShuETLPipelineBase, table=True):
-    __tablename__ = "shuetl_pipelines"
-
-    owning_team: str | None = None
-    business_domain: str | None = None
-```
-
-Do not make every internal coordination table subclassable. Run-claim leases, scheduler locks, migration state, and other correctness-critical internals remain ShuETL-owned.
-
-## Managed Alembic migrations
-
-As with AuthMate, developers should not need the Alembic CLI for normal supported ShuETL model extensions.
-
-Expose a schema manager such as:
-
-```python
-shuetl.schema.status()
-shuetl.schema.plan()
-shuetl.schema.check()
-shuetl.schema.upgrade()
-```
-
-and optional safe startup migration:
-
-```python
-ShuETL(
-    pipeline_model=Pipeline,
-    auto_migrate="safe",
+integration = ShuETL(
+    api=etlantic_api,
+    providers=my_provider_bundle,
 )
 ```
 
-Safe automatic changes are additive and validated. Destructive/ambiguous DDL is blocked for explicit action.
+The provider object remains an ETLantic provider. ShuETL does not wrap it in a
+new semantic interface.
 
-ShuETL and sibling packages sharing one database retain separate migration ownership/version namespaces.
+### Configuration presets
 
-## Extensible pipeline/run parameter contracts
+Organizations may define validated presets for:
 
-Run parameters should support application-defined Pydantic models:
+- local development;
+- PostgreSQL deployments;
+- gateway, scheduler, and worker roles;
+- approved optional ETLantic provider combinations;
+- logging, metrics, and tracing integration;
+- security requirements and deployment bounds.
 
-```python
-class CustomerRunParameters(BaseModel):
-    region: str
-    full_refresh: bool = False
-```
+Presets select capabilities; they cannot weaken upstream invariants silently.
 
-ShuETL validates parameters before durable execution and stores a versioned/serialized parameter snapshot appropriate for reproducibility.
+### Identity adapters
 
-Pipeline parameter schemas may be surfaced through JSON Schema/OpenAPI and consumed by Hedron or other clients.
+A host adapter may map a trusted principal into ETLantic's public
+control-plane context.
 
-## Schedule trigger extensions
+Adapters cannot:
 
-ShuETL ships supported cron/interval/date trigger models but should define a typed trigger-provider contract so new schedule semantics can be added without changing core domain models.
+- replace ETLantic authorization decisions;
+- trust caller-selected scope without verification;
+- expose provider ORM or token internals;
+- resolve execution secrets in the gateway.
 
-All trigger providers normalize to ShuETL-owned schedule/next-run semantics and may not bypass durable Run creation.
+### FastAPI host integration
 
-## Executor extensions
+Hosts may customize:
 
-Execution remains behind an `Executor` protocol.
+- mount prefix and documented route preset;
+- top-level lifespan composition;
+- middleware owned by the host;
+- dependency overrides;
+- approved exception-handler integration;
+- application metadata.
 
-Core ships `LocalExecutor`; optional/custom implementations may support Dramatiq, Celery, batch systems, containers, or organization-specific runtimes.
+Customizations must preserve upstream route and schema semantics.
 
-Executors must obey the same Run state machine, cancellation/result/error contracts, authorization context, and credential-reference behavior.
+### Presentation adapters
 
-## Artifact providers and types
+Optional Hedron or other UI adapters consume the mounted ETLantic API/services
+and authorization context. They do not become an authorization boundary or
+define control-plane truth.
 
-Applications may register additional artifact location/types and storage adapters using discriminated Pydantic contracts.
+### Operational adapters
 
-ShuETL retains authority over artifact identity, run relationship, metadata bounds, retention metadata, redaction, and authorization.
+ShuETL may package configuration for process supervisors, containers,
+observability exporters, or deployment platforms. These adapters invoke public
+ShuETL and ETLantic entry points.
 
-## Metadata publishers
+## Extensions that belong upstream
 
-Define a publisher protocol for Datdex, OpenLineage-style adapters, observability integrations, or custom metadata consumers:
+The following must use ETLantic extension points rather than ShuETL registries:
 
-```python
-class MetadataPublisher(Protocol):
-    async def publish(self, event: ShuETLEvent) -> None: ...
-```
+- pipeline and transformation semantics;
+- executor/runtime implementations;
+- schedule trigger types and firing policy;
+- retries, cancellation, replay, and repair;
+- artifact stores and artifact types;
+- event payload types and publishers;
+- report stores;
+- durable submission and lease providers;
+- secret/resource providers;
+- policy and authorization providers.
 
-Publisher failure semantics must be explicit and cannot silently redefine pipeline success unless configured policy says so.
+If ETLantic lacks the necessary public extension contract, resolve that gap
+upstream.
 
-## Policy extensions
+## Persistence extension
 
-Typed provider contracts should cover configurable behavior such as:
+ShuETL does not offer subclassable SQLModel control-plane entities or managed
+autogenerated migrations.
 
-- concurrency policy;
-- retry policy;
-- version-selection policy;
-- preflight/activation policy;
-- retention policy;
-- artifact policy.
+Applications needing additional metadata should prefer:
 
-Default policies remain understandable and SQL-only.
+1. an upstream ETLantic metadata/extension field with bounded, versioned
+   semantics;
+2. a host-owned table keyed by the canonical ETLantic identity;
+3. a separate host service or projection.
 
-## Event extensions
+Host tables remain under host migrations. ETLantic provider tables remain under
+provider migrations.
 
-ShuETL owns a stable event envelope containing event identity, run/pipeline references, timestamps, correlation, producer, and event version.
+## Lifecycle
 
-Applications/adapters may register typed event payloads using Pydantic discriminated unions.
+ShuETL lifecycle hooks are limited to application composition, such as provider
+construction, readiness evaluation, and host lifespan cleanup.
 
-Core events include run/schedule/pipeline lifecycle, drift/preflight, artifact, and execution outcomes.
+Pipeline, run, schedule, artifact, and event lifecycle hooks belong to ETLantic.
+ShuETL must not provide a second `before_run_execute` or similar hook sequence.
 
-## Lifecycle hooks
+## Registration
 
-Provide typed hooks/events for bounded customization, for example:
+Prefer ordinary constructor injection and explicit provider bundles over a
+global plugin registry.
 
-```text
-before_pipeline_register
-after_pipeline_register
-before_pipeline_activate
-after_pipeline_activate
-before_run_create
-after_run_create
-before_run_execute
-after_run_execute
-run_failed
-before_artifact_register
-after_artifact_register
-schedule_due
-```
+If named preset discovery is later required, it must:
 
-Hook ordering, transaction boundaries, timeout/cancellation, and failure semantics must be documented. Hooks may not bypass durable state transitions.
+- use explicit allowlists in production;
+- inspect metadata before importing code where possible;
+- report package identity and version;
+- avoid caller-controlled entry-point loading;
+- remain limited to composition factories.
 
-## Registration surface
+## Conformance
 
-Prefer explicit registration over monkey-patching:
+Every composition extension must prove:
 
-```python
-shuetl.register_executor(...)
-shuetl.register_trigger_provider(...)
-shuetl.register_artifact_provider(...)
-shuetl.register_metadata_publisher(...)
-shuetl.register_policy(...)
-shuetl.register_hook(...)
-```
-
-## ETLantic boundary
-
-ShuETL extensibility must not duplicate ETLantic's execution/inference/contract extension mechanisms. Pipeline-semantic extensions belong in ETLantic; control-plane extensions belong in ShuETL.
-
-## Extension conformance
-
-Ship conformance tests for extension families covering typed validation, async behavior, durable Run semantics, cancellation, error mapping, authorization context, secret redaction, lifecycle cleanup, and dependency-override testing.
+- it returns or configures public ETLantic providers;
+- ETLantic identities and schemas are preserved;
+- package/version compatibility is checked;
+- startup and cleanup are deterministic;
+- missing dependencies fail clearly;
+- secrets are redacted;
+- production security requirements cannot be downgraded implicitly;
+- the same upstream contract passes when mounted without the extension.

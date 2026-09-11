@@ -1,92 +1,86 @@
 # ShuETL Planning Pack
 
-**ShuETL** *(pronounced “shuttle”)* is a FastAPI-native control plane for building, persisting, scheduling, running, and observing ETLantic pipelines.
+**ShuETL** *(pronounced “shuttle”)* is the opinionated FastAPI integration and
+deployment package for ETLantic.
 
-ShuETL is intentionally separate from ETLantic core.
+> **ShuETL composes ETLantic into a durable, schedulable FastAPI service without
+> creating a second ETLantic control plane.**
 
-- **ETLantic** owns pipeline semantics, contracts, validation, planning, execution, and runtime reports.
-- **ShuETL** owns deployment, persistence, scheduling, API exposure, run orchestration, history, result references, and operator-facing control surfaces.
+## Product boundary
+
+ShuETL is a composition layer, not the semantic owner of the features it
+exposes.
+
+| Concern | Authoritative owner | ShuETL responsibility |
+|---|---|---|
+| Pipeline definitions, revisions, plans, and fingerprints | ETLantic | Registration and application configuration |
+| Durable submissions, runs, attempts, retries, and recovery | ETLantic | Provider wiring and FastAPI exposure |
+| Schedules, firings, overlap, and misfire semantics | ETLantic | API selection, configuration, and role startup |
+| Reports, events, artifacts, and diagnostics | ETLantic | HTTP/SSE projection and operator documentation |
+| HTTP schemas and ETLantic route semantics | `etlantic-fastapi` | Curated mounting and host integration |
+| Relational reference stores and migrations | `etlantic-sqlmodel` or another ETLantic provider | Database configuration and readiness checks |
+| Authentication and credential implementation | Host application or optional identity provider | Adapt authenticated identity into ETLantic authorization context |
+| Presentation | Host application or optional Hedron adapter | Optional operator-facing composition |
+
+ShuETL must use ETLantic public models and protocols directly. It must not fork,
+shadow, or translate them into ShuETL-owned equivalents without an explicit,
+documented interoperability requirement.
 
 ## Core principles
 
-> **Independent by default, composable by contract.**
+> **Integrate; do not reinterpret.**
 
-> **Own the contracts; reuse the mechanics.**
+> **One ETLantic contract at every boundary.**
 
-> **Useful defaults, extensible by contract.**
+> **Useful defaults, replaceable providers.**
 
-> **Extensions must not weaken durable execution invariants implicitly.**
+> **Development convenience must not become a false production guarantee.**
 
-ShuETL should adapt to host-application operational/domain needs without forks or monkey-patching while retaining authority over durable Run/Schedule correctness.
+## Relationship to `etlantic-fastapi`
+
+`etlantic-fastapi` remains the low-level authoritative FastAPI adapter for
+ETLantic operations. ShuETL builds on it rather than defining parallel routes or
+schemas.
+
+ShuETL adds the application-level experience that a low-level adapter should not
+own:
+
+- one configuration and composition facade;
+- explicit local and production deployment profiles;
+- provider selection and compatibility validation;
+- host FastAPI integration and lifecycle coordination;
+- optional AuthMate and Hedron adapters;
+- operator runbooks and supported deployment recipes;
+- cross-package compatibility and failure-injection tests.
+
+If this distinction cannot be maintained in implementation, ShuETL should be
+merged into or replaced by `etlantic-fastapi` rather than duplicate it.
 
 ## Planning documents
 
-- [VISION.md](VISION.md) — product purpose, principles, scope, and positioning
-- [ARCHITECTURE.md](ARCHITECTURE.md) — system boundaries and component architecture
-- [DATA_MODEL.md](DATA_MODEL.md) — persistent entities and versioning model
-- [EXTENSIBILITY.md](EXTENSIBILITY.md) — model, provider, policy, event, and lifecycle extension contracts
-- [API_DESIGN.md](API_DESIGN.md) — REST API and generated FastAPI surface
-- [SCHEDULING_AND_RUNTIME.md](SCHEDULING_AND_RUNTIME.md) — scheduling, jobs, workers, retries, concurrency
-- [RESULTS_AND_ARTIFACTS.md](RESULTS_AND_ARTIFACTS.md) — output/result storage strategy
-- [SECURITY.md](SECURITY.md) — authentication, authorization, secrets, and isolation
-- [MVP.md](MVP.md) — first shippable scope and acceptance criteria
-- [ROADMAP.md](ROADMAP.md) — staged delivery plan beyond MVP
-- [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) — initial architectural decisions and open ADRs
+- [VISION.md](VISION.md) — product purpose, users, scope, and success criteria
+- [ARCHITECTURE.md](ARCHITECTURE.md) — integration boundaries and deployment roles
+- [DATA_MODEL.md](DATA_MODEL.md) — authoritative model sourcing and persistence rules
+- [API_DESIGN.md](API_DESIGN.md) — API composition rather than parallel route design
+- [SCHEDULING_AND_RUNTIME.md](SCHEDULING_AND_RUNTIME.md) — ETLantic runtime delegation and process topology
+- [RESULTS_AND_ARTIFACTS.md](RESULTS_AND_ARTIFACTS.md) — projection of ETLantic results and artifacts
+- [SECURITY.md](SECURITY.md) — host identity adaptation and boundary enforcement
+- [IDENTITY_INTEGRATION.md](IDENTITY_INTEGRATION.md) — provider-neutral identity integration
+- [EXTENSIBILITY.md](EXTENSIBILITY.md) — composition-level extension points
+- [DEPENDENCY_STRATEGY.md](DEPENDENCY_STRATEGY.md) — direct versus transitive dependencies
+- [PYDANTIC_STRATEGY.md](PYDANTIC_STRATEGY.md) — reuse of ETLantic models
+- [FASTAPI_STRATEGY.md](FASTAPI_STRATEGY.md) — router, DI, lifespan, and application factory behavior
+- [MVP.md](MVP.md) — first shippable integration scope and acceptance criteria
+- [ROADMAP.md](ROADMAP.md) — staged delivery after the integration boundary is proven
+- [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) — decisions and blocking ADRs
 
-## Core product statement
+## Infrastructure baseline
 
-> **ShuETL deploys and operates ETLantic pipelines as durable, schedulable FastAPI services.**
+Local development may compose the API, scheduler, and worker in one process.
+Production documentation must use separate supervised gateway and execution
+roles unless the selected ETLantic provider explicitly certifies another
+topology.
 
-The initial deployment model remains intentionally simple:
-
-```text
-FastAPI
-  +
-ShuETL control plane
-  +
-ETLantic runtime
-  +
-Scheduler
-  +
-PostgreSQL / SQLite
-```
-
-## Identity and credential integration
-
-ShuETL supports external FastAPI-native identity systems through stable public protocols rather than embedding its own authentication framework.
-
-The reference composition is Hedron + AuthMate + ShuETL + ETLantic, but AuthMate remains a reference implementation rather than a core dependency.
-
-See `IDENTITY_INTEGRATION.md`.
-
-## Dependency philosophy
-
-ShuETL uses mature libraries for scheduling, pagination, retries, persistence, filesystem abstraction, and optional worker execution behind ShuETL-owned models and protocols.
-
-See `DEPENDENCY_STRATEGY.md`.
-
-## Pydantic-first contracts
-
-Pydantic is a first-class architectural dependency for public domain models, configuration, extension payloads, discriminated unions, validation, serialization boundaries, and JSON Schema.
-
-See `PYDANTIC_STRATEGY.md`.
-
-## FastAPI-native architecture
-
-FastAPI is the integration substrate: routing, DI, security, lifespan, OpenAPI, exception handling, streaming, and testing overrides.
-
-See `FASTAPI_STRATEGY.md`.
-
-## SQL-only infrastructure baseline
-
-Core production capability requires only the FastAPI application process and a relational SQL database. Redis, brokers, search services, object stores, external schedulers, and separate workers remain optional extensions.
-
-SQLite should remain sufficient for local development wherever practical.
-
-## Extensibility
-
-ShuETL supports controlled extension of selected SQLModel metadata, run parameter models, schedule triggers, executors, artifacts, metadata publishers, policies, typed events, and lifecycle behavior.
-
-Supported persistence extensions pair with ShuETL-managed Alembic migrations so safe additive schema evolution does not require normal Alembic CLI use.
-
-See `EXTENSIBILITY.md`.
+PostgreSQL is the production reference store. SQLite or memory providers are
+local-development conveniences. Brokers, object stores, and external schedulers
+remain optional when ETLantic's selected providers do not require them.

@@ -1,71 +1,95 @@
 # Results and Artifacts
 
-## Problem
+## Principle
 
-Pipeline output can range from a small JSON result or validation summary to Parquet files, millions of rows, database tables, or object-store locations. The control-plane database should not assume all outputs are small or relational.
+ETLantic owns result, report, event, diagnostic, and artifact semantics. ShuETL
+exposes those records through the configured ETLantic FastAPI adapter and
+documents their operation in the selected deployment profile.
 
-## Result model
+## Canonical records
 
-ShuETL should distinguish Run report, Result metadata, Result artifact, and Result data.
+ShuETL must preserve upstream:
 
-### Run report
+- `PipelineRunReport` schema and status;
+- submission, run, and attempt identities;
+- diagnostic codes and redaction;
+- event envelope, ordering, and cursor semantics;
+- artifact identity, type, ownership, classification, and location;
+- checksum, size, retention, and external-effect evidence where available.
 
-Always persisted when bounded and safe. Examples include run status, ETLantic execution reports, validation summaries, drift summaries, warnings, and timings.
+ShuETL does not create a generic `ResultArtifact` table or serialize ETLantic
+reports into a less expressive local model.
 
-### Result artifact
+## HTTP projection
 
-Represents where output lives, for example:
+The mounted `etlantic-fastapi` routes remain authoritative for report, event,
+and artifact metadata responses.
 
-```text
-s3://bucket/path/output.parquet
-file:///data/output.csv
-postgres://warehouse/table
-table:analytics.customers
-```
+ShuETL may:
 
-## Inline results
+- choose which optional routes are enabled;
+- configure providers and response bounds;
+- mount them under a host prefix;
+- supply proxy, caching, and streaming deployment guidance;
+- provide presentation adapters that consume the canonical responses.
 
-Inline result payloads are useful for row counts, scalar outputs, small JSON dictionaries, and tiny previews. They must have strict configurable size limits.
+It may not silently omit fields that change ETLantic semantics.
 
-## External artifacts
+## Bounded responses
 
-Large results should be represented by URI, media type, size, checksum, and metadata. ShuETL should not proxy large artifact contents through its database by default.
+ShuETL settings should configure only bounds supported by the upstream adapter
+and providers.
 
-## Artifact adapters
+- Generic API responses contain metadata and bounded previews, not arbitrary
+  datasets.
+- Oversized reports or previews produce the upstream truncation/reference
+  behavior.
+- List and event endpoints use upstream pagination/cursor contracts.
+- Presentation summaries identify truncation and their source record.
 
-Potential interface:
+## Artifact data
 
-```python
-class ArtifactStore:
-    def put(...)
-    def get_reference(...)
-    def delete(...)
-```
+Large data remains in its ETLantic-selected storage or destination system.
+ShuETL exposes metadata and authorized access mechanisms supplied by the
+artifact provider.
 
-Potential implementations include local filesystem, S3-compatible storage, Azure Blob, and database/table references.
+ShuETL must not:
+
+- turn arbitrary artifact URIs into an unrestricted proxy;
+- dereference caller-selected local paths or network locations;
+- generate persistent signed URLs;
+- persist resolved credentials;
+- delete externally owned data merely because control-plane metadata is
+  removed.
+
+## Provider selection
+
+Local development may use ETLantic memory or local-file providers within their
+documented security boundary.
+
+Production uses an explicitly configured ETLantic artifact/report/event
+provider. Object storage is optional when pipelines already publish to stable
+external locations and the provider can store safe references.
+
+## Security and authorization
+
+Artifact and report access uses ETLantic authorization context and provider
+rules. Authorization occurs before existence-sensitive lookup, signing,
+preview, download, or deletion.
+
+ShuETL presentation integrations must not treat UI visibility as authorization.
 
 ## Retention
 
-Retention policy should apply separately to run metadata, execution reports, inline results, and externally managed artifacts. Deleting ShuETL metadata must not automatically delete externally owned datasets unless the artifact store explicitly owns them.
+Retention semantics remain provider-owned. ShuETL configures supported policies
+and documents operational procedures without inventing an independent cleanup
+state machine.
 
-## Security
+Readiness or diagnostics should identify missing retention configuration for a
+production profile when the selected provider requires it.
 
-Artifact records must never persist resolved credentials, signed URLs with long-lived secrets, or unredacted connection strings. Persist stable logical references and generate temporary access paths when needed.
+## Observability integration
 
-## Filesystem dependency strategy
-
-Use `fsspec` plus `universal-pathlib` for general filesystem/object-store mechanics when the artifacts extra is installed.
-
-ShuETL still owns artifact identity, metadata, retention, security/redaction, and run relationships.
-
-## SQL-only artifact baseline
-
-ShuETL must not require object storage.
-
-Baseline behavior:
-
-- small bounded results may be stored inline in SQL;
-- large outputs remain where the pipeline writes them;
-- ShuETL stores stable metadata/references to external output locations.
-
-S3/Azure/GCS/fsspec-based artifact stores remain optional capabilities rather than required infrastructure.
+Publishers such as OpenLineage or telemetry exporters should use ETLantic event,
+report, and metadata provider contracts. ShuETL may package configuration
+adapters, but it does not define another event model.

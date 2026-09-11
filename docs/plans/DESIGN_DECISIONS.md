@@ -1,96 +1,116 @@
 # ShuETL Initial Design Decisions
 
-This document records initial decisions that should later become formal ADRs.
+These decisions define ShuETL's integration boundary. Material changes require
+an ADR.
 
-## D1 — Separate project from ETLantic
-ShuETL is a separate package because deployment, scheduling, persistence, APIs, and operational state are control-plane concerns.
+## D1 — ShuETL is an ETLantic + FastAPI integration product
 
-## D2 — FastAPI is foundational
-ShuETL is FastAPI-native and uses its API, OpenAPI, Pydantic integration, lifecycle, DI, and streaming primitives.
+ShuETL exists to make ETLantic straightforward to configure, mount, deploy, and
+operate in FastAPI applications.
 
-## D3 — Database is authoritative for operational state
-Schedules, runs, versions, and result metadata live durably in relational SQL.
+## D2 — ETLantic is authoritative
 
-## D4 — SQLModel/SQLAlchemy persistence
-Prefer SQLModel for normal persisted entities while retaining SQLAlchemy for advanced coordination/query behavior.
+ETLantic owns pipeline definitions, plans, runtime/control-plane state,
+scheduling, durable work, retries, cancellation, reports, events, artifacts,
+security references, and provider contracts.
 
-## D5 — SQLite local, PostgreSQL production reference
-Support both for zero-friction development and reliable production coordination.
+## D3 — `etlantic-fastapi` owns ETLantic HTTP semantics
 
-## D6 — Pipeline versions are immutable
-A run always targets one immutable version for reproducibility and auditability.
+ShuETL mounts and configures the existing adapter. It does not fork its routes,
+schemas, operation IDs, errors, idempotency behavior, or SSE protocol.
 
-## D7 — Scheduling creates runs
-The scheduler creates durable Run records; executors execute them.
+## D4 — ShuETL owns composition
 
-## D8 — HTTP is asynchronous relative to execution
-Run-trigger endpoints return durable run identity rather than waiting for completion.
+ShuETL owns settings, provider wiring, FastAPI integration, deployment-role
+configuration, compatibility checks, readiness diagnostics, optional ecosystem
+adapters, and operator documentation.
 
-## D9 — Output data is external by default
-The control DB primarily stores bounded results and result metadata/references rather than arbitrary datasets.
+## D5 — No shadow domain models
 
-## D10 — No arbitrary remote Python execution
-MVP does not permit unrestricted uploaded Python execution.
+ShuETL does not define parallel Pipeline, Plan, Run, Attempt, Schedule, Firing,
+Event, Report, Artifact, Executor, retry, or authorization models.
 
-## D11 — ETLantic owns pipeline intelligence
-Inference, drift, lineage, health, validation, and execution semantics remain ETLantic responsibilities.
+## D6 — Upstream-first gaps
 
-## D12 — Local executor first
-Local execution is the baseline; the Executor contract permits optional scale-out implementations.
+Missing semantic behavior belongs in ETLantic or an ETLantic provider package.
+A temporary ShuETL adapter requires an ADR, explicit version bounds, and a
+removal plan.
 
-## D13 — Identity is external and protocol-driven
-AuthMate is the reference identity/credential implementation, not a required dependency.
+## D7 — No ShuETL control-plane schema in the MVP
 
-## D14 — Triggering and execution principals are distinct
-Scheduled/background work uses explicit service identity rather than implicitly inheriting human credentials.
+Use ETLantic persistence providers. ShuETL owns no control-plane tables,
+SQLModel subclasses, or Alembic revisions in the MVP.
 
-## D15 — Credentials are references
-Pipeline versions store credential references/bindings; secrets resolve just in time.
+## D8 — Provider-owned migrations
 
-## D16 — Full-stack compatibility is a release target
-CI includes Hedron + AuthMate + ShuETL + ETLantic composition while packages remain independent.
+ShuETL checks schema compatibility and may invoke documented provider migration
+commands. It does not autogenerate or infer production DDL.
 
-## D18 — Reuse mature operational mechanics
-Use maintained libraries such as APScheduler, Tenacity, fastapi-pagination, optional fsspec/UPath, Dramatiq, and Celery behind ShuETL contracts.
+## D9 — FastAPI-native host integration
 
-## D19 — Pydantic is the ShuETL contract layer
-Public control-plane models, configuration, extension payloads, validation, unions, serialization, and JSON Schema are Pydantic-first.
+ShuETL supports router mounting, application factories, dependency injection,
+exception-handler composition, OpenAPI, and lifespan composition without taking
+over unrelated host behavior.
 
-## D20 — Prefer SQLModel for control-plane persistence
-SQLModel is default for ordinary entities; SQLAlchemy remains available for locking, coordination, bulk, and advanced queries.
+## D10 — Development and production topologies differ
 
-## D21 — Use FastAPI lifecycle and event primitives directly
-Use lifespan, SSE, OpenAPI webhooks, DI, and dependency overrides. `BackgroundTasks` never owns durable pipeline execution.
+In-process execution may be offered for explicit local development. The
+production reference separates gateway, scheduler, and worker roles.
 
-## D22 — SQL-only infrastructure baseline
-Default production requires only FastAPI + relational SQL. Brokers, external schedulers, object stores, and worker fleets remain optional.
+## D11 — SQL-only does not mean one process
 
-## D23 — Useful defaults, extensible by contract
+The production reference may avoid a required broker when PostgreSQL-backed
+ETLantic providers supply durability and coordination. Execution remains outside
+the gateway process.
 
-**Decision:** major ShuETL control-plane capabilities expose stable typed extension surfaces where practical: selected persistence metadata, run parameters, triggers, executors, artifact providers/types, metadata publishers, policies, events, and lifecycle hooks.
+## D12 — Identity is host-provided and ETLantic-authorized
 
-**Constraint:** extensions may not silently bypass durable Run creation/state transitions, immutable version binding, authorization context, idempotency/concurrency policy, or secret-reference semantics.
+The host authenticates principals. ShuETL adapts them into ETLantic context, and
+ETLantic authorizer contracts govern ETLantic resources.
 
-## D24 — Managed Alembic migrations for supported model extensions
+## D13 — AuthMate and Hedron are optional adapters
 
-**Decision:** supported SQLModel extensions use ShuETL-managed programmatic Alembic migrations. Safe additive changes may be automatically applied under `auto_migrate="safe"`; destructive/ambiguous changes are blocked for explicit action.
+Neither is a core dependency or MVP blocker. Integration uses public contracts
+when the peer package is implemented and supported.
 
-**Constraint:** ShuETL maintains its own migration namespace even in a shared ecosystem database.
+## D14 — Pydantic is limited to ShuETL-owned concerns
 
-## D25 — Extension protocols remain domain-boundary aware
+ShuETL uses Pydantic for settings and composition diagnostics. ETLantic models
+are reused for ETLantic domain data.
 
-**Decision:** ShuETL extension points cover control-plane behavior only. Pipeline-semantic/inference/execution extension mechanisms belong to ETLantic and should be consumed rather than duplicated.
+## D15 — Direct dependencies remain narrow
+
+Scheduling, retry, persistence, migrations, filesystem, and worker libraries are
+normally dependencies of ETLantic provider packages, not direct ShuETL
+implementation dependencies.
+
+## D16 — Lockstep compatibility is explicit
+
+The first release supports one tested ETLantic minor train. ShuETL rejects
+unsupported mixed versions and publishes a compatibility matrix.
+
+## D17 — No convenience HTTP fork
+
+ShuETL does not add alternate route vocabularies for the same ETLantic
+operations. Convenience belongs in configuration, clients, or upstream routes.
+
+## D18 — Merge rather than duplicate
+
+If ShuETL cannot remain meaningfully distinct from `etlantic-fastapi`, the
+projects should merge rather than maintain two competing integration surfaces.
 
 ## Open ADRs
 
-- pipeline serialization;
-- run claim/lease semantics;
-- exact concurrency/cancellation behavior;
-- report retention;
-- pipeline activation/version-selection policy;
-- exact supported set of extensible SQLModel entities;
-- managed migration revision/version strategy;
-- safe-vs-unsafe DDL classifier;
-- hook ordering/transaction/failure semantics;
-- event extension registry/versioning;
-- executor and trigger conformance contracts.
+The following decisions must close during Phase 0:
+
+1. exact public constructor and settings shape;
+2. whether ShuETL accepts only prebuilt ETLantic providers, constructs the
+   reference graph, or supports both;
+3. lifespan composition API for existing FastAPI applications;
+4. exact local and production route-selection presets;
+5. initial ETLantic/FastAPI compatibility range;
+6. gateway, scheduler, and worker CLI/process entry points;
+7. capability/readiness diagnostic schema;
+8. package-boundary exit test versus `etlantic-fastapi`;
+9. supported PostgreSQL driver and provider configuration;
+10. policy for invoking provider-owned migrations outside application startup.

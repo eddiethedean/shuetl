@@ -393,3 +393,84 @@ def test_sol_008_bundle_public_annotations_match_the_typed_contract() -> None:
     assert hints["events"] is EventStore
     assert hints["provider"] == Literal["memory", "sqlite"]
     assert hints["development_only"] == Literal[True]
+
+
+def test_sol_009_doctor_rejects_a_mismatched_memory_bundle() -> None:
+    bundle = LocalProviderBundle.create(
+        _settings(api_prefix="/bundle"),
+        authorizer=MemoryAuthorizer(),
+        context_factory=_context_factory(),
+        principal_dependency=principal_from_header,
+    )
+    try:
+        report = DoctorReport.inspect(_settings(api_prefix="/report"), bundle)
+    finally:
+        bundle.close()
+
+    readiness = next(check for check in report.checks if check.id == "provider.ready")
+    assert readiness.status == "fail"
+    assert report.status == "fail"
+
+
+def test_sol_010_evidence_rows_map_to_the_current_acceptance_contract() -> None:
+    root = Path(__file__).resolve().parents[2]
+    evidence = (root / "docs/evidence/0.3/README.md").read_text(encoding="utf-8")
+    rows = {
+        cells[0]: " ".join(cells[1:4]).lower()
+        for line in evidence.splitlines()
+        if line.startswith("| AC-")
+        for cells in [[cell.strip() for cell in line.strip("|").split("|")]]
+    }
+    required_proof_terms = {
+        "AC-001": ("metadata", "packag"),
+        "AC-002": ("export", "public"),
+        "AC-003": ("settings schema",),
+        "AC-004": ("required", "fail-closed", "omission"),
+        "AC-005": ("precedence",),
+        "AC-006": ("source", "dotenv"),
+        "AC-007": ("prefix", "route preset"),
+        "AC-008": ("cross-field", "combination"),
+        "AC-009": ("timeout",),
+        "AC-010": ("secret", "redaction"),
+        "AC-011": ("core", "compatibility"),
+        "AC-012": ("train",),
+        "AC-013": ("extra", "capability"),
+        "AC-014": ("input", "injection", "adapter"),
+        "AC-015": ("memory", "store"),
+        "AC-016": ("identity", "profile"),
+        "AC-017": ("optional", "provider"),
+        "AC-018": ("isolation", "independent"),
+        "AC-019": ("sqlite", "file"),
+        "AC-020": ("sqlmodel", "engine"),
+        "AC-021": ("schema", "migration"),
+        "AC-022": ("cleanup", "disposal", "close"),
+        "AC-023": ("0.2", "facade"),
+        "AC-024": ("parity", "http"),
+        "AC-025": ("doctor", "diagnostic"),
+        "AC-026": ("doctor", "diagnostic"),
+        "AC-027": ("version",),
+        "AC-028": ("capabil",),
+        "AC-029": ("preflight", "side effect"),
+        "AC-030": ("schema",),
+        "AC-031": ("check", "order"),
+        "AC-032": ("text", "json", "redaction"),
+        "AC-033": ("cli", "doctor"),
+        "AC-034": ("version", "cli"),
+        "AC-035": ("quickstart",),
+        "AC-036": ("sqlite example",),
+        "AC-037": ("boundar",),
+        "AC-038": ("openapi",),
+        "AC-039": ("artifact", "clean"),
+        "AC-040": ("gate", "matrix"),
+        "AC-041": ("doc",),
+        "AC-042": ("evidence",),
+    }
+    mismatches = {
+        criterion: proof
+        for criterion, terms in required_proof_terms.items()
+        if (proof := rows.get(criterion, ""))
+        and not any(term in proof for term in terms)
+    }
+    assert set(rows) == set(required_proof_terms)
+    assert not mismatches, f"evidence rows do not map to their ACs: {mismatches}"
+    assert re.search(r"\| uv version \| \d+\.\d+\.\d+", evidence)

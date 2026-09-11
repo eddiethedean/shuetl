@@ -164,7 +164,16 @@ class DoctorReport(BaseModel):
             ready = "fail"
             ready_summary = "Provider readiness cannot be evaluated."
             ready_remediation = "Fix configuration before selecting a provider."
-        if provider == "sqlite":
+        elif bundle is not None and bundle.settings != settings:
+            ready = "fail"
+            ready_summary = "The supplied provider bundle does not match configuration."
+            ready_remediation = "Inspect a bundle created from the same settings."
+            if provider == "sqlite":
+                schema_status = "fail"
+                schema_summary = (
+                    "SQLite schema was not inspected because configuration differed."
+                )
+        elif provider == "sqlite":
             if not provider_available:
                 ready = "fail"
                 ready_summary = "SQLite provider dependencies are unavailable."
@@ -174,16 +183,6 @@ class DoctorReport(BaseModel):
                     "SQLite schema cannot be inspected without the optional provider."
                 )
                 schema_remediation = "Install the optional SQLite extra."
-            elif bundle is not None and bundle.settings != settings:
-                ready = "fail"
-                ready_summary = (
-                    "The supplied provider bundle does not match configuration."
-                )
-                ready_remediation = "Inspect a bundle created from the same settings."
-                schema_status = "fail"
-                schema_summary = (
-                    "SQLite schema was not inspected because configuration differed."
-                )
             else:
                 schema_status, schema_summary, schema_remediation = (
                     _inspect_sqlite_schema(settings)

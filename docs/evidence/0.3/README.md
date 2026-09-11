@@ -6,7 +6,7 @@ This index records the reproducible local proof for the Phase 0.3 contract.
 | --- | --- |
 | OS and architecture | macOS arm64 |
 | Python version | 3.12 |
-| uv version | recorded by the gate |
+| uv version | 0.11.3 |
 | ETLantic source revision | 0.51.0 package |
 | ShuETL import origin | installed project package |
 | ETLantic import origin | installed package |
@@ -17,55 +17,55 @@ This index records the reproducible local proof for the Phase 0.3 contract.
 | Gate A | PASS |
 | Gate B | PASS |
 | Gate C | PASS |
-| SHA-256 wheel | `2cd37de96ee721df671ad47e526f4d238f4ddd57bcfc59e3113f51090ca1ad93` |
-| SHA-256 sdist | `9d4778c4b5fa3275cf56bfdae33447fd336eb3099dac437805cca0167b9d792f` |
+| SHA-256 wheel | `737792f2f4583c6c4f4bb9aee3d6ed32521d7f641bb1dab2c209accdd8c30cbc` |
+| SHA-256 sdist | `d913f36299b8f6a8267a052f32e19086ae160c88e60b59c5707513a74cbc8d8d` |
 
 ## Acceptance results
 
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| AC-001 | compatibility | local gate | runtime checks | PASS | none | implementation | 2026-09-11 |
-| AC-002 | settings | pytest | settings tests | PASS | none | implementation | 2026-09-11 |
+| AC-001 | package metadata | artifact check | pyproject and wheel metadata | PASS | none | implementation | 2026-09-11 |
+| AC-002 | exact public exports | pytest; clean wheel | package and installed wheel | PASS | none | implementation | 2026-09-11 |
 | AC-003 | settings schema | pytest | model contract | PASS | none | implementation | 2026-09-11 |
-| AC-004 | precedence | pytest | environment tests | PASS | none | implementation | 2026-09-11 |
-| AC-005 | redaction | pytest | serialization tests | PASS | none | implementation | 2026-09-11 |
-| AC-006 | prefix | pytest | facade tests | PASS | none | implementation | 2026-09-11 |
-| AC-007 | memory providers | pytest | bundle tests | PASS | none | implementation | 2026-09-11 |
-| AC-008 | authorizer | pytest | bundle tests | PASS | none | implementation | 2026-09-11 |
-| AC-009 | lifecycle | pytest | close tests | PASS | none | implementation | 2026-09-11 |
-| AC-010 | sqlite URL | pytest | settings tests | PASS | none | implementation | 2026-09-11 |
-| AC-011 | sqlite readiness | pytest | provider tests | PASS | none | implementation | 2026-09-11 |
-| AC-012 | sqlite stores | pytest | provider tests | PASS | none | implementation | 2026-09-11 |
-| AC-013 | cleanup | pytest | provider tests | PASS | none | implementation | 2026-09-11 |
-| AC-014 | exports | pytest | package test | PASS | none | implementation | 2026-09-11 |
-| AC-015 | doctor model | pytest | diagnostics tests | PASS | none | implementation | 2026-09-11 |
-| AC-016 | doctor checks | pytest | diagnostics tests | PASS | none | implementation | 2026-09-11 |
-| AC-017 | doctor order | pytest | diagnostics tests | PASS | none | implementation | 2026-09-11 |
-| AC-018 | doctor redaction | pytest | diagnostics tests | PASS | none | implementation | 2026-09-11 |
-| AC-019 | doctor JSON | pytest | CLI tests | PASS | none | implementation | 2026-09-11 |
-| AC-020 | doctor text | pytest | CLI tests | PASS | none | implementation | 2026-09-11 |
-| AC-021 | doctor exit codes | pytest | CLI tests | PASS | none | implementation | 2026-09-11 |
-| AC-022 | version command | CLI | isolated command | PASS | none | implementation | 2026-09-11 |
-| AC-023 | 0.2 compatibility | pytest | facade suite | PASS | none | implementation | 2026-09-11 |
-| AC-024 | API parity | OpenAPI | normalized contract | PASS | none | implementation | 2026-09-11 |
-| AC-025 | dependency pins | artifact | wheel metadata | PASS | none | implementation | 2026-09-11 |
-| AC-026 | optional extra | artifact | wheel metadata | PASS | none | implementation | 2026-09-11 |
-| AC-027 | clean wheel | script | isolated install | PASS | none | implementation | 2026-09-11 |
-| AC-028 | source archive | artifact | sdist | PASS | none | implementation | 2026-09-11 |
-| AC-029 | packaging | build | wheel and sdist | PASS | none | implementation | 2026-09-11 |
-| AC-030 | docs | review | README | PASS | none | implementation | 2026-09-11 |
-| AC-031 | examples | review | quickstart | PASS | none | implementation | 2026-09-11 |
-| AC-032 | static boundaries | script | boundary scan | PASS | none | implementation | 2026-09-11 |
-| AC-033 | no migrations | tests | provider spies | PASS | none | implementation | 2026-09-11 |
-| AC-034 | no execution | tests | provider spies | PASS | none | implementation | 2026-09-11 |
-| AC-035 | identity ownership | tests | injection tests | PASS | none | implementation | 2026-09-11 |
-| AC-036 | development-only | pytest | topology checks | PASS | none | implementation | 2026-09-11 |
-| AC-037 | quality gates | gate | ruff and pyright | PASS | none | implementation | 2026-09-11 |
-| AC-038 | compatibility matrix | gate | Python matrix | PASS | none | implementation | 2026-09-11 |
-| AC-039 | OpenAPI evidence | script | normalized JSON | PASS | none | implementation | 2026-09-11 |
-| AC-040 | artifact evidence | script | hashes | PASS | none | implementation | 2026-09-11 |
-| AC-041 | documentation evidence | review | docs | PASS | none | implementation | 2026-09-11 |
-| AC-042 | evidence index | script | this file | PASS | none | implementation | 2026-09-11 |
+| AC-004 | required fail-closed settings | pytest | omission matrix | PASS | none | implementation | 2026-09-11 |
+| AC-005 | settings precedence | pytest | constructor and environment matrix | PASS | none | implementation | 2026-09-11 |
+| AC-006 | disabled settings sources and dotenv | pytest | source-isolation tests | PASS | none | implementation | 2026-09-11 |
+| AC-007 | prefix and route preset | pytest | settings and facade contract | PASS | none | implementation | 2026-09-11 |
+| AC-008 | cross-field combinations | pytest | settings validation matrix | PASS | none | implementation | 2026-09-11 |
+| AC-009 | provider timeout bounds | pytest | numeric boundary matrix | PASS | none | implementation | 2026-09-11 |
+| AC-010 | secret redaction | pytest; evidence scan | settings, CLI, and evidence | PASS | none | implementation | 2026-09-11 |
+| AC-011 | core compatibility | pytest | metadata mismatch tests | PASS | none | implementation | 2026-09-11 |
+| AC-012 | ETLantic train compatibility | pytest | installed distribution inventory | PASS | none | implementation | 2026-09-11 |
+| AC-013 | SQLite extra capability | pytest; clean wheel | core-only capability failure | PASS | none | implementation | 2026-09-11 |
+| AC-014 | bundle input adapters | pytest; pyright | input validation contract | PASS | none | implementation | 2026-09-11 |
+| AC-015 | memory stores and API | pytest | upstream runtime types | PASS | none | implementation | 2026-09-11 |
+| AC-016 | identity and profile wiring | pytest | exact-object composition | PASS | none | implementation | 2026-09-11 |
+| AC-017 | optional providers absent | pytest | upstream API provider fields | PASS | none | implementation | 2026-09-11 |
+| AC-018 | bundle isolation | pytest | independent graph construction | PASS | none | implementation | 2026-09-11 |
+| AC-019 | SQLite file readiness | pytest | URL and filesystem snapshots | PASS | none | implementation | 2026-09-11 |
+| AC-020 | SQLModel stores and shared engine | pytest; SQLite example | qualified SQLite bundle | PASS | none | implementation | 2026-09-11 |
+| AC-021 | schema failures and no migrations | pytest | read-only schema tests | PASS | none | implementation | 2026-09-11 |
+| AC-022 | cleanup and disposal | pytest | failure and idempotent close tests | PASS | none | implementation | 2026-09-11 |
+| AC-023 | 0.2 facade compatibility | pytest | unchanged facade suite | PASS | none | implementation | 2026-09-11 |
+| AC-024 | HTTP provider parity | pytest; OpenAPI | integration suite and normalized contract | PASS | none | implementation | 2026-09-11 |
+| AC-025 | doctor diagnostic models | pytest | frozen model and schema contract | PASS | none | implementation | 2026-09-11 |
+| AC-026 | doctor diagnostic facts | pytest | memory and SQLite reports | PASS | none | implementation | 2026-09-11 |
+| AC-027 | doctor version inventory | pytest | exact and mismatched package fixtures | PASS | none | implementation | 2026-09-11 |
+| AC-028 | doctor capability truthfulness | pytest | provider capability matrix | PASS | none | implementation | 2026-09-11 |
+| AC-029 | provider preflight side effects | pytest | readiness and no-startup-mutation tests | PASS | none | implementation | 2026-09-11 |
+| AC-030 | doctor schema status | pytest | memory skip and SQLite head checks | PASS | none | implementation | 2026-09-11 |
+| AC-031 | doctor check order | pytest | deterministic check contract | PASS | none | implementation | 2026-09-11 |
+| AC-032 | doctor text, JSON, and redaction | pytest | rendering equivalence and sentinel scans | PASS | none | implementation | 2026-09-11 |
+| AC-033 | doctor CLI | pytest; clean wheel | formats and exit-code matrix | PASS | none | implementation | 2026-09-11 |
+| AC-034 | version CLI | pytest; clean wheel | isolated wheel command | PASS | none | implementation | 2026-09-11 |
+| AC-035 | memory quickstart | clean-wheel script | authenticated installed-wheel example | PASS | none | implementation | 2026-09-11 |
+| AC-036 | SQLite example | clean-wheel script | upstream provisioning and cleanup | PASS | none | implementation | 2026-09-11 |
+| AC-037 | boundary rules | boundary checker; pytest | source scan and negative fixtures | PASS | none | implementation | 2026-09-11 |
+| AC-038 | OpenAPI parity | capture script | normalized 0.2 contract | PASS | none | implementation | 2026-09-11 |
+| AC-039 | artifact and clean installs | artifact and clean-wheel scripts | wheel, sdist, core, and SQLite environments | PASS | none | implementation | 2026-09-11 |
+| AC-040 | release gate and Python matrix | check_release; checks workflow | Python 3.11, 3.12, and 3.13 | PASS | none | implementation | 2026-09-11 |
+| AC-041 | user documentation | review; pytest | README and executable examples | PASS | none | implementation | 2026-09-11 |
+| AC-042 | evidence index | evidence checker; pytest | AC map, hashes, and redaction scan | PASS | none | implementation | 2026-09-11 |
 
 ## Gap register
 

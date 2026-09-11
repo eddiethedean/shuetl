@@ -16,6 +16,7 @@ ALLOWED_WHEEL_FILES = {
     f"shuetl-{VERSION}.dist-info/RECORD",
     f"shuetl-{VERSION}.dist-info/WHEEL",
     f"shuetl-{VERSION}.dist-info/licenses/LICENSE",
+    f"shuetl-{VERSION}.dist-info/entry_points.txt",
     "shuetl/__init__.py",
     "shuetl/errors.py",
     "shuetl/integration.py",

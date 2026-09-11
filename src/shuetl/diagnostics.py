@@ -131,11 +131,16 @@ class DoctorReport(BaseModel):
             "control-plane.events",
             "control-plane.submissions",
         ]
-        available = ["provider.memory"] if provider == "memory" else ["provider.sqlite"]
         provider_available = provider == "memory" or all(
             versions.get(name) == required
             for name, required in SQLITE_REQUIREMENTS.items()
         )
+        if provider == "memory":
+            available = ["provider.memory"]
+        elif provider == "sqlite" and provider_available:
+            available = ["provider.sqlite"]
+        else:
+            available = []
         checks.append(
             DiagnosticCheck(
                 id="provider.available",
@@ -156,6 +161,10 @@ class DoctorReport(BaseModel):
         schema_status: CheckStatus = "skip"
         schema_summary = "SQLite schema inspection is not applicable to memory."
         schema_remediation = None
+        if configuration_error:
+            ready = "fail"
+            ready_summary = "Provider readiness cannot be evaluated."
+            ready_remediation = "Fix configuration before selecting a provider."
         if provider == "sqlite":
             if not provider_available:
                 ready = "fail"

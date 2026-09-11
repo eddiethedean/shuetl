@@ -1,7 +1,6 @@
-# Phase 0.1 ADRs
+# Architecture Decision Records
 
-These ADRs record the decisions that bound the 0.1 evidence release and the
-0.2 handoff. They are accepted implementation constraints, not open design
+These ADRs record accepted implementation constraints. They are not open design
 questions.
 
 | ADR | Decision | Status |
@@ -12,6 +11,9 @@ questions.
 | [0004](0004-facade-input-policy.md) | 0.2 facade input policy | Accepted |
 | [0005](0005-host-lifespan-and-problem-handlers.md) | Host lifecycle and handlers | Accepted |
 | [0006](0006-route-selection.md) | Route selection | Accepted |
+| [0007](0007-settings-sources-and-precedence.md) | Settings sources and precedence | Accepted |
+| [0008](0008-local-provider-bundles.md) | Local provider bundles | Accepted |
+| [0009](0009-doctor-report-contract.md) | Doctor report contract | Accepted |
 
-Any change to an accepted decision requires updating the Phase 0.1
-implementation contract and its acceptance/verification mapping.
+Any change to an accepted decision requires updating its governing execution
+contract and acceptance/verification mapping.

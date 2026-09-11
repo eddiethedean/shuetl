@@ -115,16 +115,23 @@ These decisions must close before work intended to survive into 0.2 is merged:
 5. lifespan and problem-handler composition for existing FastAPI applications;
 6. route-selection behavior for 0.2.
 
+### Resolved for Phase 0.3
+
+1. exact settings constructor and configuration precedence —
+   [ADR-0007](../adr/0007-settings-sources-and-precedence.md);
+2. local memory/SQLite provider construction and lifecycle —
+   [ADR-0008](../adr/0008-local-provider-bundles.md);
+3. capability/readiness diagnostic schema —
+   [ADR-0009](../adr/0009-doctor-report-contract.md).
+
 ### Deferred until first use
 
 These are required by the named later release, not by the 0.1 boundary proof:
 
-1. exact settings constructor and configuration precedence — 0.3;
-2. capability/readiness diagnostic schema — 0.3;
-3. supported PostgreSQL driver and provider configuration — 0.4;
-4. policy for invoking provider-owned migrations outside startup — 0.4;
-5. gateway, scheduler, and worker CLI/process entry points — 0.6;
-6. production route-selection presets, if distinct from the upstream surface —
+1. supported PostgreSQL driver and provider configuration — 0.4;
+2. policy for invoking provider-owned migrations outside startup — 0.4;
+3. gateway, scheduler, and worker CLI/process entry points — 0.6;
+4. production route-selection presets, if distinct from the upstream surface —
    no later than 0.6.
 
 Deferral does not authorize an implicit implementation decision. If earlier

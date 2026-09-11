@@ -22,7 +22,7 @@ so the evidence contains no machine-specific locations or secrets.
 | Pydantic import origin | installed wheel `pydantic` |
 | HTTPX import origin | installed test extra `httpx2` |
 | SHA-256 wheel | `5d763f93da600eadffdc94370575a3bb26d0894bba885371a9b4589ece593d49` |
-| SHA-256 sdist | `6e0408e702265e06d6c260bab0a5a7f0b4b8384a9f686a8f7baf6e070b4a8fbe` |
+| SHA-256 sdist | `1e938ec7b98cde5a156d02f31542276e72e1fcd98d63a1571de0e12d364f211b` |
 | Published wheel SHA-256 | `d3ddba2e89609ade7360df226d7d1e63c8ea1dec0284ab4b09053ee279cb0a20` |
 | Published sdist SHA-256 | `219a76bc1811a492e91132ac180bd27222ed8f45fbfae7ea82852b2d07ec3d5c` |
 

@@ -205,28 +205,26 @@ Exact names may change before the 0.9 freeze.
 
 Make the common local ETLantic + FastAPI setup predictable and diagnosable.
 
+The authoritative public contract, acceptance criteria, security boundaries,
+and dependency-aware implementation sequence are defined in
+[PHASE_0_3_EXECUTION.md](PHASE_0_3_EXECUTION.md).
+
 ### Deliverables
 
-- Add `ShuETLSettings` for integration-owned configuration:
-  - deployment profile;
-  - process role;
-  - API prefix and route preset;
-  - provider selection;
-  - database reference;
-  - identity requirements;
-  - supported operational bounds.
-- Add explicit provider-bundle construction for the supported local profile.
-- Support ETLantic memory providers and, where upstream supports it, a
-  SQLite-backed local profile.
-- Add `shuetl doctor` with machine-readable and human-readable output.
-- Report:
-  - installed package versions;
-  - supported and incompatible package combinations;
-  - configured versus available capabilities;
-  - selected profile and process role;
-  - provider readiness;
-  - schema status when a relational provider is present;
-  - whether the topology is development-only.
+- Add frozen `ShuETLSettings` with constructor-over-environment precedence and
+  no implicit dotenv, secrets-directory, or file source.
+- Require explicit local profile, gateway role, memory/SQLite provider, and host
+  identity mode; missing configuration never selects development behavior.
+- Preserve the complete upstream router and existing prefix contract.
+- Add explicit `LocalProviderBundle` construction using host-supplied ETLantic
+  authorization and identity contracts.
+- Support core ETLantic memory providers and an opt-in, file-backed SQLite local
+  profile through the exact `etlantic-sqlmodel` train.
+- Require SQLite schema provisioning through upstream tooling outside startup;
+  inspect the exact migration head and expose explicit bundle cleanup.
+- Add `shuetl doctor` with equivalent deterministic text and versioned JSON
+  output for configuration, package compatibility, capabilities, provider
+  readiness, schema state, and the development-only topology warning.
 - Provide one install-to-first-run tutorial using an application-owned ETLantic
   definition.
 - Provide settings examples for explicit Python construction and environment
@@ -238,9 +236,11 @@ Make the common local ETLantic + FastAPI setup predictable and diagnosable.
 
 - No implicit production defaults.
 - No automatic plugin discovery from caller-controlled values.
-- No automatic database migration.
+- No automatic table creation or database migration.
 - No claim that SQLite is a production coordination backend.
 - No host identity product.
+- No registry, durable-work, scheduling, governance, worker, or execution graph.
+- No new or filtered HTTP routes and no replacement for upstream `/ready`.
 
 ### Exit gate
 
@@ -248,12 +248,17 @@ Make the common local ETLantic + FastAPI setup predictable and diagnosable.
       documented quickstart.
 - [ ] Missing optional providers produce actionable capability diagnostics.
 - [ ] Mixed unsupported ETLantic package versions fail before serving traffic.
-- [ ] Production profile selection rejects memory-only providers.
+- [ ] Unsupported production profiles and non-gateway roles fail validation;
+      no local provider is constructed.
 - [ ] Development-only behavior cannot be selected through missing
       configuration.
 - [ ] Diagnostic snapshots contain no credentials or resolved secret values.
 - [ ] Configuration tests cover explicit values, environment values, invalid
       combinations, and deterministic precedence.
+- [ ] SQLite uses an already migrated file, applies no schema change during
+      construction/startup, and closes its engine exactly once.
+- [ ] Existing 0.2 facade, HTTP, authorization, lifecycle, and OpenAPI contracts
+      remain unchanged.
 
 ---
 

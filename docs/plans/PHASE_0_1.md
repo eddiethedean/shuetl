@@ -30,10 +30,11 @@ facts against installed distributions rather than a sibling source checkout:
 | Dedicated-app surface | `create_app()` |
 | Required memory graph | authorizer, definitions, submissions, events, context factory |
 
-These are spike inputs, not the final ShuETL support policy. The compatibility
-ADR decides whether the published 0.1 metadata uses exact pins or a bounded
-0.51 range. Evidence collected from editable installs or undeclared import
-paths does not satisfy the release gate.
+These are the exact 0.1 evidence inputs. Phase 0.1 supports Python 3.11–3.13 and
+proves only the ETLantic 0.51.0 package train; it records the resolved FastAPI
+and Pydantic versions without claiming their entire allowed ranges. Evidence
+collected from editable installs or undeclared import paths does not satisfy the
+release gate.
 
 ## Why a separate package is plausible
 

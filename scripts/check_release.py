@@ -25,6 +25,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     uv_run = [uv, "run"]
     run_step("lock", [uv, "lock", "--check"])
+    run_step(
+        "sync",
+        [uv, "sync", "--locked", "--all-groups", "--extra", "test"],
+    )
     run_step("format", [*uv_run, "ruff", "format", "--check", "."])
     run_step("lint", [*uv_run, "ruff", "check", "."])
     run_step("typing", [*uv_run, "pyright"])

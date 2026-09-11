@@ -192,6 +192,14 @@ worker, or identity adapter are part of the expected change.
 
 ## Public contract
 
+### Required behavior
+
+Every observable rule from **Public exports** through **Doctor contract**, plus
+the compatibility, invariant, security, and acceptance sections below, is
+required. An implementation may change private structure only when all of those
+behaviors remain demonstrably equivalent. No recommendation can weaken a
+required behavior or acceptance criterion.
+
 ### Public exports
 
 Phase 0.3 preserves all 0.2 exports and adds exactly these top-level names:
@@ -570,6 +578,31 @@ shuetl --version
 The implementation uses stdlib `argparse`; it does not add Typer or Click as a
 direct dependency merely because ETLantic currently depends on them.
 
+## Recommended implementation
+
+These details are non-normative. Luna may adapt them to repository reality while
+preserving every required behavior and AC:
+
+- Put settings, distribution checks, provider bundles, diagnostics, and CLI
+  parsing in the named modules from the touched surface instead of enlarging
+  `integration.py`.
+- Extract the existing prefix validator to one private dependency-neutral module
+  and import it from settings and the facade; do not duplicate the grammar.
+- Implement settings sources with `settings_customise_sources()` and explicit
+  per-field uppercase `validation_alias` values.
+- Use `importlib.metadata` for compatibility inventory and defer optional
+  imports until the inventory passes.
+- Use SQLAlchemy's public URL parser for SQLite classification rather than
+  hand-parsing or substring checks.
+- Keep mutable bundle lifecycle state in a private object so the public bundle
+  can remain frozen and slotted.
+- Build `DoctorReport` from a private ordered check collector, then render both
+  formats from that one model.
+- Centralize authored remediation strings so exceptions, doctor output, tests,
+  and documentation cannot drift.
+- Isolate filesystem and distribution inspection behind narrow private helpers
+  that tests can replace without mocking ETLantic behavior.
+
 ## Existing facade compatibility
 
 All 0.2 contracts remain in force:
@@ -734,20 +767,50 @@ origins outside the checkout.
 
 ## Verification matrix
 
-| AC range | Preferred proof | Required evidence |
+| AC | Preferred proof | Required assertion or artifact |
 |---|---|---|
-| AC-001–002 | Packaging and installed-wheel tests | METADATA, entry point, exact exports, import origins |
-| AC-003–010 | Parameterized settings and redaction tests | Field/schema snapshot, source matrix, invalid combinations, sentinel scan |
-| AC-011–013 | Compatibility unit tests in isolated environments | Missing/wrong/mixed distribution matrices and import spies |
-| AC-014–018 | Provider unit and integration tests | Identity assertions, exact upstream types, isolation, absent optional providers |
-| AC-019–022 | Temporary SQLite integration tests | Missing-file snapshot, schema revisions, no-migration spies, disposal counters |
-| AC-023–024 | Regression and shared HTTP contract suites | Existing 0.2 tests plus memory/SQLite parameterization |
-| AC-025–032 | Model, golden JSON, and redaction tests | Exact schema/check ordering and equivalent text/JSON facts |
-| AC-033–034 | Subprocess CLI tests from source and wheel | stdout/stderr/exit-code matrix |
-| AC-035–036 | Isolated installed-wheel examples | Executed memory quickstart and explicitly provisioned SQLite example |
-| AC-037–038 | Boundary scanner and OpenAPI comparison | Prohibited symbol/import fixtures and normalized equality |
-| AC-039–040 | Artifact/release gate on CI matrix | Core and SQLite-extra clean installs plus complete gate logs |
-| AC-041–042 | Documentation/evidence review | Required-topic assertions, AC ledger, hashes, and redaction scan |
+| AC-001 | Compatibility / Packaging | Source and wheel METADATA contain the exact version, dependencies, extra, Python range, and console entry point. |
+| AC-002 | Unit / Artifact | Source and isolated-wheel `__all__` equal the documented tuple and import every name. |
+| AC-003 | Unit / Contract | Model field and JSON-schema snapshots prove exact fields, frozen state, and forbidden extras. |
+| AC-004 | Unit / Property | The complete omission matrix fails and constructs no provider. |
+| AC-005 | Unit / Property | A constructor/environment/default Cartesian table proves field-level precedence. |
+| AC-006 | Unit / Compatibility | Temporary dotenv, secret, project, structured, and case-variant sources do not affect settings. |
+| AC-007 | Unit / Contract | The complete accepted/rejected prefix table matches 0.2 and non-`complete` presets fail. |
+| AC-008 | Unit / Property | Every provider/database/profile/role/identity combination has the specified pass/fail result. |
+| AC-009 | Unit / Property | Boundary values pass; NaN, infinity, and out-of-range values fail. |
+| AC-010 | Unit / Static Gate | Sentinel values are absent from repr, dumps, errors, logs, reports, CLI output, and evidence. |
+| AC-011 | Unit / Compatibility | Simulated missing/wrong core metadata raises before a provider constructor spy is called. |
+| AC-012 | Compatibility / Static Gate | An isolated mixed-train environment fails while optional-module import spies remain untouched. |
+| AC-013 | Integration / Compatibility | Core-only wheel plus SQLite selection returns the exact capability remediation and no memory bundle. |
+| AC-014 | Unit / Type | Valid upstream inputs pass by identity; each missing/wrong argument fails before store construction. |
+| AC-015 | Unit / Integration | Runtime type and identity checks prove the three memory stores and `ETLanticAPI` are upstream instances. |
+| AC-016 | Unit / Integration | API fields are the exact injected objects and its profile equals upstream `development`. |
+| AC-017 | Unit / Contract | Every optional `ETLanticAPI` provider field is asserted `None`. |
+| AC-018 | Property / Integration | Two bundles have disjoint APIs/stores/mutable state while explicitly reused caller objects retain identity. |
+| AC-019 | Unit / Integration | URL matrix and before/after filesystem snapshots prove only file SQLite is accepted and no missing file is created. |
+| AC-020 | Integration | A provider-migrated temporary DB produces three exact SQLModel store types sharing one engine. |
+| AC-021 | Migration / Integration | Empty, behind, ahead, and corrupt databases fail; migration/table-call spies record zero calls. |
+| AC-022 | Unit / Integration | Engine disposal counters prove one cleanup on every failed path and one total cleanup across repeated `close()`. |
+| AC-023 | Contract / Compatibility | The unchanged complete 0.2 facade suite passes against caller-built APIs. |
+| AC-024 | Contract / Integration | Shared memory/SQLite HTTP tests prove equivalent upstream statuses, bodies, authorization order, idempotency, events, and readiness. |
+| AC-025 | Unit / Contract | Frozen-model and golden-schema assertions match `shuetl.doctor/1`. |
+| AC-026 | Unit / Contract | Golden reports contain every selected setting and topology fact with no undocumented field. |
+| AC-027 | Unit / Compatibility | Missing, exact, and mismatched metadata fixtures yield the documented version map and result. |
+| AC-028 | Unit / Property | Capability lists for memory, SQLite, and missing-extra fixtures are distinct, sorted, and exact. |
+| AC-029 | Unit / Static Gate | Startup, installer, migration, table, and execution spies remain untouched during inspection. |
+| AC-030 | Unit / Migration | Memory emits `skip`; SQLite head/mismatch fixtures emit required pass/fail schema checks. |
+| AC-031 | Unit / Contract | Golden check arrays prove exact order, IDs, status reduction, and remediation text. |
+| AC-032 | Unit / Security | Text/JSON fact comparison and sentinel scans prove equivalent content and complete redaction. |
+| AC-033 | Integration / CLI | Subprocess matrix proves environment loading, format selection, stdout/stderr, and exit 0/1/2. |
+| AC-034 | Integration / Artifact | Isolated wheel prints exact version and rejects every undocumented subcommand. |
+| AC-035 | Integration / Manual | The memory tutorial runs outside the checkout and proves definition ownership plus an authenticated API response. |
+| AC-036 | Integration / Migration | The SQLite example records separate upstream provisioning, no startup mutation, successful request, and one close. |
+| AC-037 | Static Gate / Integration | Boundary fixtures fail on prohibited models/routes/imports/calls and runtime spies observe no execution. |
+| AC-038 | Contract / Compatibility | Normalized memory and SQLite OpenAPI equal the immutable 0.2 document. |
+| AC-039 | Artifact / Integration | Core and SQLite clean installs pass allowlists/import-origin checks and contain no DB/settings files. |
+| AC-040 | Static Gate / Compatibility | The one-command gate passes on the Python 3.11, 3.12, and 3.13 CI matrix. |
+| AC-041 | Manual / Static Gate | Documentation-topic assertions and executable snippets cover the complete required user contract. |
+| AC-042 | Static Gate / Artifact | Evidence checker finds AC-001–042 exactly once, verifies hashes, and passes the path/secret scan. |
 
 Behavioral acceptance must exercise production package code and real upstream
 providers. A source string, mock bundle, or monkeypatched doctor report is not
@@ -760,6 +823,9 @@ sufficient proof for a behavioral criterion.
 Goal: turn ADR-0007 and ADR-0009 into failing contract tests before adding
 production behavior.
 
+Relevant surface: new settings/diagnostic/CLI tests, shared fixtures, and the
+unchanged 0.2 regression suite.
+
 Required work:
 
 - Add exact settings field/schema and source-precedence fixtures.
@@ -767,6 +833,12 @@ Required work:
 - Add the canonical doctor JSON fixture, check order, and text fact inventory.
 - Add CLI exit/stdout/stderr expectations.
 - Preserve existing 0.2 tests unchanged as regression coverage.
+
+Verification: collect the new tests successfully and record their expected
+failures; no production module is added in this phase.
+
+Documentation/configuration: commit golden settings and doctor fixtures as test
+data only; do not edit package metadata yet.
 
 Dependencies: accepted ADRs 0007–0009.
 
@@ -777,6 +849,9 @@ Exit: AC-003–010 and AC-025–034 are represented by failing tests only becaus
 
 Goal: establish the exact install surface before importing new packages.
 
+Relevant surface: `pyproject.toml`, `uv.lock`, package/artifact tests, and the
+0.3 contract inventory.
+
 Required work:
 
 - Set version `0.3.0`.
@@ -786,6 +861,12 @@ Required work:
 - Record public imports, versions, migration head, and ownership in 0.3 evidence.
 - Add isolated mismatch fixtures that do not mutate the project environment.
 
+Verification: inspect built metadata and entry points in both core and SQLite
+isolated installations.
+
+Documentation/configuration: record the compatibility table and optional-extra
+installation contract; make no runtime provider change.
+
 Dependencies: E01.
 
 Exit: AC-001 and the inventory portion of AC-011–013 pass.
@@ -793,6 +874,9 @@ Exit: AC-001 and the inventory portion of AC-011–013 pass.
 ### E03 — Implement fail-closed settings
 
 Goal: make every supported local topology explicit and reproducible.
+
+Relevant surface: `src/shuetl/settings.py`, the shared private prefix validator,
+and settings/redaction tests.
 
 Required work:
 
@@ -802,6 +886,12 @@ Required work:
 - Exclude database values from all ordinary serialization.
 - Keep raw secret resolution in one private provider function.
 
+Verification: run the source, cross-field, boundary, immutability, schema, and
+secret-sentinel matrices from AC-003–010.
+
+Documentation/configuration: add the exact environment-variable table and
+precedence statement to the settings reference draft.
+
 Dependencies: E02.
 
 Exit: AC-003–010 pass.
@@ -809,6 +899,9 @@ Exit: AC-003–010 pass.
 ### E04 — Implement compatibility and capability checks
 
 Goal: reject impossible environments before provider imports or side effects.
+
+Relevant surface: `src/shuetl/compatibility.py`, `src/shuetl/errors.py`, the
+existing facade constructor, and isolated compatibility fixtures.
 
 Required work:
 
@@ -818,6 +911,12 @@ Required work:
 - Add bounded authored errors and exact remediation strings.
 - Invoke the core check from `ShuETL.__init__` without changing API identity.
 
+Verification: use distribution metadata and import/construction spies for every
+missing, wrong, mixed, and exact package case.
+
+Documentation/configuration: publish exact supported and remediation tables;
+do not widen dependency ranges.
+
 Dependencies: E02.
 
 Exit: AC-011–013 and the compatibility regression portion of AC-023 pass.
@@ -825,6 +924,9 @@ Exit: AC-011–013 and the compatibility regression portion of AC-023 pass.
 ### E05 — Implement the memory provider bundle
 
 Goal: provide the minimal useful local construction path.
+
+Relevant surface: `src/shuetl/providers.py`, `src/shuetl/__init__.py`, provider
+unit tests, and memory integration fixtures.
 
 Required work:
 
@@ -835,6 +937,12 @@ Required work:
   idempotent cleanup.
 - Add no grant, anonymous principal, or convenience authorization policy.
 
+Verification: assert exact upstream types and identities, optional-provider
+absence, graph isolation, and no-op cleanup.
+
+Documentation/configuration: draft the explicit host identity/authorization
+portion of the memory quickstart.
+
 Dependencies: E03 and E04.
 
 Exit: AC-014–018 pass for memory.
@@ -842,6 +950,9 @@ Exit: AC-014–018 pass for memory.
 ### E06 — Implement the qualified SQLite bundle
 
 Goal: add persistent local evaluation without claiming production support.
+
+Relevant surface: the optional branch in `src/shuetl/providers.py`, SQLite
+fixtures, migration-state fixtures, and cleanup/redaction tests.
 
 Required work:
 
@@ -854,6 +965,12 @@ Required work:
 - Test behind, current, ahead, corrupt, locked, and driver-error cases with
   complete redaction.
 
+Verification: use real temporary provider databases plus spies around table and
+migration APIs; snapshot filesystem state and engine disposal counts.
+
+Documentation/configuration: document the optional extra, supported file URLs,
+upstream-only provisioning step, expected head, and mandatory cleanup.
+
 Dependencies: E05.
 
 Exit: AC-019–022 pass.
@@ -861,6 +978,9 @@ Exit: AC-019–022 pass.
 ### E07 — Implement typed diagnostics and CLI
 
 Goal: make configuration/provider failures actionable to humans and automation.
+
+Relevant surface: `src/shuetl/diagnostics.py`, `src/shuetl/cli.py`, the console
+entry point, golden reports, and subprocess tests.
 
 Required work:
 
@@ -872,6 +992,12 @@ Required work:
 - Implement the exact argparse grammar and exit behavior.
 - Add an outer redaction guard for unexpected CLI exceptions.
 
+Verification: compare typed facts across text/JSON, exercise all check statuses
+and CLI exits, and scan stdout/stderr/logs with the secret sentinel corpus.
+
+Documentation/configuration: add command syntax, report schema, check meanings,
+exit codes, and remediation guarantees.
+
 Dependencies: E03–E06.
 
 Exit: AC-025–034 pass.
@@ -879,6 +1005,9 @@ Exit: AC-025–034 pass.
 ### E08 — Prove facade and upstream behavior preservation
 
 Goal: demonstrate that configuration is composition, not a new control plane.
+
+Relevant surface: existing facade and HTTP tests, bundle-parameterized contract
+fixtures, boundary checks, and OpenAPI capture tooling.
 
 Required work:
 
@@ -889,6 +1018,12 @@ Required work:
   background work, and execution.
 - Verify `bundle.close()` remains host-controlled.
 
+Verification: run the unchanged 0.2 suite, shared real-provider HTTP contracts,
+normalized OpenAPI comparison, and prohibited-call spies.
+
+Documentation/configuration: record compatibility evidence only; do not change
+the 0.2 user contract or route documentation.
+
 Dependencies: E06.
 
 Exit: AC-023, AC-024, AC-037, and AC-038 pass.
@@ -896,6 +1031,9 @@ Exit: AC-023, AC-024, AC-037, and AC-038 pass.
 ### E09 — Add installed-wheel tutorials and documentation
 
 Goal: provide a truthful install-to-first-run local experience.
+
+Relevant surface: both Phase 0.3 examples, `README.md`, `CHANGELOG.md`, and a
+focused configuration/doctor guide if needed for readability.
 
 Required work:
 
@@ -908,6 +1046,12 @@ Required work:
   code, remediation, lifecycle responsibility, and local-only limitation.
 - Keep examples executable outside the source checkout.
 
+Verification: execute copied examples from core and SQLite wheel installations
+with no repository import path.
+
+Documentation/configuration: complete all user-facing settings, environment,
+ownership, migration, cleanup, diagnostics, and limitation material.
+
 Dependencies: E07 and E08.
 
 Exit: AC-035, AC-036, and AC-041 pass.
@@ -915,6 +1059,9 @@ Exit: AC-035, AC-036, and AC-041 pass.
 ### E10 — Generalize gates and assemble 0.3 evidence
 
 Goal: produce one self-bootstrapping release gate for core and optional paths.
+
+Relevant surface: release scripts, clean-wheel/artifact/evidence checks,
+`.github/workflows/checks.yml`, and `docs/evidence/0.3/`.
 
 Required work:
 
@@ -925,6 +1072,12 @@ Required work:
 - Retain 0.1 and 0.2 evidence as history.
 - Ensure artifacts and evidence contain no SQLite file or secret value.
 
+Verification: run the one-command gate locally, then from a source archive, and
+validate exact artifact/evidence hashes.
+
+Documentation/configuration: make gate/evidence paths version-derived and CI
+job names phase-neutral while preserving the release workflow trust chain.
+
 Dependencies: E09.
 
 Exit: AC-039, AC-040, and AC-042 pass locally.
@@ -932,6 +1085,9 @@ Exit: AC-039, AC-040, and AC-042 pass locally.
 ### E11 — Final release qualification
 
 Goal: establish a reviewable 0.3.0 candidate.
+
+Relevant surface: the exact candidate commit, built distributions, CI run,
+release evidence, documentation, and review reports; no new feature module.
 
 Required work:
 
@@ -944,6 +1100,12 @@ Required work:
 6. Audit every changed file against the touched surface and explicit non-scope.
 7. Obtain normal production review and an independent release check before a
    `v0.3.0` tag.
+
+Verification: all AC evidence, full gates, clean installs, examples, and review
+verdicts must refer to the same candidate commit.
+
+Documentation/configuration: freeze release notes and evidence to observed
+behavior; do not revise public scope during qualification.
 
 Dependencies: E10.
 
@@ -968,6 +1130,37 @@ Exit: every AC maps to passing evidence and no release blocker remains.
 | Full memory provider graph balloons scope | Optional control-plane semantics are enabled accidentally | Construct only definitions, submissions, and events |
 | Direct SQLAlchemy use widens dependency burden | Transitive implementation detail becomes accidental API | Keep it optional, exact-pinned, limited to URL/connection/disposal, and revisit on upstream lifecycle support |
 | 0.2 regressions hide behind new tests | Existing users break while local DX passes | Run the entire unchanged 0.2 suite and compare OpenAPI |
+
+## Known pre-existing problems and follow-up candidates
+
+Repository and upstream issue searches found these open, non-blocking items:
+
+- [ShuETL #1](https://github.com/eddiethedean/shuetl/issues/1) tracks upgrading
+  GitHub Actions away from deprecated Node.js 20 runtimes. Current CI passes
+  because GitHub applies its compatibility runtime. Phase 0.3 must not absorb
+  that upgrade unless the existing actions prevent an in-scope gate from
+  running.
+- [ShuETL #2](https://github.com/eddiethedean/shuetl/issues/2) tracks the
+  deprecated Starlette `TestClient` path and related `BlockingPortal` warning.
+  The test dependency now uses `httpx2`, but the upstream Starlette warning is
+  still visible. It is a follow-up unless it causes a Phase 0.3 test failure or
+  invalidates an HTTP assertion.
+- [ETLantic #130](https://github.com/eddiethedean/etlantic/issues/130) tracks a
+  stale `etlantic-fastapi` package docstring version. Runtime metadata is
+  authoritative; this documentation defect does not block compatibility checks.
+- PostgreSQL selection, production schema policy, and provider-owned migration
+  commands remain Phase 0.4 work in the roadmap. They are planned scope, not a
+  newly discovered defect, so no duplicate issue is needed.
+- Production identity adapters remain Phase 0.5 work; scheduler/worker CLI roles
+  and broader operational bounds remain Phase 0.6 work. Phase 0.3 must reject
+  those selections rather than partially implement them.
+- An upstream lifecycle wrapper for SQLModel provider bundles could later remove
+  ShuETL's narrow optional SQLAlchemy lifecycle dependency. This is an
+  architectural simplification candidate, not a correctness blocker for the
+  bounded 0.3 contract.
+
+No newly discovered unrelated repository defect lacks an appropriate existing
+issue or roadmap owner. Do not require Luna to fix the items above for 0.3.
 
 ## Stop conditions
 

@@ -23,6 +23,12 @@ dependencies = [
     "pydantic==2.13.5",
 ]
 
+[project.urls]
+Homepage = "https://github.com/eddiethedean/shuetl"
+Repository = "https://github.com/eddiethedean/shuetl"
+Changelog = "https://github.com/eddiethedean/shuetl/blob/main/CHANGELOG.md"
+Issues = "https://github.com/eddiethedean/shuetl/issues"
+
 [project.optional-dependencies]
 test = [
     "httpx2==2.12.0",

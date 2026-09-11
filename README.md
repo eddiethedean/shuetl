@@ -54,8 +54,9 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-The upcoming ShuETL 0.2.0 release provides a typed FastAPI facade for local
-development and automated tests. It accepts a prebuilt
+ShuETL 0.2.0 is [published on PyPI](https://pypi.org/project/shuetl/0.2.0/).
+This release provides a typed FastAPI facade for local development and
+automated tests. It accepts a prebuilt
 `etlantic_fastapi.ETLanticAPI`; the
 host remains responsible for providers and their lifecycle. In-memory providers
 are process-local and are not a production durability claim.
@@ -65,6 +66,12 @@ The complete design pack is in [`docs/plans/`](docs/plans/README.md).
 The implementation contracts are in
 [`docs/plans/PHASE_0_1_EXECUTION.md`](docs/plans/PHASE_0_1_EXECUTION.md) and
 [`docs/plans/PHASE_0_2_EXECUTION.md`](docs/plans/PHASE_0_2_EXECUTION.md).
+
+## Install
+
+```bash
+python -m pip install "shuetl==0.2.0"
+```
 
 ## Quickstart
 

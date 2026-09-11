@@ -17,15 +17,15 @@ in the lock file/evidence; 0.1 does not claim support across their full ranges.
 
 ## Consequences
 
+The 0.1 evidence is reproducible and conservative. A second ETLantic minor
+train requires a new compatibility decision and contract evidence.
+
 ## Alternatives
 
 - Support every upstream minor release; rejected because the 0.1 evidence must
   be reproducible and exact-pinned.
 - Test only the default interpreter; rejected because the declared matrix is
   Python 3.11–3.13.
-
-The 0.1 evidence is reproducible and conservative. A second ETLantic minor
-train requires a new compatibility decision and contract evidence.
 
 ## Validation
 

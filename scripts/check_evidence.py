@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "docs" / "evidence" / "0.1"
+DIST = ROOT / "dist"
 REDACTION_PATTERNS = (
     r"/Users/",
     r"/Volumes/",
@@ -64,11 +66,44 @@ def check() -> list[str]:
         ):
             if field not in header:
                 errors.append(f"acceptance evidence has no {field!r} column")
+        rows = [line for line in section.splitlines() if line.startswith("| AC-")]
+        expected = {f"AC-{number:03d}" for number in range(1, 23)}
+        seen: dict[str, str] = {}
+        for row in rows:
+            cells = [cell.strip() for cell in row.strip("|").split("|")]
+            if len(cells) < 5:
+                errors.append(f"malformed acceptance row: {row}")
+                continue
+            criterion, status = cells[0], cells[4]
+            if criterion in seen:
+                errors.append(f"duplicate acceptance result: {criterion}")
+            seen[criterion] = status
+            if status != "PASS":
+                errors.append(f"acceptance criterion is not PASS: {criterion}")
+        missing = sorted(expected - seen.keys())
+        if missing:
+            errors.append(f"acceptance evidence omits criteria: {missing}")
+    else:
+        errors.append("evidence index is missing the acceptance results section")
     for gate in ("Gate A", "Gate B", "Gate C"):
-        if f"| {gate} |" not in text:
+        gate_rows = [
+            line for line in text.splitlines() if line.startswith(f"| {gate} |")
+        ]
+        if not gate_rows:
             errors.append(f"evidence index does not record {gate}")
-    if not re.search(r"SHA-256[^|]*\|[^|]*[0-9a-f]{64}", text):
-        errors.append("evidence index does not record a SHA-256 artifact hash")
+        elif gate_rows[0].strip("|").split("|")[-1].strip() != "PASS":
+            errors.append(f"{gate} is not PASS")
+    recorded_hashes = dict(
+        re.findall(r"\| SHA-256 (wheel|sdist) \| `([0-9a-f]{64})` \|", text)
+    )
+    for kind, pattern in (("wheel", "*.whl"), ("sdist", "*.tar.gz")):
+        artifacts = sorted(DIST.glob(pattern))
+        if len(artifacts) != 1:
+            errors.append(f"expected one {kind} artifact in {DIST}")
+            continue
+        digest = hashlib.sha256(artifacts[0].read_bytes()).hexdigest()
+        if recorded_hashes.get(kind) != digest:
+            errors.append(f"recorded {kind} SHA-256 does not match built artifact")
     for number in range(1, 23):
         criterion = f"AC-{number:03d}"
         if criterion not in text:

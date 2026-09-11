@@ -17,16 +17,16 @@ readiness work.
 
 ## Consequences
 
+OpenAPI parity can be compared directly after stripping the mount prefix.
+Route filtering, if ever needed, must be added upstream or through a separately
+accepted ADR.
+
 ## Alternatives
 
 - Expose selected route aliases; rejected because it would create a second
   public vocabulary and drift from upstream OpenAPI.
 - Copy upstream handlers and schemas; rejected because ETLantic remains the
   semantic and HTTP owner.
-
-OpenAPI parity can be compared directly after stripping the mount prefix.
-Route filtering, if ever needed, must be added upstream or through a separately
-accepted ADR.
 
 ## Validation
 

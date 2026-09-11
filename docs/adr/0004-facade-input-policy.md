@@ -17,15 +17,15 @@ readiness requirements are implemented.
 
 ## Consequences
 
+Applications retain explicit provider ownership in 0.2. ShuETL cannot silently
+select or discover caller-controlled providers.
+
 ## Alternatives
 
 - Construct providers from settings in the facade; rejected until the 0.3
   configuration phase.
 - Accept arbitrary mappings; rejected because typed `ETLanticAPI` preserves
   upstream ownership and validation.
-
-Applications retain explicit provider ownership in 0.2. ShuETL cannot silently
-select or discover caller-controlled providers.
 
 ## Validation
 

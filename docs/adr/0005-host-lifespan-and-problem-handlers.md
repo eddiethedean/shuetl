@@ -19,15 +19,15 @@ changed by ShuETL 0.1.
 
 ## Consequences
 
+The spike proves the upstream behavior while avoiding an accidental lifecycle
+API. Collision resolution is a required 0.2 implementation concern.
+
 ## Alternatives
 
 - Replace host handlers or lifespan silently; rejected because composition must
   preserve host behavior and surface conflicts.
 - Add lifespan behavior to the 0.1 spike; rejected because it would turn proof
   tooling into production runtime code.
-
-The spike proves the upstream behavior while avoiding an accidental lifecycle
-API. Collision resolution is a required 0.2 implementation concern.
 
 ## Validation
 

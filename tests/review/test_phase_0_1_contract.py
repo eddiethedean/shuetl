@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import re
+import shutil
+import subprocess
 import tomllib
 from importlib import metadata
 from pathlib import Path
 
 import pytest
+from scripts import check_evidence
 
 ROOT = Path(__file__).resolve().parents[2]
 SUPPORTED_PYTHONS = ("3.11", "3.12", "3.13")
@@ -102,6 +106,9 @@ def test_every_adr_records_alternatives_and_evidence_links() -> None:
         text = adr.read_text(encoding="utf-8")
         missing = [section for section in required_sections if section not in text]
         assert not missing, f"{adr.name} missing sections: {missing}"
+        for section in required_sections:
+            body = text.split(section, 1)[1].split("\n## ", 1)[0].strip()
+            assert body, f"{adr.name} has an empty {section} section"
         assert "contracts.md" in text, f"{adr.name} does not link contract evidence"
         assert "ownership.md" in text, f"{adr.name} does not link ownership evidence"
 
@@ -151,6 +158,62 @@ def test_evidence_index_contains_required_reproducibility_record() -> None:
         "date",
     ):
         assert field in header, f"acceptance evidence has no {field!r} column"
+
+
+def test_recorded_artifact_hashes_match_a_fresh_build(tmp_path: Path) -> None:
+    archive = tmp_path / "source.tar"
+    source = tmp_path / "source"
+    source.mkdir()
+    subprocess.run(
+        ["git", "archive", "--output", str(archive), "HEAD"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["tar", "-xf", str(archive), "-C", str(source)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    dist = tmp_path / "dist"
+    subprocess.run(
+        ["uv", "build", "--out-dir", str(dist)],
+        cwd=source,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    index = (ROOT / "docs" / "evidence" / "0.1" / "README.md").read_text(
+        encoding="utf-8"
+    )
+    recorded = dict(
+        re.findall(r"\| SHA-256 (wheel|sdist) \| `([0-9a-f]{64})` \|", index)
+    )
+    artifacts = {
+        "wheel": next(dist.glob("*.whl")),
+        "sdist": next(dist.glob("*.tar.gz")),
+    }
+    actual = {
+        kind: hashlib.sha256(path.read_bytes()).hexdigest()
+        for kind, path in artifacts.items()
+    }
+    assert actual == recorded
+
+
+def test_evidence_gate_rejects_a_nonpassing_acceptance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    evidence = tmp_path / "evidence"
+    shutil.copytree(ROOT / "docs" / "evidence" / "0.1", evidence)
+    index = evidence / "README.md"
+    text = index.read_text(encoding="utf-8")
+    assert "| AC-001 |" in text
+    text = text.replace("| PASS | none | Codex |", "| FAIL | none | Codex |", 1)
+    index.write_text(text, encoding="utf-8")
+    monkeypatch.setattr(check_evidence, "EVIDENCE", evidence)
+    assert check_evidence.check(), "evidence gate accepted an AC with FAIL status"
 
 
 def test_boundary_review_answers_all_stop_questions() -> None:

@@ -24,7 +24,7 @@
 | Evidence environment | isolated wheel installation; normalized origins contain no absolute paths |
 | Source checkout | `PYTHONPATH` empty; clean-wheel runs outside checkout |
 | SHA-256 wheel | `07945576ee12d978e5fc785fa3303d38d41481c07fca6dc39158dc483d2ff948` |
-| SHA-256 sdist | `60570afd3a07d43173246cfc50fe959bfdef2a154b9dbbbff197a5a1f6239617` |
+| SHA-256 sdist | `0573a636468b39b4de3bde7d9d7c52950cdc7b595dc108c244ee4b2b5ba926d0` |
 | ShuETL GitHub issues | none open at planning/implementation baseline |
 | Upstream follow-up | [ETLantic #130](https://github.com/eddiethedean/etlantic/issues/130), non-blocking docstring drift |
 

@@ -17,10 +17,19 @@ in the lock file/evidence; 0.1 does not claim support across their full ranges.
 
 ## Consequences
 
+## Alternatives
+
+- Support every upstream minor release; rejected because the 0.1 evidence must
+  be reproducible and exact-pinned.
+- Test only the default interpreter; rejected because the declared matrix is
+  Python 3.11–3.13.
+
 The 0.1 evidence is reproducible and conservative. A second ETLantic minor
 train requires a new compatibility decision and contract evidence.
 
 ## Validation
+
+See the [contract inventory](../evidence/0.1/contracts.md) and [ownership matrix](../evidence/0.1/ownership.md).
 
 The test extra, lock file, import-origin checks, and Python matrix prove this
 decision. See AC-004, AC-005, and AC-019.

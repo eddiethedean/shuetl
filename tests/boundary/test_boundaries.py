@@ -26,6 +26,13 @@ def test_private_upstream_import_is_rejected() -> None:
     assert any(item.rule_id == "BOUNDARY-PRIVATE" for item in violations)
 
 
+def test_every_name_in_compound_imports_is_checked() -> None:
+    violations = check_tree(FIXTURES / "compound_import")
+    rule_ids = {item.rule_id for item in violations}
+    assert "BOUNDARY-IMPORT" in rule_ids
+    assert "BOUNDARY-PRIVATE" in rule_ids
+
+
 def test_route_decorator_is_rejected() -> None:
     violations = check_tree(FIXTURES / "route_decorator")
     assert any(item.rule_id == "BOUNDARY-ROUTE" for item in violations)

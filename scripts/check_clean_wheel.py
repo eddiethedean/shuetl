@@ -6,6 +6,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -42,8 +43,9 @@ def verify(wheel: Path) -> None:
         uv = shutil.which("uv")
         if uv is None:
             raise RuntimeError("uv is required for clean-wheel verification")
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
         _run(
-            [uv, "venv", "--python", "3.12", "--seed", str(venv_dir)],
+            [uv, "venv", "--python", python_version, "--seed", str(venv_dir)],
             cwd=work_dir,
             env=os.environ.copy(),
         )

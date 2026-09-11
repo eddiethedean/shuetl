@@ -28,6 +28,47 @@ def check() -> list[str]:
     if errors:
         return errors
     text = index.read_text(encoding="utf-8")
+    required_fields = (
+        "OS and architecture",
+        "Python version",
+        "uv version",
+        "ETLantic source revision",
+        "SHA-256",
+        "Gate A",
+        "Gate B",
+        "Gate C",
+        "ShuETL import origin",
+        "ETLantic import origin",
+        "etlantic-fastapi import origin",
+        "FastAPI import origin",
+        "Pydantic import origin",
+        "HTTPX import origin",
+    )
+    for field in required_fields:
+        if field not in text:
+            errors.append(f"evidence index omits required field: {field}")
+    acceptance = text.split("## Acceptance results", 1)
+    if len(acceptance) == 2:
+        section = acceptance[1].split("## Gap register", 1)[0]
+        header = (
+            section.splitlines()[2].lower() if len(section.splitlines()) > 2 else ""
+        )
+        for field in (
+            "criterion",
+            "task",
+            "command",
+            "artifact",
+            "limitation",
+            "reviewer",
+            "date",
+        ):
+            if field not in header:
+                errors.append(f"acceptance evidence has no {field!r} column")
+    for gate in ("Gate A", "Gate B", "Gate C"):
+        if f"| {gate} |" not in text:
+            errors.append(f"evidence index does not record {gate}")
+    if not re.search(r"SHA-256[^|]*\|[^|]*[0-9a-f]{64}", text):
+        errors.append("evidence index does not record a SHA-256 artifact hash")
     for number in range(1, 23):
         criterion = f"AC-{number:03d}"
         if criterion not in text:
@@ -41,6 +82,15 @@ def check() -> list[str]:
         errors.append("evidence index must record exactly one boundary outcome")
     if "| PASS |" not in text:
         errors.append("evidence index must contain PASS results before release")
+    for answer in (
+        "integration burden",
+        "public composition hooks",
+        "copied route",
+        "materially easier",
+        "contributed to `etlantic-fastapi`",
+    ):
+        if answer not in text:
+            errors.append(f"boundary review omits answer: {answer}")
     combined = "\n".join(
         path.read_text(encoding="utf-8") for path in (index, contracts, ownership)
     )

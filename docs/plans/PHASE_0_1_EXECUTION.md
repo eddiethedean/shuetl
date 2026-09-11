@@ -158,7 +158,9 @@ The implementation may create or update only:
 
 - root packaging and project files: `pyproject.toml`, `uv.lock`, `LICENSE`,
   `CHANGELOG.md`, and status text in `README.md`;
-- `.github/workflows/ci.yml`;
+- `.github/workflows/ci.yml`, `.github/workflows/checks.yml`, and
+  `.github/workflows/release.yml` (the tag-triggered publication workflow is
+  included by separate explicit release authorization);
 - inert package files under `src/shuetl/`;
 - repository-only proof code under `spikes/`, `scripts/`, and `tests/`;
 - ADRs under `docs/adr/`;
@@ -953,7 +955,8 @@ review comment unless this contract is deliberately revised:
 - AuthMate, Hedron, observability, artifact-store, broker, cloud, or identity
   integrations;
 - CLI commands, application server startup, container files, deployment
-  manifests, runbooks, or publication automation;
+  manifests, or runbooks. The tag-triggered release workflow is separately
+  authorized and remains outside package behavior;
 - full FastAPI/Pydantic lower-and-upper-bound testing;
 - support for ETLantic releases other than exactly 0.51.0;
 - repair of upstream defects that do not block the public 0.51 composition seam;
@@ -1005,4 +1008,4 @@ The repository does not need to be globally defect-free, and ETLantic issue
 
 ## Plan Status
 
-**READY FOR IMPLEMENTATION**
+**IMPLEMENTED — pending independent re-review**

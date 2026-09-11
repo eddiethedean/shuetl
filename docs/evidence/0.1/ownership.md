@@ -19,6 +19,7 @@
 | Capability/readiness diagnostics | ShuETL composition | later adapter surface | deferred | implicit fallback capability | scope gate | 0.3 |
 | Gateway/scheduler/worker roles | ETLantic runtime + supervisor | n/a | configure later | ShuETL executor/scheduler | reserved inventory | 0.6 |
 | Optional AuthMate/Hedron adapters | peer package public APIs | peer/upstream | deferred | core dependency or authority fork | scope gate | 0.8 |
+| Deployment profiles | ShuETL | n/a | select/document later | implicit production guarantee | scope gate | 0.3 |
 
 The authoritative semantic owner is unique in every row. “ShuETL supports” a
 capability means selecting, mounting, validating, or documenting the upstream

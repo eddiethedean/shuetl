@@ -212,6 +212,16 @@ def run() -> None:
     _assert_clean_origin(shuetl, "shuetl")
     _assert_clean_origin(etlantic, "etlantic")
     _assert_clean_origin(etlantic_fastapi, "etlantic_fastapi")
+    for distribution in (
+        "shuetl",
+        "etlantic",
+        "etlantic-fastapi",
+        "fastapi",
+        "pydantic",
+        "httpx",
+    ):
+        version = metadata.version(distribution)
+        print(f"{distribution}={version}")
     assert metadata.version("etlantic") == "0.51.0"
     assert metadata.version("etlantic-fastapi") == "0.51.0"
 
@@ -295,6 +305,7 @@ def run() -> None:
 
     contract = assert_openapi_parity(app, build_direct_app())
     print(f"OPENAPI_OPERATION_COUNT={len(contract['operationIds'])}")
+    print("MEMORY_PROFILE=process-local; no restart durability")
     print("PHASE_0_1_SPIKE=PASS")
 
 

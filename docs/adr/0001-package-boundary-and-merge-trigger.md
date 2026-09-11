@@ -24,10 +24,17 @@ Phase 0.1 proves the upstream seam and does not create a facade. Every later
 feature must be expressible as configuring or exposing ETLantic capability
 through FastAPI.
 
+## Alternatives
+
+- Merge immediately into `etlantic-fastapi`; rejected because ShuETL still owns
+  composition, compatibility, and deployment-profile evidence.
+- Ship a wrapper facade in 0.1; rejected because the phase is an evidence
+  release and must not duplicate upstream routes or models.
+
 ## Validation
 
 The memory spike, ownership matrix, OpenAPI comparison, and boundary checker
-provide the evidence. See AC-006 through AC-018.
+provide the evidence. See AC-006 through AC-018 and the [contract inventory](../evidence/0.1/contracts.md) and [ownership matrix](../evidence/0.1/ownership.md).
 
 ## Revisit trigger
 

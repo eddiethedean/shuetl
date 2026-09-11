@@ -21,6 +21,14 @@ packages; private implementation modules are excluded.
 | Memory submissions | `MemorySubmissionStore` | `etlantic.control_plane.MemorySubmissionStore` | etlantic | 0.51.0 | process-local acceptance | 0.1 spike graph | upstream memory implementation | consumed |
 | Memory events | `MemoryEventStore` | `etlantic.control_plane.MemoryEventStore` | etlantic | 0.51.0 | test/local provider | 0.1 spike graph | upstream memory implementation | consumed |
 | Identity context | `ControlPlaneContext`, refs, `Principal` | `etlantic.control_plane` | etlantic | 0.51.0 | public models | 0.1 spike setup | upstream control-plane exports | consumed |
+| Identity references | `TenantRef`, `WorkspaceRef`, `EnvironmentRef`, `SecurityDomain` | `etlantic.control_plane` | etlantic | 0.51.0 | public models | 0.1 spike setup | upstream control-plane exports | consumed |
+| Durable work | `DurableWorkStore`, `MemoryDurableWorkStore` | `etlantic.control_plane` | etlantic | 0.51.0 | reserved provider seam | 0.4 | upstream control-plane exports | reserved |
+| Registry | `RegistryProvider`, `RevisionRegistry` | `etlantic.control_plane` | etlantic | 0.51.0 | reserved provider seam | 0.4 | upstream control-plane exports | reserved |
+| History | `HistoryStore`, `MemoryHistoryStore` | `etlantic.control_plane` | etlantic | 0.51.0 | reserved provider seam | 0.4 | upstream control-plane exports | reserved |
+| Health | `HealthResponse` | `etlantic_fastapi` | etlantic-fastapi | 0.51.0 | public response | 0.2 | upstream adapter exports | reserved |
+| Readiness | `ReadyResponse` | `etlantic_fastapi` | etlantic-fastapi | 0.51.0 | public response | 0.2 | upstream adapter exports | reserved |
+| Problem Details | `ProblemDetails` | `etlantic.control_plane` | etlantic | 0.51.0 | public error model | 0.2 | upstream control-plane exports | reserved |
+| SSE | `sse_streaming_response` | `etlantic_fastapi` | etlantic-fastapi | 0.51.0 | public response helper | 0.2 | upstream adapter exports | reserved |
 | HTTP host | `FastAPI`, `TestClient` | `fastapi`, `fastapi.testclient` | fastapi | lock-resolved | framework API | 0.1 spike | FastAPI contract tests | test-only |
 | HTTP test transport | `httpx` | `httpx` | httpx | lock-resolved | test dependency | 0.1 tests | adapter test extra | test-only |
 | Relational providers | `etlantic-sqlmodel` public package | `etlantic_sqlmodel` | etlantic-sqlmodel | 0.51.0 | provider-owned persistence | 0.4 | provider README/migrations | reserved |

@@ -55,12 +55,13 @@ class Violation:
         )
 
 
-def _module_from_import(node: ast.AST) -> str | None:
+def _modules_from_import(node: ast.AST) -> list[str]:
     if isinstance(node, ast.Import):
-        return node.names[0].name if node.names else None
+        return [alias.name for alias in node.names]
     if isinstance(node, ast.ImportFrom):
-        return node.module
-    return None
+        prefix = "." * node.level + (node.module or "")
+        return [f"{prefix}.{alias.name}" for alias in node.names]
+    return []
 
 
 def _scan_file(path: Path) -> list[Violation]:
@@ -80,35 +81,36 @@ def _scan_file(path: Path) -> list[Violation]:
     violations: list[Violation] = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
-            module = _module_from_import(node)
-            if not module:
-                continue
-            root = module.split(".", 1)[0]
-            if root in PROHIBITED_IMPORT_ROOTS:
-                violations.append(
-                    Violation(
-                        "BOUNDARY-IMPORT",
-                        path,
-                        node.lineno,
-                        f"prohibited implementation dependency: {module}",
-                        (
-                            "use an ETLantic public contract or move the capability "
-                            "upstream"
-                        ),
+            for module in _modules_from_import(node):
+                normalized = module.lstrip(".")
+                if not normalized:
+                    continue
+                root = normalized.split(".", 1)[0]
+                if root in PROHIBITED_IMPORT_ROOTS:
+                    violations.append(
+                        Violation(
+                            "BOUNDARY-IMPORT",
+                            path,
+                            node.lineno,
+                            f"prohibited implementation dependency: {normalized}",
+                            (
+                                "use an ETLantic public contract or move capability "
+                                "upstream"
+                            ),
+                        )
                     )
-                )
-            if root in {"etlantic", "etlantic_fastapi"} and any(
-                segment.startswith("_") for segment in module.split(".")[1:]
-            ):
-                violations.append(
-                    Violation(
-                        "BOUNDARY-PRIVATE",
-                        path,
-                        node.lineno,
-                        f"private upstream import: {module}",
-                        "import only documented public ETLantic package surfaces",
+                if root in {"etlantic", "etlantic_fastapi"} and any(
+                    segment.startswith("_") for segment in normalized.split(".")[1:]
+                ):
+                    violations.append(
+                        Violation(
+                            "BOUNDARY-PRIVATE",
+                            path,
+                            node.lineno,
+                            f"private upstream import: {normalized}",
+                            "import only documented public ETLantic package surfaces",
+                        )
                     )
-                )
         elif isinstance(node, ast.ClassDef) and node.name in DOMAIN_CLASS_NAMES:
             violations.append(
                 Violation(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+from typing import Any, cast
 
 import pytest
 from etlantic.control_plane import ControlPlaneError
@@ -97,6 +98,28 @@ def test_repeated_mount_and_prefix_subtree_collision(integration: ShuETL) -> Non
 
     with pytest.raises(MountConflictError):
         integration.mount(occupied)
+
+
+def test_upstream_operation_ids_must_be_present_and_unique(integration: ShuETL) -> None:
+    first = cast(Any, integration.api.router.routes[0])
+    second = cast(Any, integration.api.router.routes[1])
+    first_state = (first.operation_id, first.unique_id)
+    second_state = (second.operation_id, second.unique_id)
+    try:
+        first.operation_id = None
+        first.unique_id = None
+        with pytest.raises(MountConflictError):
+            integration.mount(FastAPI())
+
+        first.operation_id = "duplicate-operation"
+        first.unique_id = "duplicate-operation"
+        second.operation_id = "duplicate-operation"
+        second.unique_id = "duplicate-operation"
+        with pytest.raises(MountConflictError):
+            integration.mount(FastAPI())
+    finally:
+        first.operation_id, first.unique_id = first_state
+        second.operation_id, second.unique_id = second_state
 
 
 def test_segment_adjacent_prefix_does_not_conflict(integration: ShuETL) -> None:

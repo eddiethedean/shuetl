@@ -93,6 +93,40 @@ app.dependency_overrides.pop(integration.api.principal_dependency, None)
 app.dependency_overrides.pop(integration.api.context_dependency, None)
 ```
 
+Mount the integration before startup. ShuETL does not start, stop,
+close, or mutate caller-owned providers; the host remains responsible for their
+lifecycle. When a host lifespan is present, compose it explicitly: the host
+enters first and ShuETL exits before the host. The host first initializes
+providers, then ShuETL records its active mount:
+
+```python
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def host_lifespan(app):
+    # Initialize caller-owned ETLantic providers here.
+    yield
+    # Close caller-owned providers here.
+
+
+app = FastAPI(lifespan=integration.compose_lifespan(host_lifespan))
+integration.mount(app, prefix="/etl")
+```
+
+Prefixes are literal path segments: use `""` for the root, or a slash-prefixed
+sequence of ASCII letters, digits, `.`, `_`, `~`, and `-` segments. A prefix may
+not have a trailing slash or contain empty, dot, or dot-dot segments, route
+parameters, query or fragment markers, percent escapes, backslashes, whitespace,
+or control characters. `InvalidPrefixError` reports invalid prefixes. Mounting
+raises `MountConflictError` before mutation when reserved state, handlers, route
+namespaces, or operation IDs collide; resolve the host conflict before retrying.
+
+This release does not construct or own providers, execute ETLantic work, or
+provide production deployment orchestration. It is intended for local
+development and automated tests, and the in-memory provider examples are
+process-local.
+
 To run the local evidence gate:
 
 ```bash

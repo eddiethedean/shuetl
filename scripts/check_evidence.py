@@ -6,10 +6,14 @@ import argparse
 import hashlib
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-EVIDENCE = ROOT / "docs" / "evidence" / "0.1"
+PROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+PROJECT_VERSION = str(PROJECT["project"]["version"])
+RELEASE_SERIES = ".".join(PROJECT_VERSION.split(".")[:2])
+EVIDENCE = ROOT / "docs" / "evidence" / RELEASE_SERIES
 DIST = ROOT / "dist"
 REDACTION_PATTERNS = (
     r"/Users/",

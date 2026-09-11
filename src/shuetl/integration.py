@@ -41,7 +41,9 @@ def _state_contains(app: FastAPI, key: str) -> bool:
 
 def _validate_prefix(prefix: str) -> str:
     if not isinstance(prefix, str):
-        raise InvalidPrefixError(f"invalid mount prefix {prefix!r}: expected str")
+        raise InvalidPrefixError(
+            f"invalid mount prefix: expected str, got {type(prefix).__name__}"
+        )
     if prefix == "":
         return prefix
     if not fullmatch(_PREFIX_PATTERN, prefix):
@@ -86,14 +88,27 @@ def _path_templates_overlap(left: str, right: str) -> bool:
 
     left_segments = _path_segments(left)
     right_segments = _path_segments(right)
-    if len(left_segments) != len(right_segments):
+    left_catch_all = bool(left_segments and left_segments[-1] == "{path:path}")
+    right_catch_all = bool(right_segments and right_segments[-1] == "{path:path}")
+    if (
+        not left_catch_all
+        and not right_catch_all
+        and len(left_segments) != len(right_segments)
+    ):
         return False
-    for left_segment, right_segment in zip(left_segments, right_segments, strict=True):
+    comparable = min(len(left_segments), len(right_segments))
+    for left_segment, right_segment in zip(
+        left_segments[:comparable], right_segments[:comparable], strict=True
+    ):
+        if left_segment == "{path:path}" or right_segment == "{path:path}":
+            return True
         if left_segment.startswith("{") or right_segment.startswith("{"):
             continue
         if left_segment != right_segment:
             return False
-    return True
+    return (
+        left_catch_all or right_catch_all or len(left_segments) == len(right_segments)
+    )
 
 
 def _full_path(prefix: str, route_path: str) -> str:
@@ -104,8 +119,55 @@ def _full_path(prefix: str, route_path: str) -> str:
     return f"{prefix}{route_path if route_path.startswith('/') else '/' + route_path}"
 
 
-def _host_routes(app: FastAPI) -> list[Any]:
-    return list(app.routes)
+@dataclass(frozen=True, slots=True)
+class _HostRoute:
+    route: Any
+    path: str
+
+
+def _join_route_path(prefix: str, path: str) -> str:
+    if not path or path == "/":
+        return prefix or "/"
+    normalized_path = path if path.startswith("/") else f"/{path}"
+    if not prefix:
+        return normalized_path
+    return f"{prefix.rstrip('/')}{normalized_path}"
+
+
+def _included_router_parts(route: Any) -> tuple[list[Any], str] | None:
+    """Read FastAPI's included-router container without importing private APIs."""
+
+    original_router = getattr(route, "original_router", None)
+    include_context = getattr(route, "include_context", None)
+    routes = getattr(original_router, "routes", None)
+    include_prefix = getattr(include_context, "prefix", None)
+    if not isinstance(routes, list) or not isinstance(include_prefix, str):
+        return None
+    return routes, include_prefix
+
+
+def _host_routes(app: FastAPI) -> list[_HostRoute]:
+    routes: list[_HostRoute] = []
+
+    def visit(route_list: list[Any], prefix: str = "") -> None:
+        for route in route_list:
+            included = _included_router_parts(route)
+            if included is not None:
+                included_routes, included_prefix = included
+                visit(included_routes, _join_route_path(prefix, included_prefix))
+                continue
+
+            route_path = _route_path(route)
+            if route_path is None:
+                continue
+            effective_path = _join_route_path(prefix, route_path)
+            routes.append(_HostRoute(route=route, path=effective_path))
+            child_routes = getattr(route, "routes", None)
+            if isinstance(child_routes, list):
+                visit(child_routes, effective_path)
+
+    visit(list(app.routes))
+    return routes
 
 
 def _is_prefix_subtree(path: str, prefix: str) -> bool:
@@ -164,8 +226,9 @@ class ShuETL:
         host_routes = _host_routes(app)
         host_operation_ids = {
             operation_id
-            for route in host_routes
-            if isinstance(route, APIRoute)
+            for host_route in host_routes
+            if isinstance(host_route.route, APIRoute)
+            for route in [host_route.route]
             for operation_id in [_route_operation_id(route)]
             if operation_id is not None
         }
@@ -183,19 +246,23 @@ class ShuETL:
             target_path = _full_path(prefix, route_path)
             target_methods = _route_methods(upstream_route)
             for host_route in host_routes:
-                host_path = _route_path(host_route)
-                if host_path is None:
-                    continue
-                if prefix and _is_prefix_subtree(host_path, prefix):
+                host_path = host_route.path
+                route = host_route.route
+                if prefix and (
+                    _is_prefix_subtree(host_path, prefix)
+                    or (
+                        isinstance(route, Mount)
+                        and _is_prefix_subtree(prefix, host_path)
+                    )
+                    or _path_templates_overlap(host_path, target_path)
+                ):
                     raise _conflict(
                         f"mount conflict: host route occupies prefix {prefix!r}"
                     )
-                if not prefix and isinstance(
-                    host_route, (Route, WebSocketRoute, Mount)
-                ):
+                if not prefix and isinstance(route, (WebSocketRoute, Mount)):
                     continue
-                if not prefix and isinstance(host_route, APIRoute):
-                    host_methods = _route_methods(host_route)
+                if not prefix and isinstance(route, (APIRoute, Route)):
+                    host_methods = _route_methods(route)
                     if target_methods & host_methods and _path_templates_overlap(
                         target_path, host_path
                     ):
@@ -210,7 +277,13 @@ class ShuETL:
         self._preflight(app, validated_prefix)
         if ControlPlaneError not in app.exception_handlers:
             install_exception_handlers(app)
-        include_router(app, self.api, prefix=validated_prefix)
+        host_lifespan = app.router.lifespan_context
+        try:
+            include_router(app, self.api, prefix=validated_prefix)
+        finally:
+            # The upstream helper merges router lifespans as a side effect.
+            # ShuETL must leave lifespan selection to the host/factory caller.
+            app.router.lifespan_context = host_lifespan
         app.state.shuetl = _MountRecord(
             integration_id=id(self), api_id=id(self.api), prefix=validated_prefix
         )

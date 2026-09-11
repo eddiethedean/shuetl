@@ -16,8 +16,8 @@ so the evidence contains no machine-specific locations or secrets.
 | FastAPI import origin | installed wheel `fastapi` |
 | Pydantic import origin | installed wheel `pydantic` |
 | HTTPX import origin | installed test extra `httpx` |
-| SHA-256 wheel | `99f41d10983511c330b7603e9dd2203b87e580ac19452c4882cdcb3f6a296b9e` |
-| SHA-256 sdist | `6ad21d309dba9577f31ddaf56597ae98e9a906f886095aecf5d0cfc0baadd806` |
+| SHA-256 wheel | `4cf33f0c676813af1e754c18ccf5171e1d2f31704e27c10bed308b8417d1dc12` |
+| SHA-256 sdist | `e5bf38d77cca431adad972a316abad1fef1016cdb2daf3267934ac650514a515` |
 
 ## Gates
 
@@ -33,40 +33,40 @@ so the evidence contains no machine-specific locations or secrets.
 |---|---|---|---|---|---|---|---|
 | AC-001 | 0.2.0 metadata and qualified dependencies | pytest | package metadata | PASS | none | Codex | 2026-09-11 |
 | AC-002 | exact public exports | pytest | installed wheel | PASS | none | Codex | 2026-09-11 |
-| AC-003 | API identity and type validation | pytest | facade unit tests | PASS | none | Codex | 2026-09-11 |
-| AC-004 | complete default mount | pytest | integration tests | PASS | none | Codex | 2026-09-11 |
-| AC-005 | dedicated application factory | pytest | integration tests | PASS | none | Codex | 2026-09-11 |
-| AC-006 | literal prefixes | pytest | prefix tests | PASS | none | Codex | 2026-09-11 |
-| AC-007 | invalid prefixes are atomic | pytest | prefix tests | PASS | none | Codex | 2026-09-11 |
-| AC-008 | OpenAPI parity | capture_openapi.py | openapi.normalized.json | PASS | none | Codex | 2026-09-11 |
-| AC-009 | operation IDs and schemas | boundary check | OpenAPI evidence | PASS | none | Codex | 2026-09-11 |
+| AC-003 | API identity and type validation | pytest | tests/unit/test_package.py; tests/unit/test_integration.py | PASS | none | Codex | 2026-09-11 |
+| AC-004 | complete default mount | pytest | tests/unit/test_integration.py; tests/integration/test_shuetl_facade.py | PASS | none | Codex | 2026-09-11 |
+| AC-005 | dedicated application factory | pytest | tests/unit/test_integration.py; tests/integration/test_shuetl_facade.py | PASS | none | Codex | 2026-09-11 |
+| AC-006 | literal prefixes | pytest | tests/unit/test_integration.py | PASS | none | Codex | 2026-09-11 |
+| AC-007 | invalid prefixes are atomic | pytest | tests/unit/test_integration.py; tests/review/test_phase_0_2_blockers.py | PASS | none | Codex | 2026-09-11 |
+| AC-008 | OpenAPI parity | pytest; capture_openapi.py | tests/integration/test_phase_0_2_contract.py; openapi.normalized.json | PASS | none | Codex | 2026-09-11 |
+| AC-009 | operation IDs and schemas | pytest; boundary check | tests/integration/test_phase_0_2_contract.py; OpenAPI evidence | PASS | none | Codex | 2026-09-11 |
 | AC-010 | upstream error handler install | pytest | handler test | PASS | none | Codex | 2026-09-11 |
-| AC-011 | exact handler preservation | pytest | handler test | PASS | none | Codex | 2026-09-11 |
+| AC-011 | exact handler preservation | pytest | tests/integration/test_phase_0_2_contract.py | PASS | none | Codex | 2026-09-11 |
 | AC-012 | custom handler conflict | pytest | collision test | PASS | none | Codex | 2026-09-11 |
 | AC-013 | state ownership record | pytest | state test | PASS | none | Codex | 2026-09-11 |
 | AC-014 | reserved state conflicts | pytest | collision test | PASS | none | Codex | 2026-09-11 |
 | AC-015 | repeated mount rejection | pytest | collision test | PASS | none | Codex | 2026-09-11 |
-| AC-016 | prefix subtree rules | pytest | collision test | PASS | none | Codex | 2026-09-11 |
-| AC-017 | path and operation collisions | pytest | collision test | PASS | none | Codex | 2026-09-11 |
-| AC-018 | upstream operation validation | pytest | preflight implementation | PASS | none | Codex | 2026-09-11 |
-| AC-019 | OpenAPI cache invalidation | pytest | mount implementation | PASS | none | Codex | 2026-09-11 |
-| AC-020 | host preservation | pytest | mount implementation | PASS | none | Codex | 2026-09-11 |
-| AC-021 | bound lifespan state | pytest | lifespan implementation | PASS | none | Codex | 2026-09-11 |
-| AC-022 | composed lifespan ordering | pytest | lifespan implementation | PASS | none | Codex | 2026-09-11 |
-| AC-023 | provider ownership | pytest | facade implementation | PASS | none | Codex | 2026-09-11 |
-| AC-024 | dependency overrides | pytest | FastAPI integration | PASS | none | Codex | 2026-09-11 |
-| AC-025 | definition contract | pytest | upstream contract | PASS | none | Codex | 2026-09-11 |
-| AC-026 | accepted idempotent submission | pytest | Phase 0.1 contract | PASS | none | Codex | 2026-09-11 |
-| AC-027 | operability routes | pytest | upstream contract | PASS | none | Codex | 2026-09-11 |
-| AC-028 | SSE contract | pytest | upstream inventory | PASS | qualified upstream behavior | Codex | 2026-09-11 |
-| AC-029 | authorization ownership | pytest | upstream contract | PASS | none | Codex | 2026-09-11 |
-| AC-030 | no duplicate execution layer | boundary check | source tree | PASS | none | Codex | 2026-09-11 |
-| AC-031 | independent app state | pytest | factory test | PASS | none | Codex | 2026-09-11 |
+| AC-016 | prefix subtree rules | pytest | tests/unit/test_integration.py; tests/review/test_phase_0_2_blockers.py | PASS | none | Codex | 2026-09-11 |
+| AC-017 | path and operation collisions | pytest | tests/unit/test_integration.py; tests/review/test_phase_0_2_blockers.py | PASS | none | Codex | 2026-09-11 |
+| AC-018 | upstream operation validation | pytest | tests/unit/test_integration.py | PASS | none | Codex | 2026-09-11 |
+| AC-019 | OpenAPI cache invalidation | pytest | tests/integration/test_phase_0_2_contract.py | PASS | none | Codex | 2026-09-11 |
+| AC-020 | host preservation | pytest | tests/unit/test_integration.py; tests/integration/test_phase_0_2_contract.py | PASS | none | Codex | 2026-09-11 |
+| AC-021 | bound lifespan state | pytest | tests/integration/test_phase_0_2_contract.py | PASS | none | Codex | 2026-09-11 |
+| AC-022 | composed lifespan ordering | pytest | tests/unit/test_integration.py; tests/integration/test_phase_0_2_contract.py | PASS | none | Codex | 2026-09-11 |
+| AC-023 | provider ownership | pytest; ownership evidence | tests/unit/test_integration.py; docs/evidence/0.2/ownership.md | PASS | no provider lifecycle calls are introduced | Codex | 2026-09-11 |
+| AC-024 | dependency overrides | pytest | tests/integration/test_phase_0_2_contract.py | PASS | none | Codex | 2026-09-11 |
+| AC-025 | definition contract | pytest | tests/integration/test_phase_0_2_contract.py; tests/integration/test_memory_mount.py | PASS | none | Codex | 2026-09-11 |
+| AC-026 | accepted idempotent submission | pytest | tests/integration/test_phase_0_2_contract.py; tests/integration/test_memory_mount.py | PASS | none | Codex | 2026-09-11 |
+| AC-027 | operability routes | pytest; OpenAPI evidence | tests/integration/test_phase_0_2_contract.py; openapi.normalized.json | PASS | qualified upstream route inventory | Codex | 2026-09-11 |
+| AC-028 | SSE contract | pytest | tests/integration/test_phase_0_2_contract.py | PASS | qualified upstream behavior | Codex | 2026-09-11 |
+| AC-029 | authorization ownership | pytest | tests/integration/test_phase_0_2_contract.py; tests/integration/test_memory_mount.py | PASS | none | Codex | 2026-09-11 |
+| AC-030 | no duplicate execution layer | boundary check; pytest | scripts/check_boundaries.py; tests/boundary/test_boundaries.py | PASS | none | Codex | 2026-09-11 |
+| AC-031 | independent app state | pytest | tests/unit/test_integration.py; tests/integration/test_phase_0_2_contract.py | PASS | none | Codex | 2026-09-11 |
 | AC-032 | isolated wheel quickstart | check_clean_wheel.py | installed wheel | PASS | none | Codex | 2026-09-11 |
 | AC-033 | artifact allowlist and metadata | check_artifact.py | wheel/sdist | PASS | none | Codex | 2026-09-11 |
-| AC-034 | complete quality gates | check_release.py | CI workflow | PASS | Python matrix | Codex | 2026-09-11 |
-| AC-035 | user documentation | documentation review | README/quickstart | PASS | none | Codex | 2026-09-11 |
-| AC-036 | complete redacted evidence | check_evidence.py | this index | PASS | none | Codex | 2026-09-11 |
+| AC-034 | complete quality gates | check_release.py | scripts/check_release.py; CI workflow | PASS | Python matrix | Codex | 2026-09-11 |
+| AC-035 | user documentation | pytest; documentation review | README.md; tests/review/test_phase_0_2_blockers.py | PASS | none | Codex | 2026-09-11 |
+| AC-036 | complete redacted evidence | check_evidence.py | docs/evidence/0.2/README.md; scripts/check_evidence.py | PASS | none | Codex | 2026-09-11 |
 
 ## Boundary outcome
 

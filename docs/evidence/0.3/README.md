@@ -17,8 +17,8 @@ This index records the reproducible local proof for the Phase 0.3 contract.
 | Gate A | PASS |
 | Gate B | PASS |
 | Gate C | PASS |
-| SHA-256 wheel | `70ee1aa2e685f4e7aeebe0502910ed4dc24436374ab0bc6c212d028048d3f383` |
-| SHA-256 sdist | `984fb02638c37718ab1c96ec0387bd17397ad4297c904d983b9c816857ce14e8` |
+| SHA-256 wheel | `f54a045b1eaf4a8ee5998f418f4fffa08ac1896510e56988bb0bf0951d05804b` |
+| SHA-256 sdist | `57bdff328797b570cb2d7185ceb2219e81a1c61d4456fbb1886238a0e3d2a068` |
 
 ## Acceptance results
 

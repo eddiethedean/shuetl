@@ -5,11 +5,18 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .compatibility import CORE_REQUIREMENTS, installed_versions, validate_core
+from .compatibility import (
+    CORE_REQUIREMENTS,
+    SQLITE_REQUIREMENTS,
+    installed_versions,
+    validate_core,
+)
 from .providers import SQLITE_HEAD, LocalProviderBundle
 from .settings import ShuETLSettings
 
@@ -125,8 +132,9 @@ class DoctorReport(BaseModel):
             "control-plane.submissions",
         ]
         available = ["provider.memory"] if provider == "memory" else ["provider.sqlite"]
-        provider_available = (
-            provider == "memory" or versions.get("etlantic-sqlmodel") == "0.51.0"
+        provider_available = provider == "memory" or all(
+            versions.get(name) == required
+            for name, required in SQLITE_REQUIREMENTS.items()
         )
         checks.append(
             DiagnosticCheck(
@@ -169,11 +177,13 @@ class DoctorReport(BaseModel):
                     "SQLite schema was not inspected because configuration differed."
                 )
             else:
-                schema_status = "warn"
-                schema_summary = "SQLite schema readiness requires an existing file at the migration head."
-                schema_remediation = (
-                    f"Provision the database at {SQLITE_HEAD} before startup."
+                schema_status, schema_summary, schema_remediation = (
+                    _inspect_sqlite_schema(settings)
                 )
+                if schema_status == "fail":
+                    ready = "fail"
+                    ready_summary = "SQLite provider is not ready."
+                    ready_remediation = schema_remediation
         checks.append(
             DiagnosticCheck(
                 id="provider.ready",
@@ -266,6 +276,61 @@ class DoctorReport(BaseModel):
             f"{check.id}: {check.status} — {check.summary}" for check in self.checks
         )
         return "\n".join(lines)
+
+
+def _inspect_sqlite_schema(
+    settings: ShuETLSettings,
+) -> tuple[CheckStatus, str, str | None]:
+    """Inspect an existing SQLite file through the optional public APIs."""
+
+    database_url = settings.database_url
+    if database_url is None:
+        return (
+            "fail",
+            "SQLite database file is not configured.",
+            "Set SHUETL_DATABASE_URL.",
+        )
+    parsed = urlsplit(database_url.get_secret_value())
+    raw_path = parsed.path
+    path = (
+        Path("/" + raw_path.lstrip("/"))
+        if raw_path.startswith("//")
+        else Path(raw_path.lstrip("/"))
+    )
+    if not path.is_file():
+        return (
+            "fail",
+            "SQLite database file is not ready.",
+            "Provision the SQLite file before startup.",
+        )
+    engine = None
+    try:
+        from etlantic_sqlmodel import (  # type: ignore[import-not-found]
+            create_sqlite_engine,
+            current_version,
+        )
+
+        engine = create_sqlite_engine(
+            database_url.get_secret_value(),
+            connect_args={"timeout": settings.provider_connect_timeout_seconds},
+        )
+        version = current_version(engine)
+    except Exception:
+        return (
+            "fail",
+            "SQLite schema could not be inspected.",
+            f"Provision the database at {SQLITE_HEAD}.",
+        )
+    finally:
+        if engine is not None:
+            engine.dispose()
+    if version != SQLITE_HEAD:
+        return (
+            "fail",
+            "SQLite schema is not at the required migration head.",
+            f"Provision the database at {SQLITE_HEAD}.",
+        )
+    return "pass", "SQLite schema is at the required migration head.", None
 
 
 __all__ = ["DiagnosticCheck", "DoctorReport"]

@@ -1,20 +1,24 @@
-"""Check that built artifacts contain only the Phase 0.1 package surface."""
+"""Check that built artifacts contain only the Phase 0.2 package surface."""
 
 from __future__ import annotations
 
 import argparse
 import csv
 import io
+import tomllib
 import zipfile
 from pathlib import Path
 
-VERSION = "0.1.0"
+ROOT = Path(__file__).resolve().parents[1]
+VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
 ALLOWED_WHEEL_FILES = {
     f"shuetl-{VERSION}.dist-info/METADATA",
     f"shuetl-{VERSION}.dist-info/RECORD",
     f"shuetl-{VERSION}.dist-info/WHEEL",
     f"shuetl-{VERSION}.dist-info/licenses/LICENSE",
     "shuetl/__init__.py",
+    "shuetl/errors.py",
+    "shuetl/integration.py",
     "shuetl/py.typed",
 }
 
@@ -42,10 +46,18 @@ def check_wheel(path: Path) -> None:
         requires_dist = [
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
-        unconditional = [line for line in requires_dist if "extra ==" not in line]
-        if unconditional:
+        expected = {
+            "etlantic==0.51.0",
+            "etlantic-fastapi==0.51.0",
+            "fastapi==0.141.1",
+            "pydantic==2.13.5",
+        }
+        actual = {
+            line.removeprefix("Requires-Dist: ").strip() for line in requires_dist
+        }
+        if not expected <= actual:
             raise ValueError(
-                f"unconditional runtime dependencies found: {unconditional}"
+                f"runtime dependencies missing: {sorted(expected - actual)}"
             )
         if not any(
             "extra == 'test'" in line or 'extra == "test"' in line

@@ -74,6 +74,7 @@ merged into or replaced by `etlantic-fastapi` rather than duplicate it.
 - [ROADMAP.md](ROADMAP.md) — staged delivery after the integration boundary is proven
 - [PHASE_0_1.md](PHASE_0_1.md) — executable boundary-proof plan and release gate
 - [PHASE_0_1_EXECUTION.md](PHASE_0_1_EXECUTION.md) — authoritative 0.1 architecture contract, acceptance criteria, tasks, and gates
+- [PHASE_0_2_EXECUTION.md](PHASE_0_2_EXECUTION.md) — authoritative 0.2 facade contract, acceptance criteria, and implementation sequence
 - [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) — decisions and blocking ADRs
 
 ## Infrastructure baseline

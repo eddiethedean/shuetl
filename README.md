@@ -54,15 +54,44 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL 0.1.0 is [published on PyPI](https://pypi.org/project/shuetl/0.1.0/).
-This release is the 0.1 boundary-proof implementation phase: the package is
-intentionally inert while the published ETLantic 0.51.0 composition seam is
-verified; the usable `ShuETL` facade begins in 0.2.
+The upcoming ShuETL 0.2.0 release provides a typed FastAPI facade for local
+development and automated tests. It accepts a prebuilt
+`etlantic_fastapi.ETLanticAPI`; the
+host remains responsible for providers and their lifecycle. In-memory providers
+are process-local and are not a production durability claim.
 
 The complete design pack is in [`docs/plans/`](docs/plans/README.md).
 
-The implementation contract and release gate are in
-[`docs/plans/PHASE_0_1_EXECUTION.md`](docs/plans/PHASE_0_1_EXECUTION.md).
+The implementation contracts are in
+[`docs/plans/PHASE_0_1_EXECUTION.md`](docs/plans/PHASE_0_1_EXECUTION.md) and
+[`docs/plans/PHASE_0_2_EXECUTION.md`](docs/plans/PHASE_0_2_EXECUTION.md).
+
+## Quickstart
+
+```python
+from fastapi import FastAPI
+from shuetl import ShuETL
+
+integration = ShuETL(api=prebuilt_etlantic_api)
+app = FastAPI(lifespan=integration.lifespan)
+integration.mount(app, prefix="/etl")
+```
+
+Use `integration.create_app()` for a dedicated root-mounted application. Prefixes
+are literal slash-prefixed segments (`/etl`, `/internal/etl`); use `""` for the
+root. Mounting rejects occupied state keys, route namespaces, operation IDs, and
+custom `ControlPlaneError` handlers before mutating the host. Dependency
+overrides target the original ETLantic callables through ordinary FastAPI APIs.
+
+For tests, override the exact upstream dependencies and remove them normally:
+
+```python
+app.dependency_overrides[integration.api.principal_dependency] = override_principal
+app.dependency_overrides[integration.api.context_dependency] = override_context
+# ...test...
+app.dependency_overrides.pop(integration.api.principal_dependency, None)
+app.dependency_overrides.pop(integration.api.context_dependency, None)
+```
 
 To run the local evidence gate:
 

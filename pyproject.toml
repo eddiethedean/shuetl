@@ -1,7 +1,7 @@
 [project]
 name = "shuetl"
-version = "0.1.0"
-description = "FastAPI composition boundary proof for ETLantic."
+version = "0.2.0"
+description = "Typed FastAPI composition facade for ETLantic."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11,<3.14"
@@ -16,14 +16,16 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+    "etlantic==0.51.0",
+    "etlantic-fastapi==0.51.0",
+    "fastapi==0.141.1",
+    "pydantic==2.13.5",
+]
 
 [project.optional-dependencies]
 test = [
-    "etlantic==0.51.0",
-    "etlantic-fastapi==0.51.0",
-    "fastapi>=0.115,<1",
-    "httpx>=0.27,<1",
+    "httpx==0.28.1",
 ]
 
 [dependency-groups]
@@ -45,6 +47,7 @@ include = [
     "/src",
     "/tests",
     "/spikes",
+    "/examples",
     "/scripts",
     "/docs",
     "/README.md",
@@ -53,7 +56,10 @@ include = [
     "/pyproject.toml",
     "/uv.lock",
 ]
-exclude = ["/docs/evidence/0.1/README.md"]
+exclude = [
+    "/docs/evidence/0.1/README.md",
+    "/docs/evidence/0.2/README.md",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

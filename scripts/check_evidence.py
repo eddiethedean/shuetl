@@ -1,7 +1,8 @@
-"""Validate the committed Phase 0.1 evidence index and redaction rules."""
+"""Validate a committed ShuETL evidence index and redaction rules."""
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import re
 import sys
@@ -19,11 +20,12 @@ REDACTION_PATTERNS = (
 )
 
 
-def check() -> list[str]:
+def check(evidence: Path | None = None) -> list[str]:
     errors: list[str] = []
-    index = EVIDENCE / "README.md"
-    contracts = EVIDENCE / "contracts.md"
-    ownership = EVIDENCE / "ownership.md"
+    evidence_dir = evidence or EVIDENCE
+    index = evidence_dir / "README.md"
+    contracts = evidence_dir / "contracts.md"
+    ownership = evidence_dir / "ownership.md"
     for path in (index, contracts, ownership):
         if not path.exists():
             errors.append(f"missing evidence file: {path.relative_to(ROOT)}")
@@ -67,7 +69,10 @@ def check() -> list[str]:
             if field not in header:
                 errors.append(f"acceptance evidence has no {field!r} column")
         rows = [line for line in section.splitlines() if line.startswith("| AC-")]
-        expected = {f"AC-{number:03d}" for number in range(1, 23)}
+        expected = {
+            f"AC-{number:03d}"
+            for number in range(1, (37 if evidence_dir.name == "0.2" else 23))
+        }
         seen: dict[str, str] = {}
         for row in rows:
             cells = [cell.strip() for cell in row.strip("|").split("|")]
@@ -104,7 +109,8 @@ def check() -> list[str]:
         digest = hashlib.sha256(artifacts[0].read_bytes()).hexdigest()
         if recorded_hashes.get(kind) != digest:
             errors.append(f"recorded {kind} SHA-256 does not match built artifact")
-    for number in range(1, 23):
+    max_criterion = 36 if evidence_dir.name == "0.2" else 22
+    for number in range(1, max_criterion + 1):
         criterion = f"AC-{number:03d}"
         if criterion not in text:
             errors.append(f"evidence index does not mention {criterion}")
@@ -138,7 +144,10 @@ def check() -> list[str]:
 
 
 def main() -> int:
-    errors = check()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--evidence", type=Path)
+    args = parser.parse_args()
+    errors = check(args.evidence)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

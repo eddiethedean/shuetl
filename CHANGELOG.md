@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 — FastAPI composition facade
+
+- Added the typed `ShuETL` facade for embedding or creating ETLantic FastAPI
+  applications from a caller-owned `ETLanticAPI`.
+- Added strict prefix validation, atomic collision checks, upstream handler
+  composition, OpenAPI cache invalidation, and host-lifespan composition.
+- Qualified runtime dependencies against ETLantic 0.51.0, FastAPI 0.141.1,
+  and Pydantic 2.13.5.
+- Added local/test quickstart documentation and facade contract tests.
+
 ## 0.1.0 — Boundary proof
 
 - Added the typed ShuETL package foundation.

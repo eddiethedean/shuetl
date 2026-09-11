@@ -1,4 +1,4 @@
-"""Capture or verify normalized Phase 0.1 OpenAPI evidence."""
+"""Capture or verify normalized Phase 0.2 OpenAPI evidence."""
 
 from __future__ import annotations
 
@@ -8,25 +8,34 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from fastapi import FastAPI
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from spikes.phase_0_1_memory_mount import (  # noqa: E402
-    assert_openapi_parity,
     build_direct_app,
-    build_embedded_app,
     build_graph,
+    normalized_openapi,
 )
 
-DEFAULT_OUTPUT = ROOT / "docs" / "evidence" / "0.1" / "openapi.normalized.json"
+from shuetl import ShuETL  # noqa: E402
+
+DEFAULT_OUTPUT = ROOT / "docs" / "evidence" / "0.2" / "openapi.normalized.json"
 
 
 def capture() -> dict[str, Any]:
     """Build both apps and return the normalized upstream contract."""
 
     graph = build_graph()
-    return assert_openapi_parity(build_embedded_app(graph), build_direct_app())
+    embedded = FastAPI()
+    ShuETL(api=graph.api).mount(embedded, prefix="/etl")
+    direct = build_direct_app()
+    contract = normalized_openapi(embedded.openapi(), prefix="/etl")
+    if contract != normalized_openapi(direct.openapi()):
+        raise AssertionError("ShuETL OpenAPI differs from direct upstream OpenAPI")
+    return contract
 
 
 def main(argv: list[str] | None = None) -> int:

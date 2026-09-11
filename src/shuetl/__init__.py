@@ -1,7 +1,11 @@
-"""ShuETL 0.1 boundary-proof package.
+"""Typed FastAPI composition facade for ETLantic."""
 
-The 0.1 package intentionally exposes no composition facade. The executable
-integration proof lives in the repository's ``spikes`` and ``tests`` trees.
-"""
+from .errors import InvalidPrefixError, MountConflictError, ShuETLError
+from .integration import ShuETL
 
-__all__: tuple[str, ...] = ()
+__all__ = (
+    "ShuETL",
+    "ShuETLError",
+    "InvalidPrefixError",
+    "MountConflictError",
+)

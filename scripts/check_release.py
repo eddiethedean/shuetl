@@ -1,4 +1,4 @@
-"""Run the complete local Phase 0.1 release gate."""
+"""Run the complete local Phase 0.2 release gate."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
             "python",
             "scripts/check_boundaries.py",
             "--openapi",
-            "docs/evidence/0.1/openapi.normalized.json",
+            "docs/evidence/0.2/openapi.normalized.json",
         ],
     )
     run_step("tests", [*uv_run, "pytest", "-q"])
@@ -50,8 +50,17 @@ def main(argv: list[str] | None = None) -> int:
         [*uv_run, "python", "scripts/capture_openapi.py", "--check"],
     )
     run_step("clean-wheel", [*uv_run, "python", "scripts/check_clean_wheel.py"])
-    run_step("evidence", [*uv_run, "python", "scripts/check_evidence.py"])
-    print("Phase 0.1 release gate passed")
+    run_step(
+        "evidence",
+        [
+            *uv_run,
+            "python",
+            "scripts/check_evidence.py",
+            "--evidence",
+            "docs/evidence/0.2",
+        ],
+    )
+    print("Phase 0.2 release gate passed")
     return 0
 
 

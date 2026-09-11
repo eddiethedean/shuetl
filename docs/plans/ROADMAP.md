@@ -136,6 +136,10 @@ integration improvements directly to `etlantic-fastapi`.
 
 Ship the first usable ShuETL facade for local development and automated tests.
 
+The authoritative public contract, acceptance criteria, and dependency-aware
+implementation sequence are defined in
+[PHASE_0_2_EXECUTION.md](PHASE_0_2_EXECUTION.md).
+
 ### Public surface
 
 The intended shape is:

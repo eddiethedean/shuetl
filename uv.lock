@@ -634,14 +634,17 @@ wheels = [
 
 [[package]]
 name = "shuetl"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
-
-[package.optional-dependencies]
-test = [
+dependencies = [
     { name = "etlantic" },
     { name = "etlantic-fastapi" },
     { name = "fastapi" },
+    { name = "pydantic" },
+]
+
+[package.optional-dependencies]
+test = [
     { name = "httpx" },
 ]
 
@@ -654,10 +657,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "etlantic", marker = "extra == 'test'", specifier = "==0.51.0" },
-    { name = "etlantic-fastapi", marker = "extra == 'test'", specifier = "==0.51.0" },
-    { name = "fastapi", marker = "extra == 'test'", specifier = ">=0.115,<1" },
-    { name = "httpx", marker = "extra == 'test'", specifier = ">=0.27,<1" },
+    { name = "etlantic", specifier = "==0.51.0" },
+    { name = "etlantic-fastapi", specifier = "==0.51.0" },
+    { name = "fastapi", specifier = "==0.141.1" },
+    { name = "httpx", marker = "extra == 'test'", specifier = "==0.28.1" },
+    { name = "pydantic", specifier = "==2.13.5" },
 ]
 provides-extras = ["test"]
 

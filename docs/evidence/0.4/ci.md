@@ -2,6 +2,53 @@
 
 ## Qualified runtime matrix
 
+Observed on 2026-09-13 from the completed GitHub Actions job API and logs.
+
+- Run: [34776217942](https://github.com/eddiethedean/shuetl/actions/runs/34776217942), attempt 2.
+- Tested source commit: `b28bf9aedbcf3f9cbb212ffa5012dae15c43a1eb` on `main`.
+- Trigger: push; workflow: CI calling `.github/workflows/checks.yml`.
+- Completed conclusion: `success`; all nine required jobs passed.
+- Locked train: ETLantic / FastAPI adapter / SQLModel adapter 0.52.1,
+  SQLAlchemy 2.0.52, Psycopg / psycopg-binary 3.3.5.
+- Server: `postgres:18.6-bookworm`; actual server version asserted as 18.6.
+- Runner: Ubuntu x86_64; uv 0.11.3; Python 3.11, 3.12 and 3.13.
+
+```console
+gh run view 34776217942 --json headSha,status,conclusion,jobs
+```
+
+| Job | Python | Result | GitHub job |
+| --- | --- | --- | --- |
+| Quality | 3.11 | PASS | [103775185773](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775185773) |
+| Quality | 3.12 | PASS | [103775186491](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775186491) |
+| Quality | 3.13 | PASS | [103775164900](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775164900) |
+| PostgreSQL integration | 3.11 | PASS — 4 passed, no skips | [103775164567](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775164567) |
+| PostgreSQL integration | 3.12 | PASS — 4 passed, no skips | [103775179168](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775179168) |
+| PostgreSQL integration | 3.13 | PASS — 4 passed, no skips | [103775180264](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775180264) |
+| Phase 0.4 release gate | 3.11 | PASS | [103775164933](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775164933) |
+| Phase 0.4 release gate | 3.12 | PASS | [103775164533](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775164533) |
+| Phase 0.4 release gate | 3.13 | PASS | [103775165157](https://github.com/eddiethedean/shuetl/actions/runs/34776217942/job/103775165157) |
+
+The live suite includes two-workspace canonical firing/durable identity after
+restart. Default release-suite logs record 120 passed and 4 skipped; the three
+live jobs independently execute all four PostgreSQL tests. The 3.12 release log
+ends with clean-wheel verification, evidence consistency and
+`Phase 0.4 release gate passed`.
+
+Attempt 1 had eight passing jobs and one clean-wheel failure: its pip index
+response did not yet list etlantic-sqlmodel 0.52.1. The other interpreters and
+local clean installs resolved that published package. The failed workflow was
+rerun without changing source, dependencies, gates or assertions. Attempt 2
+completed successfully. This publication/index timing failure is preserved in
+the run history rather than presented as an implementation fix.
+
+Limitation: qualifies recorded source revision; see ci.md for tested commit.
+The record is committed after its tested source revision. It does not claim
+the recorded run tested subsequent evidence-document edits. CI success is not
+independent Sol approval.
+
+## Original 0.52.0 runtime matrix
+
 Observed on 2026-09-13 using the GitHub Actions run/job API and completed logs.
 This is newly executed CI evidence, not a reconstruction of a previous review.
 

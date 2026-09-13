@@ -428,9 +428,9 @@ Result: PASS for the referenced check/observation. Limitation: local Python 3.12
 
 Requirement: Real PostgreSQL integration tests run in CI on Python 3.11, 3.12, and 3.13 using the exact locked server/driver/provider set.
 
-Verification: `gh run view 34771524213 --json headSha,status,conclusion,jobs`
+Verification: `gh run view 34776217942 --json headSha,status,conclusion,jobs`
 
-Procedure and evidence: GitHub Actions run 34771524213 tested current-change commit `114da1ab264088e487e7f216e7d1f14ee778f6aa` and completed successfully. All nine matrix jobs passed. Each real PostgreSQL job on Python 3.11/3.12/3.13 passed all three integration tests without skips, using `postgres:18.6-bookworm` and the committed exact locked provider/driver set. The schema/doctor test asserts actual server version 18.6. The primary run/job links, observed interpreter versions, commands and release-gate results are recorded in ci.md. This replaces configuration-only evidence; it is not an independent release verdict.
+Procedure and evidence: GitHub Actions run 34776217942 tested current-change commit `b28bf9aedbcf3f9cbb212ffa5012dae15c43a1eb` and completed successfully on attempt 2. All nine matrix jobs passed. Each real PostgreSQL job on Python 3.11/3.12/3.13 passed all four integration tests without skips, using `postgres:18.6-bookworm` and the committed exact locked 0.52.1 provider/driver set. The schema/doctor test asserts actual server version 18.6. The primary run/job links, commands, publication/index retry history and release-gate results are recorded in ci.md. This is not an independent release verdict.
 
 Provenance: [Completed CI execution](ci.md#qualified-runtime-matrix) — AC-033, 2026-09-13.
 

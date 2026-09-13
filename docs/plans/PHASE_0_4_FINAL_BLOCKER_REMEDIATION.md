@@ -105,6 +105,42 @@ prior head. It used no copied DDL, local upstream implementation or patched
 installed package. The PostgreSQL suite exercises persistent restart identity,
 concurrent event ordering and the actual upstream bundle.
 
-The complete locked release gate and ShuETL CI results will be appended after
-execution. Local source/wheel probes above are distinguished from this fresh
-published-package evidence.
+The complete locked local release gate passed. ShuETL
+[CI run 34776217942](https://github.com/eddiethedean/shuetl/actions/runs/34776217942)
+passed all nine jobs on source `b28bf9aedbcf3f9cbb212ffa5012dae15c43a1eb` after
+rerunning an initial Python 3.12 clean-wheel publication/index timing failure.
+No source or gate changed for the rerun. Detailed primary provenance and the
+historical original-train record are retained in `docs/evidence/0.4/ci.md`.
+
+## Quality gate report
+
+| Gate | Executed | Result | Notes |
+| --- | --- | --- | --- |
+| Locked sync / lock check | Yes | PASS | Published PyPI 0.52.1 train |
+| Ruff format / lint | Yes | PASS | No exclusions added |
+| Pyright | Yes | PASS | Zero errors |
+| Boundary / OpenAPI | Yes | PASS | Exact upstream composition retained |
+| Default suite | Yes | PASS | 120 passed; 4 PostgreSQL skips |
+| Live PostgreSQL suite | Yes | PASS | 4 passed, no skips; actual 18.6 |
+| Earlier-head upgrade probe | Yes | PASS | Four prior heads preserve canonical records |
+| Build / artifact / fresh archive hashes | Yes | PASS | Deterministic build |
+| Core / SQLite / PostgreSQL clean wheels | Yes | PASS | Three isolated installations |
+| Evidence / redaction checks | Yes | PASS | Approved AC requirements retained |
+| Upstream release checks | Yes | PASS | All 37 jobs before publication |
+| ShuETL CI matrix | Yes | PASS | Nine jobs, Python 3.11/3.12/3.13; attempt 2 |
+
+The initial Python 3.12 CI failure is environmental publication/index timing,
+not a weakened gate. Local source/wheel probes above are distinguished from
+fresh published-package evidence. Subsequent evidence edits are not claimed as
+tested by the recorded source run.
+
+## Remediation summary
+
+Blockers received: 2
+Blockers fixed: 2
+Blockers remaining: 0
+Verification conflicts: 0
+Escalations: 0
+New follow-up candidates: 0
+
+READY FOR SOL RE-REVIEW

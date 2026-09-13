@@ -20,7 +20,7 @@ server is 18.6.
 | Gate B | PASS |
 | Gate C | PASS |
 | SHA-256 wheel | `61a6b3a5fe9185e1d6049f241df301f5da1169f710baf4ece2bdb5e6107cafca` |
-| SHA-256 sdist | `c821ce94b4441e3f349248602ac1b61ceb7e788764616ecf8082d4ed6a53b39f` |
+| SHA-256 sdist | `a32c008d8f5ded53104dc527ef3df115aabdf0632230d68a776a68881c2bf1a6` |
 
 ## Acceptance results
 
@@ -64,7 +64,7 @@ tested source commit, live PostgreSQL results and primary job links.
 | AC-030 | compatibility suite | `uv run pytest -q` | `qualification.md#ac-030` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |
 | AC-031 | boundary ownership | `uv run python scripts/check_boundaries.py --openapi docs/evidence/0.4/openapi.normalized.json` | `qualification.md#ac-031` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |
 | AC-032 | wheel dependencies imports | `uv run python scripts/check_clean_wheel.py` | `qualification.md#ac-032` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |
-| AC-033 | CI Python server | `gh run view 34771524213 --json headSha,status,conclusion,jobs` | `qualification.md#ac-033` | PASS | qualifies recorded source revision; see ci.md for tested commit | GitHub Actions execution | 2026-09-13 |
+| AC-033 | CI Python server | `gh run view 34776217942 --json headSha,status,conclusion,jobs` | `qualification.md#ac-033` | PASS | qualifies recorded source revision; see ci.md for tested commit | GitHub Actions execution | 2026-09-13 |
 | AC-034 | quality gates | `uv run python scripts/check_release.py` | `qualification.md#ac-034` | PASS | local Python 3.12 gate; live PostgreSQL qualified separately | implementation / Sol record | 2026-09-13 |
 | AC-035 | operator docs restore example | `Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-035, 2026-09-13)` | `qualification.md#ac-035` | PASS | prior independent review; not rerun in remediation | independent Sol record | 2026-09-13 |
 | AC-036 | evidence mapping | `uv run python scripts/check_evidence.py --evidence docs/evidence/0.4` | `qualification.md#ac-036` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |

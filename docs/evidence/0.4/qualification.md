@@ -10,11 +10,13 @@ they were NOT all rerun during this remediation. Procedures below reconstruct
 the assessable observations recorded there, not recovered scripts or invented
 new execution logs. Actual local environment: macOS arm64, Python 3.12.13,
 uv 0.11.3, installed locked 0.52.0 providers, disposable PostgreSQL 18.6.
-Python 3.11/3.13 and current-change Actions execution are not claimed.
+Newly executed current-change Actions evidence for Python 3.11/3.12/3.13 is
+recorded separately in `ci.md`; it does not imply that all historical manual
+probes were rerun on each interpreter.
 
 PASS means the referenced check/observation within its limitation, NOT release
-approval. AC-033 has passing configuration evidence only and is still partially
-satisfied pending live CI. Automated PostgreSQL commands require a disposable
+approval. AC-033 now has passing live CI evidence at the explicitly recorded
+source commit. Automated PostgreSQL commands require a disposable
 SHUETL_DATABASE_URL and explicit SHUETL_POSTGRESQL_SSLMODE; a skip is not proof.
 
 ## AC-001
@@ -405,13 +407,13 @@ Result: PASS for the referenced check/observation. Limitation: local Python 3.12
 
 Requirement: Real PostgreSQL integration tests run in CI on Python 3.11, 3.12, and 3.13 using the exact locked server/driver/provider set.
 
-Verification: `Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-033, 2026-09-13)`
+Verification: `gh run view 34771524213 --json headSha,status,conclusion,jobs`
 
-Procedure and evidence: Inspect checks.yml: real PostgreSQL job uses Python 3.11/3.12/3.13, postgres:18.6-bookworm, locked exact extras and live integration command. Both reviews recorded configuration only. AC-033 remains PARTIALLY SATISFIED until a current-change Actions run supplies passing execution; no such run or local 3.11/3.13 run is claimed.
+Procedure and evidence: GitHub Actions run 34771524213 tested current-change commit `114da1ab264088e487e7f216e7d1f14ee778f6aa` and completed successfully. All nine matrix jobs passed. Each real PostgreSQL job on Python 3.11/3.12/3.13 passed all three integration tests without skips, using `postgres:18.6-bookworm` and the committed exact locked provider/driver set. The schema/doctor test asserts actual server version 18.6. The primary run/job links, observed interpreter versions, commands and release-gate results are recorded in ci.md. This replaces configuration-only evidence; it is not an independent release verdict.
 
-Provenance: [Independent Sol record](../../../tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria) — AC-033, 2026-09-13.
+Provenance: [Completed CI execution](ci.md#qualified-runtime-matrix) — AC-033, 2026-09-13.
 
-Result: PASS for the referenced check/observation. Limitation: configuration only; live CI and Python 3.11/3.13 execution unrecorded.
+Result: PASS for the referenced check/observation. Limitation: qualifies recorded source revision; see ci.md for tested commit.
 
 ## AC-034
 

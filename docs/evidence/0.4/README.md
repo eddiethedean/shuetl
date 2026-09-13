@@ -6,8 +6,8 @@ server is 18.6.
 
 | Field | Value |
 | --- | --- |
-| OS and architecture | macOS arm64 (executed); Ubuntu is CI configuration only |
-| Python version | 3.12.13 executed; 3.11/3.13 supported, not executed |
+| OS and architecture | macOS arm64 (local); Ubuntu 24.04.5 x86_64 (CI executed) |
+| Python version | 3.12.13 local; CI Python 3.11, 3.12 and 3.13 executed; see ci.md |
 | uv version | 0.11.3 |
 | ETLantic source revision | 0.52.0 package |
 | ShuETL import origin | installed project package |
@@ -20,14 +20,15 @@ server is 18.6.
 | Gate B | PASS |
 | Gate C | PASS |
 | SHA-256 wheel | `a36b25ffbcceb65757ee50949395b909aaddfdecd1e9a431409077663319a4a2` |
-| SHA-256 sdist | `98a046e6106204670ae7cdcf86876a804c7f1e402dd0de58f9f5e0a9ef6c61b9` |
+| SHA-256 sdist | `bfb06482d5c56413917573e7b01ed9f18bccd1059d97f5c6f7b55d70162e2306` |
 
 ## Acceptance results
 
 Proof bindings are audited in `proofs.json`; each artifact identifies a specific
 section in `qualification.md` with procedure, result and source provenance.
-Recorded review references are not newly executed test commands. AC-033 records
-passing workflow configuration only: live CI execution remains unverified.
+Recorded review references are not newly executed test commands. AC-033 now
+records the successful current-change CI matrix in `ci.md`, including its
+tested source commit, live PostgreSQL results and primary job links.
 
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -63,7 +64,7 @@ passing workflow configuration only: live CI execution remains unverified.
 | AC-030 | compatibility suite | `uv run pytest -q` | `qualification.md#ac-030` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |
 | AC-031 | boundary ownership | `uv run python scripts/check_boundaries.py --openapi docs/evidence/0.4/openapi.normalized.json` | `qualification.md#ac-031` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |
 | AC-032 | wheel dependencies imports | `uv run python scripts/check_clean_wheel.py` | `qualification.md#ac-032` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |
-| AC-033 | CI Python server | `Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-033, 2026-09-13)` | `qualification.md#ac-033` | PASS | configuration only; live CI and Python 3.11/3.13 execution unrecorded | independent Sol record | 2026-09-13 |
+| AC-033 | CI Python server | `gh run view 34771524213 --json headSha,status,conclusion,jobs` | `qualification.md#ac-033` | PASS | qualifies recorded source revision; see ci.md for tested commit | GitHub Actions execution | 2026-09-13 |
 | AC-034 | quality gates | `uv run python scripts/check_release.py` | `qualification.md#ac-034` | PASS | local Python 3.12 gate; live PostgreSQL qualified separately | implementation / Sol record | 2026-09-13 |
 | AC-035 | operator docs restore example | `Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-035, 2026-09-13)` | `qualification.md#ac-035` | PASS | prior independent review; not rerun in remediation | independent Sol record | 2026-09-13 |
 | AC-036 | evidence mapping | `uv run python scripts/check_evidence.py --evidence docs/evidence/0.4` | `qualification.md#ac-036` | PASS | local Python 3.12; see qualification record | implementation / Sol record | 2026-09-13 |

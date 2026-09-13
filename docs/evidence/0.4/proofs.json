@@ -224,11 +224,11 @@
     "limitation": "local Python 3.12; see qualification record"
   },
   "AC-033": {
-    "command": "Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-033, 2026-09-13)",
+    "command": "gh run view 34771524213 --json headSha,status,conclusion,jobs",
     "artifact": "qualification.md#ac-033",
     "requirement": "Real PostgreSQL integration tests run in CI on Python 3.11, 3.12, and 3.13 using the exact locked server/driver/provider set.",
-    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
-    "limitation": "configuration only; live CI and Python 3.11/3.13 execution unrecorded"
+    "provenance": "ci.md#qualified-runtime-matrix",
+    "limitation": "qualifies recorded source revision; see ci.md for tested commit"
   },
   "AC-034": {
     "command": "uv run python scripts/check_release.py",

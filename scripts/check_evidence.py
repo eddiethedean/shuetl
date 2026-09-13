@@ -330,6 +330,7 @@ def check(evidence: Path | None = None) -> list[str]:
             for path in (
                 evidence_dir / "proofs.json",
                 evidence_dir / "qualification.md",
+                evidence_dir / "ci.md",
             )
             if path.is_file()
         )

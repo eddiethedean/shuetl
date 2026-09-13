@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -52,6 +54,26 @@ def test_manual_proof_requires_its_locatable_result_section(tmp_path: Path) -> N
     assert any("AC-021" in error for error in check_evidence.check(evidence))
 
 
-def test_valid_registry_and_ledger_have_no_proof_errors(tmp_path: Path) -> None:
-    errors = check_evidence.check(_copy(tmp_path))
-    assert not [error for error in errors if "SHA-256" not in error]
+def test_valid_registry_and_ledger_have_no_proof_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    evidence = _copy(tmp_path)
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    index = evidence / "README.md"
+    text = index.read_text()
+    # This unit checks ledger/hash consistency, not archive contents. Real
+    # artifacts are independently checked by the fresh-build and release gates.
+    for kind, suffix in (("wheel", "-py3-none-any.whl"), ("sdist", ".tar.gz")):
+        payload = f"isolated {kind} hash fixture".encode()
+        artifact = dist / f"shuetl-{check_evidence.PROJECT_VERSION}{suffix}"
+        artifact.write_bytes(payload)
+        digest = hashlib.sha256(payload).hexdigest()
+        text = re.sub(
+            rf"(\| SHA-256 {kind} \| `)[0-9a-f]{{64}}(` \|)",
+            rf"\g<1>{digest}\g<2>",
+            text,
+        )
+    index.write_text(text)
+    monkeypatch.setattr(check_evidence, "DIST", dist)
+    assert check_evidence.check(evidence) == []

@@ -20,7 +20,7 @@ server is 18.6.
 | Gate B | PASS |
 | Gate C | PASS |
 | SHA-256 wheel | `a36b25ffbcceb65757ee50949395b909aaddfdecd1e9a431409077663319a4a2` |
-| SHA-256 sdist | `69695fcb002055f543b20d42a7d9e4fa5b443e62cac2511c90292dd47c07a0e0` |
+| SHA-256 sdist | `98a046e6106204670ae7cdcf86876a804c7f1e402dd0de58f9f5e0a9ef6c61b9` |
 
 ## Acceptance results
 

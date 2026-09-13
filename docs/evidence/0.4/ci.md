@@ -1,5 +1,27 @@
 # Phase 0.4 CI execution record
 
+## Published release
+
+Observed on 2026-09-13 from the completed GitHub Actions API and
+[PyPI version metadata](https://pypi.org/pypi/shuetl/0.4.0/json).
+
+- Release: [ShuETL 0.4.0](https://pypi.org/project/shuetl/0.4.0/).
+- Tag: [`v0.4.0`](https://github.com/eddiethedean/shuetl/tree/v0.4.0).
+- Released commit: `69f140f6f7343cc6e2bdbb97c34dba3d4eb324e0`.
+- Pre-tag [CI run 34777933774](https://github.com/eddiethedean/shuetl/actions/runs/34777933774):
+  completed successfully; all nine quality, live PostgreSQL integration, and
+  release-gate jobs passed across Python 3.11, 3.12 and 3.13.
+- Tag-triggered [Release run 34778081760](https://github.com/eddiethedean/shuetl/actions/runs/34778081760):
+  completed successfully; all nine checks, distribution build, and Trusted
+  Publishing to PyPI passed.
+- PyPI contains `shuetl-0.4.0-py3-none-any.whl` and `shuetl-0.4.0.tar.gz`,
+  uploaded at 19:36 UTC on 2026-09-13. Their SHA-256 values match the approved
+  release artifacts recorded in the [evidence index](README.md#published-artifacts).
+
+These runs qualify the released commit, not the subsequent documentation-only
+update recording publication. The release tag and published artifacts remain
+unchanged.
+
 ## Qualified runtime matrix
 
 Observed on 2026-09-13 from the completed GitHub Actions job API and logs.

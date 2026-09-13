@@ -2,6 +2,11 @@
 
 ## 0.4.0 — Durable PostgreSQL pilot (2026-09-13)
 
+- Published to [PyPI](https://pypi.org/project/shuetl/0.4.0/) through Trusted
+  Publishing from the `v0.4.0` tag at `69f140f6f7343cc6e2bdbb97c34dba3d4eb324e0`.
+  All nine CI jobs and the
+  [release workflow](https://github.com/eddiethedean/shuetl/actions/runs/34778081760)
+  passed.
 - Added the exact ETLantic 0.52.1 compatibility train and a `shuetl[postgresql]`
   extra with SQLModel, SQLAlchemy, and Psycopg 3.3.5 binary support.
 - Added validated `postgresql-pilot` settings and the public

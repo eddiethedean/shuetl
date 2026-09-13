@@ -54,7 +54,11 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL 0.4.0 is the current development release. It provides a typed FastAPI facade for local development and a
+ShuETL [0.4.0](https://pypi.org/project/shuetl/0.4.0/) was published on
+2026-09-13 from the [`v0.4.0` tag](https://github.com/eddiethedean/shuetl/tree/v0.4.0).
+The [release workflow](https://github.com/eddiethedean/shuetl/actions/runs/34778081760)
+passed all checks and published the wheel and source distribution to PyPI.
+It provides a typed FastAPI facade for local development and a
 controlled single-tenant PostgreSQL pilot. It accepts a prebuilt
 `etlantic_fastapi.ETLanticAPI`; the 0.3 local bundle additionally wires exact
 upstream memory providers and an opt-in, pre-provisioned SQLite profile. The

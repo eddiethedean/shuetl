@@ -4,6 +4,24 @@ This index records reproducible evidence for the PostgreSQL pilot and migration
 boundary.  The release train is ETLantic 0.52.1 and the qualified PostgreSQL
 server is 18.6.
 
+## Published artifacts
+
+ShuETL [0.4.0](https://pypi.org/project/shuetl/0.4.0/) was published on
+2026-09-13 from tag `v0.4.0`, commit
+`69f140f6f7343cc6e2bdbb97c34dba3d4eb324e0`. Both pre-tag CI and the
+tag-triggered release workflow passed; see the [publication record](ci.md#published-release).
+
+| Published PyPI file | SHA-256 |
+| --- | --- |
+| `shuetl-0.4.0-py3-none-any.whl` | `5a8ac20eab3553cc3fe65a815808f6e4fd4d0b7cea412dc3b47880e23bd170e9` |
+| `shuetl-0.4.0.tar.gz` | `967a61fbea2937549e00b2e3b8984b95da6f4cd205febf3723ddd1e230be5efe` |
+
+## Working-tree qualification
+
+The build hashes below track deterministic builds of the current repository,
+including post-release documentation updates. They are not replacements for
+the immutable published artifact hashes above.
+
 | Field | Value |
 | --- | --- |
 | OS and architecture | macOS arm64 (local); Ubuntu 24.04.5 x86_64 (CI executed) |
@@ -19,8 +37,8 @@ server is 18.6.
 | Gate A | PASS |
 | Gate B | PASS |
 | Gate C | PASS |
-| SHA-256 wheel | `5a8ac20eab3553cc3fe65a815808f6e4fd4d0b7cea412dc3b47880e23bd170e9` |
-| SHA-256 sdist | `967a61fbea2937549e00b2e3b8984b95da6f4cd205febf3723ddd1e230be5efe` |
+| SHA-256 wheel | `23680c84a59149a4f81fe2e4e36dcdf678ac2055298c5954b7aa4d2836901d42` |
+| SHA-256 sdist | `4af522c56017018e52bd383f29e01f05a972536dd211e36c7d58691b9c23c837` |
 
 ## Acceptance results
 

@@ -1,4 +1,4 @@
-"""Check that built artifacts contain only the Phase 0.3 package surface."""
+"""Check that built artifacts contain only the Phase 0.4 package surface."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ ALLOWED_WHEEL_FILES = {
     "shuetl/_secrets.py",
     "shuetl/settings.py",
     "shuetl/providers.py",
+    "shuetl/postgresql.py",
     "shuetl/diagnostics.py",
     "shuetl/cli.py",
     "shuetl/py.typed",
@@ -54,8 +55,8 @@ def check_wheel(path: Path) -> None:
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
         expected = {
-            "etlantic==0.51.0",
-            "etlantic-fastapi==0.51.0",
+            "etlantic==0.52.0",
+            "etlantic-fastapi==0.52.0",
             "fastapi==0.141.1",
             "pydantic==2.13.5",
             "pydantic-settings==2.15.0",

@@ -1,4 +1,4 @@
-"""Verify Phase 0.3 memory and SQLite examples from an isolated wheel."""
+"""Verify local and optional provider imports from an isolated wheel."""
 
 from __future__ import annotations
 
@@ -58,7 +58,9 @@ def verify(wheel: Path) -> None:
             "SHUETL_EXPECT_INSTALLED": "1",
         }
 
-        def verify_environment(name: str, example_path: Path, sqlite: bool) -> None:
+        def verify_environment(
+            name: str, example_path: Path | None, extra: str
+        ) -> None:
             venv_dir = temp_root / f"venv-{name}"
             _run(
                 [uv, "venv", "--python", python_version, "--seed", str(venv_dir)],
@@ -67,20 +69,35 @@ def verify(wheel: Path) -> None:
             )
             python = _python(venv_dir)
             _run(
-                [str(python), "-m", "pip", "install", f"{wheel}[test]"],
+                [
+                    str(python),
+                    "-m",
+                    "pip",
+                    "install",
+                    f"{wheel}[test{',' + extra if extra else ''}]",
+                ],
                 cwd=work_dir,
                 env=env,
             )
-            if sqlite:
+            if example_path:
+                _run([str(python), str(example_path)], cwd=work_dir, env=env)
+            else:
                 _run(
-                    [str(python), "-m", "pip", "install", f"{wheel}[sqlite]"],
+                    [
+                        str(python),
+                        "-c",
+                        (
+                            "import psycopg, shuetl; "
+                            "from shuetl import PostgreSQLProviderBundle"
+                        ),
+                    ],
                     cwd=work_dir,
                     env=env,
                 )
-            _run([str(python), str(example_path)], cwd=work_dir, env=env)
 
-        verify_environment("core", isolated_example, sqlite=False)
-        verify_environment("sqlite", isolated_sqlite_example, sqlite=True)
+        verify_environment("core", isolated_example, "")
+        verify_environment("sqlite", isolated_sqlite_example, "sqlite")
+        verify_environment("postgresql", None, "postgresql")
 
 
 def main(argv: list[str] | None = None) -> int:

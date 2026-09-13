@@ -8,11 +8,12 @@ import shuetl
 
 
 def test_package_metadata_and_minimal_surface() -> None:
-    assert metadata.version("shuetl") == "0.3.0"
+    assert metadata.version("shuetl") == "0.4.0"
     assert shuetl.__all__ == (
         "ShuETL",
         "ShuETLSettings",
         "LocalProviderBundle",
+        "PostgreSQLProviderBundle",
         "DoctorReport",
         "DiagnosticCheck",
         "ShuETLError",

@@ -10,13 +10,14 @@ from .errors import (
     ShuETLError,
 )
 from .integration import ShuETL
-from .providers import LocalProviderBundle
+from .providers import LocalProviderBundle, PostgreSQLProviderBundle
 from .settings import ShuETLSettings
 
 __all__ = (
     "ShuETL",
     "ShuETLSettings",
     "LocalProviderBundle",
+    "PostgreSQLProviderBundle",
     "DoctorReport",
     "DiagnosticCheck",
     "ShuETLError",

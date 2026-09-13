@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import os
 import re
 import shutil
 import subprocess
@@ -155,27 +156,20 @@ def test_evidence_index_contains_required_reproducibility_record() -> None:
 
 
 def test_recorded_artifact_hashes_match_a_fresh_build(tmp_path: Path) -> None:
-    archive = tmp_path / "source.tar"
     source = tmp_path / "source"
-    source.mkdir()
-    subprocess.run(
-        ["git", "archive", "--output", str(archive), "HEAD"],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    subprocess.run(
-        ["tar", "-xf", str(archive), "-C", str(source)],
-        check=True,
-        capture_output=True,
-        text=True,
+    shutil.copytree(
+        ROOT,
+        source,
+        ignore=shutil.ignore_patterns(
+            ".git", ".venv", "dist", "__pycache__", ".pytest_cache"
+        ),
     )
     dist = tmp_path / "dist"
     subprocess.run(
         ["uv", "build", "--out-dir", str(dist)],
         cwd=source,
         check=True,
+        env={**os.environ, "SOURCE_DATE_EPOCH": "1580601600"},
         capture_output=True,
         text=True,
     )
@@ -189,8 +183,8 @@ def test_recorded_artifact_hashes_match_a_fresh_build(tmp_path: Path) -> None:
         re.findall(r"\| SHA-256 (wheel|sdist) \| `([0-9a-f]{64})` \|", index)
     )
     artifacts = {
-        "wheel": next(dist.glob("*.whl")),
-        "sdist": next(dist.glob("*.tar.gz")),
+        "wheel": next(dist.glob(f"shuetl-{version}-*.whl")),
+        "sdist": next(dist.glob(f"shuetl-{version}*.tar.gz")),
     }
     actual = {
         kind: hashlib.sha256(path.read_bytes()).hexdigest()

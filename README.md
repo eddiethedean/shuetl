@@ -54,11 +54,13 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL 0.3.0 is the current development release. It provides a typed FastAPI facade for local development and
-automated tests. It accepts a prebuilt
+ShuETL 0.4.0 is the current development release. It provides a typed FastAPI facade for local development and a
+controlled single-tenant PostgreSQL pilot. It accepts a prebuilt
 `etlantic_fastapi.ETLanticAPI`; the 0.3 local bundle additionally wires exact
-upstream memory providers and an opt-in, pre-provisioned SQLite profile.
-Both profiles are development-only and are not a production durability claim.
+upstream memory providers and an opt-in, pre-provisioned SQLite profile. The
+0.4 PostgreSQL bundle wires ETLantic 0.52.0 registry, submission, event,
+durable-work, and schedule stores. It does not provide a multi-tenant, HA, or
+exactly-once external-effect guarantee.
 
 The complete design pack is in [`docs/plans/`](docs/plans/README.md).
 
@@ -67,13 +69,17 @@ The implementation contracts are in
 [`docs/plans/PHASE_0_2_EXECUTION.md`](docs/plans/PHASE_0_2_EXECUTION.md), with
 the Phase 0.3 contract in
 [`docs/plans/PHASE_0_3_EXECUTION.md`](docs/plans/PHASE_0_3_EXECUTION.md).
+The Phase 0.4 PostgreSQL contract is in
+[`docs/plans/PHASE_0_4_EXECUTION.md`](docs/plans/PHASE_0_4_EXECUTION.md).
 
 ## Install
 
 ```bash
-python -m pip install "shuetl==0.3.0"
+python -m pip install "shuetl==0.4.0"
 # Optional pre-provisioned SQLite provider
-python -m pip install "shuetl[sqlite]==0.3.0"
+python -m pip install "shuetl[sqlite]==0.4.0"
+# Controlled PostgreSQL pilot provider
+python -m pip install "shuetl[postgresql]==0.4.0"
 ```
 
 ## Quickstart
@@ -132,13 +138,15 @@ or control characters. `InvalidPrefixError` reports invalid prefixes. Mounting
 raises `MountConflictError` before mutation when reserved state, handlers, route
 namespaces, or operation IDs collide; resolve the host conflict before retrying.
 
-Phase 0.3 adds immutable `ShuETLSettings`, `LocalProviderBundle`, and the
-redacted `shuetl doctor` preflight CLI. Settings use `SHUETL_*` environment
-variables; constructor values override the environment. SQLite files must be
-provisioned and migrated by upstream tooling before the bundle is created.
-ShuETL never migrates, creates tables, executes pipelines, or accepts anonymous
-identity. The host supplies the authorizer, context factory, principal
-dependency, and closes the bundle.
+Phase 0.4 adds immutable `ShuETLSettings`, `LocalProviderBundle`,
+`PostgreSQLProviderBundle`, and the redacted `shuetl doctor` preflight CLI.
+Settings use `SHUETL_*` environment variables; constructor values override the
+environment. SQLite files must be provisioned and migrated by upstream tooling
+before the bundle is created. PostgreSQL is provisioned explicitly with
+`shuetl database upgrade`; application startup and doctor never migrate or
+create tables. ShuETL never executes pipelines or accepts anonymous identity.
+The host supplies the authorizer, context factory, principal dependency, TLS
+trust configuration, database credentials, and closes the bundle.
 
 ### Settings contract
 
@@ -146,14 +154,15 @@ The supported settings are:
 
 | Environment variable | Meaning | Default |
 | --- | --- | --- |
-| `SHUETL_PROFILE` | Deployment profile; currently `local` | required |
+| `SHUETL_PROFILE` | `local` or `postgresql-pilot` | required |
 | `SHUETL_ROLE` | Runtime role; currently `gateway` | required |
-| `SHUETL_PROVIDER` | `memory` or `sqlite` | required |
+| `SHUETL_PROVIDER` | `memory`, `sqlite`, or `postgresql` | required |
 | `SHUETL_IDENTITY` | Host-supplied identity mode; currently `host` | required |
 | `SHUETL_API_PREFIX` | Mount prefix | `/etl` |
 | `SHUETL_ROUTE_PRESET` | Route set; currently `complete` | `complete` |
-| `SHUETL_DATABASE_URL` | Existing local SQLite file URL | none |
-| `SHUETL_PROVIDER_CONNECT_TIMEOUT_SECONDS` | SQLite connection timeout | `2.0` |
+| `SHUETL_DATABASE_URL` | Existing SQLite file or `postgresql+psycopg` URL | none |
+| `SHUETL_PROVIDER_CONNECT_TIMEOUT_SECONDS` | Provider connection timeout | `2.0` |
+| `SHUETL_POSTGRESQL_SSLMODE` | `verify-full`, `verify-ca`, `require`, or explicit CI-only `disable` | `verify-full` |
 
 The four required values fail closed when omitted. Constructor arguments take
 precedence over environment variables. Names are case-sensitive and only the
@@ -164,10 +173,59 @@ and must call `close()` during application shutdown.
 
 SQLite is local-only: use an absolute or relative file URL with the `sqlite` or
 `sqlite+pysqlite` driver, and provision the file to migration head
-`004_schedules_0_47` with ETLantic's upstream tooling before startup. ShuETL
-does not create tables or run migrations. The local memory and SQLite profiles
-are development-only; production durability, authentication, scheduling, and
-worker operation remain outside this package.
+`005_cp1_reference` with ETLantic's upstream tooling before startup. ShuETL
+does not create tables or run SQLite migrations.
+
+The PostgreSQL pilot requires the exact `postgresql+psycopg` URL scheme, a
+username, host, and database, and PostgreSQL 18.6. The secure default is
+`verify-full`; use `disable` only for an isolated local/CI service with an
+explicit environment setting. Provision the database with:
+
+```bash
+shuetl database upgrade
+shuetl doctor --format json
+python examples/phase_0_4_postgresql.py
+```
+
+The database migration command is the only ShuETL schema-changing operation.
+Run it with a migration-capable role, then run the gateway with a role that
+does not need schema-change privileges. Backups must include all ETLantic-owned
+tables and `etlantic_sqlmodel_schema_version`; credentials, TLS keys, external
+artifacts, and pipeline side effects are separate operator inputs.
+
+### PostgreSQL backup and restore verification
+
+Use a transactionally consistent custom-format dump of the provider-owned
+database. Native `pg_dump` and `pg_restore` use libpq connection strings
+(`postgresql://`), while ShuETL uses its SQLAlchemy URL
+(`postgresql+psycopg://`). Keep those inputs separate, and configure the same
+TLS policy for both tools. For the isolated local/CI service, set
+`PGSSLMODE=disable`; for a verified deployment use `PGSSLMODE=verify-full`
+and provide `PGSSLROOTCERT` as required by the server certificate:
+
+```bash
+export PGSSLMODE="${PGSSLMODE:-disable}"
+export PG_DUMP_DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database>"
+export PG_RESTORE_DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<isolated_restore_database>"
+export SHUETL_RESTORE_DATABASE_URL="postgresql+psycopg://<user>:<password>@<host>:<port>/<isolated_restore_database>"
+
+pg_dump --format=custom --file=shuetl-0.4.backup "$PG_DUMP_DATABASE_URL"
+pg_restore --exit-on-error --dbname="$PG_RESTORE_DATABASE_URL" shuetl-0.4.backup
+SHUETL_DATABASE_URL="$SHUETL_RESTORE_DATABASE_URL" shuetl doctor --format json
+```
+
+Restore into an isolated database first. Do not admit gateway traffic until
+`doctor` reports the qualified server, migration head, required tables, and
+provider capabilities, then repeat the restart/idempotency/event probes used
+for the pilot. A failed readiness check keeps the restored database out of
+traffic; it does not run migrations or repair the restored schema. The dump
+must contain the canonical ETLantic tables and
+`etlantic_sqlmodel_schema_version`; backups do not contain external artifacts,
+credentials, TLS keys, or external side effects.
+
+The memory and SQLite profiles remain development-only. The PostgreSQL profile
+is a controlled single-tenant pilot; it is not a multi-tenant, high-availability,
+or exactly-once external-effect claim.
 
 ```bash
 shuetl doctor

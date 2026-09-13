@@ -124,14 +124,24 @@ These decisions must close before work intended to survive into 0.2 is merged:
 3. capability/readiness diagnostic schema —
    [ADR-0009](../adr/0009-doctor-report-contract.md).
 
+### Resolved for Phase 0.4
+
+1. supported PostgreSQL driver and provider configuration —
+   [ADR-0010](../adr/0010-postgresql-pilot-and-migration-boundary.md);
+2. provider-owned migration invocation outside startup —
+   [ADR-0010](../adr/0010-postgresql-pilot-and-migration-boundary.md).
+
+Phase 0.4 is unblocked against the published 0.52.0 provider train. The
+qualification evidence and exact migration head are recorded in
+[PHASE_0_4_EXECUTION.md](PHASE_0_4_EXECUTION.md); a future train change requires
+requalification.
+
 ### Deferred until first use
 
 These are required by the named later release, not by the 0.1 boundary proof:
 
-1. supported PostgreSQL driver and provider configuration — 0.4;
-2. policy for invoking provider-owned migrations outside startup — 0.4;
-3. gateway, scheduler, and worker CLI/process entry points — 0.6;
-4. production route-selection presets, if distinct from the upstream surface —
+1. gateway, scheduler, and worker CLI/process entry points — 0.6;
+2. production route-selection presets, if distinct from the upstream surface —
    no later than 0.6.
 
 Deferral does not authorize an implicit implementation decision. If earlier

@@ -264,6 +264,10 @@ and dependency-aware implementation sequence are defined in
 
 ## 0.4 — Durable PostgreSQL Pilot
 
+> Planning status: **implemented and locally qualified** against the qualified 0.52.0
+> provider train. The architecture contract, ACs, and qualification evidence are defined in
+> [PHASE_0_4_EXECUTION.md](PHASE_0_4_EXECUTION.md).
+
 ### Outcome
 
 Qualify a controlled, single-tenant PostgreSQL deployment using ETLantic's

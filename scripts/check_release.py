@@ -1,8 +1,9 @@
-"""Run the complete local Phase 0.3 release gate."""
+"""Run the complete local Phase 0.4 release gate."""
 
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -16,7 +17,12 @@ RELEASE_SERIES = ".".join(str(PROJECT["project"]["version"]).split(".")[:2])
 
 def run_step(label: str, command: list[str]) -> None:
     print(f"== {label} ==")
-    subprocess.run(command, cwd=ROOT, check=True)
+    subprocess.run(
+        command,
+        cwd=ROOT,
+        check=True,
+        env={**os.environ, "SOURCE_DATE_EPOCH": "1580601600"},
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -39,6 +45,8 @@ def main(argv: list[str] | None = None) -> int:
             "test",
             "--extra",
             "sqlite",
+            "--extra",
+            "postgresql",
         ],
     )
     run_step("format", [*uv_run, "ruff", "format", "--check", "."])

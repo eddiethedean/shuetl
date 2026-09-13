@@ -1,0 +1,268 @@
+{
+  "AC-001": {
+    "command": "uv run python scripts/check_artifact.py",
+    "artifact": "qualification.md#ac-001",
+    "requirement": "Project and wheel metadata report `0.4.0`, Python 3.11–3.13, the exact qualified core train, and exact PostgreSQL extra including Psycopg 3.3.5 binary.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-002": {
+    "command": "uv run pytest tests/integration/test_postgresql.py::test_schema_head_graph_and_doctor -q",
+    "artifact": "qualification.md#ac-002",
+    "requirement": "PostgreSQL 18.6 is the only claimed server and the executed server version is recorded in CI/evidence.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-003": {
+    "command": "uv run pytest tests/unit/test_package.py -q",
+    "artifact": "qualification.md#ac-003",
+    "requirement": "All 0.3 public exports remain and source/wheel expose exactly the added `PostgreSQLProviderBundle`.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-004": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-004, 2026-09-13)",
+    "artifact": "qualification.md#ac-004",
+    "requirement": "Settings accept exactly the three documented profile/provider combinations and never select PostgreSQL implicitly.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-005": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-005, 2026-09-13)",
+    "artifact": "qualification.md#ac-005",
+    "requirement": "PostgreSQL URLs and TLS mode validate exactly as specified; invalid or secret-bearing errors contain no connection value or coordinate.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-006": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-006, 2026-09-13)",
+    "artifact": "qualification.md#ac-006",
+    "requirement": "Exact core/PostgreSQL versions are validated before optional imports or engine construction; missing/mismatched extras fail with the documented remediation and no fallback.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-007": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-007, 2026-09-13)",
+    "artifact": "qualification.md#ac-007",
+    "requirement": "Bundle construction requires the exact pilot settings and explicit conforming host authorizer, context factory, and principal dependency.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-008": {
+    "command": "uv run pytest tests/review/test_phase_0_4_contract.py::test_sol_011_bundle_definitions_are_the_api_definitions -q",
+    "artifact": "qualification.md#ac-008",
+    "requirement": "A qualified bundle contains exact upstream registry, registry-backed definition, submission, event, durable-work, schedule, and API objects over one engine.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-009": {
+    "command": "Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-009, 2026-09-13)",
+    "artifact": "qualification.md#ac-009",
+    "requirement": "The API retains caller objects, uses upstream production profile, and exposes registry/durable/schedule providers without adding report/artifact/governance/execution providers.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-010": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-010, 2026-09-13)",
+    "artifact": "qualification.md#ac-010",
+    "requirement": "Fresh, behind, unknown/ahead, corrupt, wrong-server, and unreachable databases produce the documented redacted readiness failures and no bundle.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-011": {
+    "command": "uv run pytest tests/integration/test_postgresql.py::test_schema_head_graph_and_doctor -q",
+    "artifact": "qualification.md#ac-011",
+    "requirement": "Exact head plus every required provider table is necessary and sufficient for database readiness.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-012": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-012, 2026-09-13)",
+    "artifact": "qualification.md#ac-012",
+    "requirement": "Bundle construction, doctor, gateway startup, mount, app factory, and lifespan perform zero schema/table/version writes and invoke no migration/create-all API.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-013": {
+    "command": "uv run pytest tests/review/test_phase_0_4_contract.py::test_sol_014_cancelled_construction_disposes_engine_once -q",
+    "artifact": "qualification.md#ac-013",
+    "requirement": "Every construction failure disposes its engine once; successful bundle close is thread-safe, explicit, and idempotent.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-014": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-014, 2026-09-13)",
+    "artifact": "qualification.md#ac-014",
+    "requirement": "`shuetl database upgrade` alone performs provider migrations with exact stdout/stderr and exit 0/1/2 behavior.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-015": {
+    "command": "uv run pytest tests/integration/test_postgresql.py::test_schema_head_graph_and_doctor -q",
+    "artifact": "qualification.md#ac-015",
+    "requirement": "Fresh PostgreSQL upgrades to the qualified head solely through the public provider migration API and has every required table/constraint.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-016": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-016, 2026-09-13)",
+    "artifact": "qualification.md#ac-016",
+    "requirement": "Every recognized earlier provider head upgrades to the qualified head without losing seeded canonical data.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-017": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-017, 2026-09-13)",
+    "artifact": "qualification.md#ac-017",
+    "requirement": "Repeating upgrade at head is a successful no-op; unknown/ahead/corrupt state is never downgraded, reset, repaired, or overwritten.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-018": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-018, 2026-09-13)",
+    "artifact": "qualification.md#ac-018",
+    "requirement": "A registry-backed definition and at least two immutable revisions remain readable with the same logical/revision IDs after engine and gateway restart.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-019": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-019, 2026-09-13)",
+    "artifact": "qualification.md#ac-019",
+    "requirement": "A committed CP1 submission remains readable after restart and preserves acceptance, submission, run, and definition identities.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-020": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-020, 2026-09-13)",
+    "artifact": "qualification.md#ac-020",
+    "requirement": "Same-scope same-key same-payload submission before/after restart returns one canonical upstream outcome; changed payload returns upstream conflict.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-021": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-021, 2026-09-13)",
+    "artifact": "qualification.md#ac-021",
+    "requirement": "Barrier-controlled concurrent same-key submissions through independent connections produce one durable canonical acceptance and no raw database exception.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-022": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-022, 2026-09-13)",
+    "artifact": "qualification.md#ac-022",
+    "requirement": "Events appended before restart replay from the beginning and a persisted cursor with the same IDs, sequences, order, payload, and scope.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-023": {
+    "command": "uv run pytest tests/integration/test_postgresql.py::test_concurrent_event_appends_have_unique_sequences -q",
+    "artifact": "qualification.md#ac-023",
+    "requirement": "Barrier-controlled concurrent same-scope event appends all persist with unique ordered sequences/cursors and expose no raw SQLAlchemy/Psycopg exception.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-024": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-024, 2026-09-13)",
+    "artifact": "qualification.md#ac-024",
+    "requirement": "A schedule and canonical firing created through upstream API/store behavior persist with the same identities after restart without a ShuETL scheduler loop.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-025": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-025, 2026-09-13)",
+    "artifact": "qualification.md#ac-025",
+    "requirement": "Duplicate schedule firing claim returns the canonical upstream firing and does not create a second durable submission.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-026": {
+    "command": "uv run pytest tests/integration/test_phase_0_2_contract.py -q",
+    "artifact": "qualification.md#ac-026",
+    "requirement": "Mounted PostgreSQL endpoints preserve upstream authorization order, request/response schemas, statuses, errors, idempotency, SSE, operation IDs, and schema refs.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-027": {
+    "command": "uv run pytest tests/integration/test_postgresql.py::test_schema_head_graph_and_doctor -q",
+    "artifact": "qualification.md#ac-027",
+    "requirement": "Doctor keeps `shuetl.doctor/1`, existing fields/check IDs/order, and reports truthful pilot capabilities, package/server versions, connection, schema, and non-development topology.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-028": {
+    "command": "uv run pytest tests/review/test_phase_0_4_contract.py -q",
+    "artifact": "qualification.md#ac-028",
+    "requirement": "Doctor text/JSON contain equivalent bounded facts and neither performs writes nor reveals credentials, coordinates, paths, TLS material, SQL, reprs, or raw exceptions.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-029": {
+    "command": "Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-029, 2026-09-13)",
+    "artifact": "qualification.md#ac-029",
+    "requirement": "Database backup/restore of provider-owned canonical tables preserves the AC-018 through AC-025 identities and passes readiness before traffic.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-030": {
+    "command": "uv run pytest -q",
+    "artifact": "qualification.md#ac-030",
+    "requirement": "Existing memory, SQLite, caller-built API, mount, lifecycle, handler, OpenAPI, CLI, and doctor compatibility suites remain green.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-031": {
+    "command": "uv run python scripts/check_boundaries.py --openapi docs/evidence/0.4/openapi.normalized.json",
+    "artifact": "qualification.md#ac-031",
+    "requirement": "Static boundaries find no ShuETL domain model, table, migration, store wrapper, route, scheduler, worker, executor, anonymous identity, or startup DDL.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-032": {
+    "command": "uv run python scripts/check_clean_wheel.py",
+    "artifact": "qualification.md#ac-032",
+    "requirement": "Core, SQLite, and PostgreSQL clean-wheel installs contain only their declared dependencies and all public imports resolve from the wheel.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-033": {
+    "command": "Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-033, 2026-09-13)",
+    "artifact": "qualification.md#ac-033",
+    "requirement": "Real PostgreSQL integration tests run in CI on Python 3.11, 3.12, and 3.13 using the exact locked server/driver/provider set.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "configuration only; live CI and Python 3.11/3.13 execution unrecorded"
+  },
+  "AC-034": {
+    "command": "uv run python scripts/check_release.py",
+    "artifact": "qualification.md#ac-034",
+    "requirement": "Ruff, Pyright, boundary, unit, integration, migration, concurrency, build, artifact, OpenAPI, clean-wheel, redaction, and evidence gates pass.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12 gate; live PostgreSQL qualified separately"
+  },
+  "AC-035": {
+    "command": "Recorded review: tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria (AC-035, 2026-09-13)",
+    "artifact": "qualification.md#ac-035",
+    "requirement": "Documentation states exact setup, TLS, privileges, migration, readiness, cleanup, backup/restore, canonical data, and pilot limitations and contains executable wheel-based examples.",
+    "provenance": "tests/review/PHASE_0_4_RE_REVIEW_2.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-036": {
+    "command": "uv run python scripts/check_evidence.py --evidence docs/evidence/0.4",
+    "artifact": "qualification.md#ac-036",
+    "requirement": "The Phase 0.4 evidence index maps every AC exactly once to passing proof and contains no secret or machine-specific path.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  },
+  "AC-037": {
+    "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-037, 2026-09-13)",
+    "artifact": "qualification.md#ac-037",
+    "requirement": "The qualified 0.52.0 provider train provisions submission/event tables through production migrations and upgrades preserve data.",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "prior independent review; not rerun in remediation"
+  },
+  "AC-038": {
+    "requirement": "The qualified 0.52.0 provider train provides a supported, tested concurrent event-append outcome meeting AC-023.",
+    "command": "uv run pytest tests/integration/test_postgresql.py::test_concurrent_event_appends_have_unique_sequences -q",
+    "artifact": "qualification.md#ac-038",
+    "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
+    "limitation": "local Python 3.12; see qualification record"
+  }
+}

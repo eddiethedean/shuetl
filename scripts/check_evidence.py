@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import sys
 import tomllib
@@ -68,6 +69,81 @@ PHASE_0_3_PROOF_TERMS = {
 }
 
 
+def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str, str]]:
+    """Load reviewed proof bindings, not keywords inferred from task labels.
+
+    The registry and qualification record are an auditable review contract.
+    This checks reference integrity; it cannot replace human review of whether
+    a test or recorded observation establishes the approved requirement.
+    """
+    registry = evidence_dir / "proofs.json"
+    try:
+        data = json.loads(registry.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        errors.append(f"cannot read current proof registry: {exc}")
+        return {}
+    if not isinstance(data, dict):
+        errors.append("current proof registry must be an AC-keyed object")
+        return {}
+    result: dict[str, dict[str, str]] = {}
+    plan = (ROOT / "docs/plans/PHASE_0_4_EXECUTION.md").read_text(encoding="utf-8")
+    approved = plan.split("## Acceptance criteria", 1)[1].split(
+        "## Verification matrix", 1
+    )[0]
+    for criterion, proof in data.items():
+        fields = ("command", "artifact", "requirement", "provenance", "limitation")
+        if not isinstance(proof, dict) or not all(
+            isinstance(proof.get(field), str) and proof[field] for field in fields
+        ):
+            errors.append(f"malformed current proof binding: {criterion}")
+            continue
+        result[criterion] = proof
+        # The verification matrix repeats IDs: bind to the observable AC table,
+        # not the matrix's preferred verification type.
+        required_row = next(
+            (
+                line
+                for line in approved.splitlines()
+                if line.startswith(f"| {criterion} |")
+            ),
+            "",
+        )
+        requirement = required_row.strip("|").split("|")
+        if len(requirement) != 2 or proof["requirement"] != requirement[1].strip():
+            errors.append(
+                f"proof requirement differs from approved contract: {criterion}"
+            )
+        for field in ("artifact", "provenance"):
+            reference = proof[field]
+            path_ref, _, anchor = reference.partition("#")
+            path = evidence_dir / path_ref if "/" not in path_ref else ROOT / path_ref
+            if not path.is_file():
+                errors.append(f"missing {field} for {criterion}: {reference}")
+                continue
+            contents = path.read_text(encoding="utf-8")
+            headings = {
+                re.sub(r"[^\w -]", "", heading.lower()).replace(" ", "-")
+                for heading in re.findall(r"^#+ (.+)$", contents, re.MULTILINE)
+            }
+            if anchor and anchor not in headings:
+                errors.append(f"missing {field} anchor for {criterion}: {reference}")
+            if field == "artifact":
+                section = contents.split(f"## {criterion}\n", 1)
+                record = section[1].split("\n## ", 1)[0] if len(section) == 2 else ""
+                if not all(
+                    value in record
+                    for value in (
+                        proof["command"],
+                        proof["requirement"],
+                        proof["provenance"],
+                        proof["limitation"],
+                        "Result: PASS",
+                    )
+                ):
+                    errors.append(f"incomplete qualification record for {criterion}")
+    return result
+
+
 def check(evidence: Path | None = None) -> list[str]:
     errors: list[str] = []
     evidence_dir = evidence or EVIDENCE
@@ -80,6 +156,9 @@ def check(evidence: Path | None = None) -> list[str]:
     if errors:
         return errors
     text = index.read_text(encoding="utf-8")
+    registry = (
+        proof_registry(evidence_dir, errors) if evidence_dir.name == "0.4" else {}
+    )
     required_fields = (
         "OS and architecture",
         "Python version",
@@ -102,8 +181,13 @@ def check(evidence: Path | None = None) -> list[str]:
     acceptance = text.split("## Acceptance results", 1)
     if len(acceptance) == 2:
         section = acceptance[1].split("## Gap register", 1)[0]
-        header = (
-            section.splitlines()[2].lower() if len(section.splitlines()) > 2 else ""
+        header = next(
+            (
+                line.lower()
+                for line in section.splitlines()
+                if line.startswith("| Criterion |")
+            ),
+            "",
         )
         for field in (
             "criterion",
@@ -117,9 +201,10 @@ def check(evidence: Path | None = None) -> list[str]:
             if field not in header:
                 errors.append(f"acceptance evidence has no {field!r} column")
         rows = [line for line in section.splitlines() if line.startswith("| AC-")]
+        criterion_counts = {"0.2": 36, "0.3": 42, "0.4": 38}
         expected = {
             f"AC-{number:03d}"
-            for number in range(1, (37 if evidence_dir.name == "0.2" else 43))
+            for number in range(1, criterion_counts.get(evidence_dir.name, 43) + 1)
         }
         seen: dict[str, str] = {}
         proofs: dict[str, str] = {}
@@ -135,11 +220,45 @@ def check(evidence: Path | None = None) -> list[str]:
             proofs[criterion] = " ".join(cells[1:4]).lower()
             if status != "PASS":
                 errors.append(f"acceptance criterion is not PASS: {criterion}")
+            if evidence_dir.name == "0.4":
+                command, artifact = cells[2], cells[3]
+                if not command:
+                    errors.append(
+                        f"acceptance evidence has no verification command: {criterion}"
+                    )
+                if not artifact:
+                    errors.append(
+                        f"acceptance evidence has no result artifact: {criterion}"
+                    )
+                else:
+                    artifact_ref = artifact.strip().strip("`")
+                    artifact_path = artifact_ref.split("#", 1)[0].split("::", 1)[0]
+                    candidate_paths = [ROOT / artifact_path]
+                    if "/" not in artifact_path:
+                        candidate_paths.insert(0, evidence_dir / artifact_path)
+                    if not any(path.exists() for path in candidate_paths):
+                        errors.append(
+                            "acceptance evidence artifact does not exist: "
+                            f"{criterion} ({artifact_path})"
+                        )
+                binding = registry.get(criterion)
+                if binding is None or (
+                    command.strip("`") != binding["command"]
+                    or artifact.strip("`") != binding["artifact"]
+                    or len(cells) < 6
+                    or cells[5] != binding["limitation"]
+                ):
+                    errors.append(
+                        f"acceptance evidence does not match audited proof: {criterion}"
+                    )
         missing = sorted(expected - seen.keys())
         if missing:
             errors.append(f"acceptance evidence omits criteria: {missing}")
-        if evidence_dir.name == "0.3":
-            for criterion, terms in PHASE_0_3_PROOF_TERMS.items():
+        if evidence_dir.name == "0.4" and registry.keys() != expected:
+            errors.append("current proof registry must cover exactly AC-001–AC-038")
+        proof_terms = PHASE_0_3_PROOF_TERMS if evidence_dir.name == "0.3" else {}
+        if proof_terms:
+            for criterion, terms in proof_terms.items():
                 proof = proofs.get(criterion, "")
                 if proof and not any(term in proof for term in terms):
                     errors.append(
@@ -162,7 +281,11 @@ def check(evidence: Path | None = None) -> list[str]:
     recorded_hashes = dict(
         re.findall(r"\| SHA-256 (wheel|sdist) \| `([0-9a-f]{64})` \|", text)
     )
-    for kind, pattern in (("wheel", "*.whl"), ("sdist", "*.tar.gz")):
+    artifact_prefix = f"shuetl-{PROJECT_VERSION}"
+    for kind, pattern in (
+        ("wheel", f"{artifact_prefix}*.whl"),
+        ("sdist", f"{artifact_prefix}*.tar.gz"),
+    ):
         artifacts = sorted(DIST.glob(pattern))
         if len(artifacts) != 1:
             errors.append(f"expected one {kind} artifact in {DIST}")
@@ -170,32 +293,47 @@ def check(evidence: Path | None = None) -> list[str]:
         digest = hashlib.sha256(artifacts[0].read_bytes()).hexdigest()
         if recorded_hashes.get(kind) != digest:
             errors.append(f"recorded {kind} SHA-256 does not match built artifact")
-    max_criterion = 36 if evidence_dir.name == "0.2" else 42
+    max_criterion = {"0.2": 36, "0.3": 42, "0.4": 38}.get(evidence_dir.name, 42)
     for number in range(1, max_criterion + 1):
         criterion = f"AC-{number:03d}"
         if criterion not in text:
             errors.append(f"evidence index does not mention {criterion}")
-    if (
-        text.count("proceed-to-0.2")
-        + text.count("blocked-on-upstream")
-        + text.count("merge-into-etlantic-fastapi")
-        != 1
-    ):
+    outcomes = (
+        ("proceed-to-0.2", "blocked-on-upstream", "merge-into-etlantic-fastapi")
+        if evidence_dir.name != "0.4"
+        else ("proceed-to-0.4", "blocked-on-upstream", "merge-into-etlantic-fastapi")
+    )
+    if sum(text.count(outcome) for outcome in outcomes) != 1:
         errors.append("evidence index must record exactly one boundary outcome")
     if "| PASS |" not in text:
         errors.append("evidence index must contain PASS results before release")
-    for answer in (
+    boundary_answers = (
         "integration burden",
         "public composition hooks",
         "copied route",
         "materially easier",
         "contributed to `etlantic-fastapi`",
-    ):
+    )
+    if evidence_dir.name == "0.4":
+        boundary_answers = (
+            "integration burden",
+            "public composition hooks",
+            "copied route",
+        )
+    for answer in boundary_answers:
         if answer not in text:
             errors.append(f"boundary review omits answer: {answer}")
-    combined = "\n".join(
-        path.read_text(encoding="utf-8") for path in (index, contracts, ownership)
-    )
+    redaction_files = [index, contracts, ownership]
+    if evidence_dir.name == "0.4":
+        redaction_files.extend(
+            path
+            for path in (
+                evidence_dir / "proofs.json",
+                evidence_dir / "qualification.md",
+            )
+            if path.is_file()
+        )
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in redaction_files)
     for pattern in REDACTION_PATTERNS:
         if re.search(pattern, combined):
             errors.append(

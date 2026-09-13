@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0 — Durable PostgreSQL pilot (2026-09-13)
+
+- Added the exact ETLantic 0.52.0 compatibility train and a `shuetl[postgresql]`
+  extra with SQLModel, SQLAlchemy, and Psycopg 3.3.5 binary support.
+- Added validated `postgresql-pilot` settings and the public
+  `PostgreSQLProviderBundle` for registry-backed definitions, submissions,
+  events, durable work, schedules, and firings.
+- Added read-only PostgreSQL connectivity/schema-head checks to `shuetl doctor`
+  and the explicit `shuetl database upgrade` provider-migration command.
+- Qualified fresh/prior-head migrations, restart identity persistence,
+  idempotency, schedule/firing claims, event replay, and concurrent PostgreSQL
+  appends against PostgreSQL 18.6.
+
 ## 0.3.0 — Local provider bundle and diagnostics (2026-09-11)
 
 - Added immutable `ShuETLSettings` with strict `SHUETL_*` configuration and

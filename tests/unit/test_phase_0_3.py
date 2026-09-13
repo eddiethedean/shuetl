@@ -33,6 +33,7 @@ def test_settings_constructor_overrides_environment(monkeypatch) -> None:
         "api_prefix": "/from-init",
         "route_preset": "complete",
         "provider_connect_timeout_seconds": 2.0,
+        "postgresql_sslmode": "verify-full",
     }
 
 
@@ -85,6 +86,6 @@ def test_doctor_json_is_stable_and_redacted() -> None:
 
 def test_cli_version_and_json(capsys) -> None:
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.strip() == "shuetl 0.3.0"
+    assert capsys.readouterr().out.strip() == "shuetl 0.4.0"
     assert main(["doctor", "--format", "json"]) == 1
     assert json.loads(capsys.readouterr().out)["schema"] == "shuetl.doctor/1"

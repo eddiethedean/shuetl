@@ -1,7 +1,4 @@
-"""Deterministic, redacted local runtime diagnostics."""
-
-# Stable golden summary lines intentionally retain their contract wording.
-# ruff: noqa: E501
+"""Deterministic, redacted ShuETL runtime diagnostics."""
 
 from __future__ import annotations
 
@@ -12,11 +9,19 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ._secrets import _database_url_value
 from .compatibility import (
     CORE_REQUIREMENTS,
+    POSTGRESQL_REQUIREMENTS,
     SQLITE_REQUIREMENTS,
     installed_versions,
     validate_core,
 )
-from .providers import SQLITE_HEAD, LocalProviderBundle, _sqlite_path
+from .postgresql import POSTGRESQL_HEAD, inspect_postgresql
+from .providers import (
+    SQLITE_HEAD,
+    LocalProviderBundle,
+    PostgreSQLProviderBundle,
+    _read_sqlite_version,
+    _sqlite_path,
+)
 from .settings import ShuETLSettings
 
 CheckStatus = Literal["pass", "warn", "fail", "skip"]
@@ -54,7 +59,7 @@ class DoctorReport(BaseModel):
     def inspect(
         cls,
         settings: ShuETLSettings | None = None,
-        bundle: LocalProviderBundle | None = None,
+        bundle: LocalProviderBundle | PostgreSQLProviderBundle | None = None,
     ) -> DoctorReport:
         configuration_error: str | None = None
         if settings is None:
@@ -71,11 +76,11 @@ class DoctorReport(BaseModel):
                     route_preset=None,
                     database_url=None,
                     provider_connect_timeout_seconds=2.0,
+                    postgresql_sslmode="verify-full",
                 )
 
         versions = installed_versions()
-        checks: list[DiagnosticCheck] = []
-        checks.append(
+        checks: list[DiagnosticCheck] = [
             DiagnosticCheck(
                 id="configuration.valid",
                 status="fail" if configuration_error else "pass",
@@ -84,7 +89,7 @@ class DoctorReport(BaseModel):
                     "Set supported SHUETL_* values." if configuration_error else None
                 ),
             )
-        )
+        ]
         try:
             validate_core()
             core_status: CheckStatus = "pass"
@@ -93,7 +98,7 @@ class DoctorReport(BaseModel):
         except Exception:
             core_status = "fail"
             core_summary = "Core package versions are incompatible."
-            core_remediation = "Install the qualified ShuETL 0.3 package set."
+            core_remediation = "Install the qualified ShuETL 0.4 package set."
         checks.append(
             DiagnosticCheck(
                 id="compatibility.core",
@@ -103,7 +108,7 @@ class DoctorReport(BaseModel):
             )
         )
         train_ok = all(
-            value is None or value.split(".")[:2] == ["0", "51"]
+            value is None or value.split(".")[:2] == ["0", "52"]
             for name, value in versions.items()
             if name.startswith("etlantic-")
         )
@@ -112,14 +117,14 @@ class DoctorReport(BaseModel):
                 id="compatibility.etlantic_train",
                 status="pass" if train_ok else "fail",
                 summary=(
-                    "Installed ETLantic extensions share the 0.51 train."
+                    "Installed ETLantic extensions share the 0.52 train."
                     if train_ok
-                    else "An ETLantic extension is outside the 0.51 train."
+                    else "An ETLantic extension is outside the 0.52 train."
                 ),
                 remediation=(
                     None
                     if train_ok
-                    else "Align every installed etlantic-* package to 0.51."
+                    else "Align every installed etlantic-* package to 0.52."
                 ),
             )
         )
@@ -130,16 +135,45 @@ class DoctorReport(BaseModel):
             "control-plane.events",
             "control-plane.submissions",
         ]
-        provider_available = provider == "memory" or all(
-            versions.get(name) == required
-            for name, required in SQLITE_REQUIREMENTS.items()
-        )
+        if provider == "postgresql":
+            configured.extend(
+                [
+                    "control-plane.registry",
+                    "control-plane.revisions",
+                    "control-plane.durable-work",
+                    "control-plane.schedules",
+                    "control-plane.firings",
+                ]
+            )
+        if provider == "memory":
+            provider_available = True
+        elif provider == "sqlite":
+            provider_available = all(
+                versions.get(name) == required
+                for name, required in SQLITE_REQUIREMENTS.items()
+            )
+        else:
+            provider_available = all(
+                versions.get(name) == required
+                for name, required in POSTGRESQL_REQUIREMENTS.items()
+            )
+
         if provider == "memory":
             available = ["provider.memory"]
         elif provider == "sqlite" and provider_available:
             available = ["provider.sqlite"]
+        elif provider == "postgresql" and provider_available:
+            available = ["provider.postgresql"]
         else:
             available = []
+
+        provider_remediation = None
+        if not provider_available:
+            provider_remediation = (
+                "Install `shuetl[sqlite]==0.4.0`."
+                if provider == "sqlite"
+                else "Install `shuetl[postgresql]==0.4.0`."
+            )
         checks.append(
             DiagnosticCheck(
                 id="provider.available",
@@ -149,17 +183,18 @@ class DoctorReport(BaseModel):
                     if provider_available
                     else "Configured provider dependencies are unavailable."
                 ),
-                remediation=(
-                    None if provider_available else "Install `shuetl[sqlite]==0.3.0`."
-                ),
+                remediation=provider_remediation,
             )
         )
-        ready = "pass"
+
+        ready: CheckStatus = "pass"
         ready_summary = "Configured provider is ready for local use."
-        ready_remediation = None
+        ready_remediation: str | None = None
         schema_status: CheckStatus = "skip"
-        schema_summary = "SQLite schema inspection is not applicable to memory."
-        schema_remediation = None
+        schema_summary = "Relational schema inspection is not applicable to memory."
+        schema_remediation: str | None = None
+        server_version: str | None = None
+
         if configuration_error:
             ready = "fail"
             ready_summary = "Provider readiness cannot be evaluated."
@@ -168,16 +203,17 @@ class DoctorReport(BaseModel):
             ready = "fail"
             ready_summary = "The supplied provider bundle does not match configuration."
             ready_remediation = "Inspect a bundle created from the same settings."
-            if provider == "sqlite":
+            if provider in {"sqlite", "postgresql"}:
                 schema_status = "fail"
                 schema_summary = (
-                    "SQLite schema was not inspected because configuration differed."
+                    "Relational schema was not inspected because configuration "
+                    "differed."
                 )
         elif provider == "sqlite":
             if not provider_available:
                 ready = "fail"
                 ready_summary = "SQLite provider dependencies are unavailable."
-                ready_remediation = "Install `shuetl[sqlite]==0.3.0`."
+                ready_remediation = "Install `shuetl[sqlite]==0.4.0`."
                 schema_status = "fail"
                 schema_summary = (
                     "SQLite schema cannot be inspected without the optional provider."
@@ -191,83 +227,148 @@ class DoctorReport(BaseModel):
                     ready = "fail"
                     ready_summary = "SQLite provider is not ready."
                     ready_remediation = schema_remediation
-        checks.append(
-            DiagnosticCheck(
-                id="provider.ready",
-                status=ready,
-                summary=ready_summary,
-                remediation=ready_remediation,
+        elif provider == "postgresql":
+            ready_summary = (
+                "PostgreSQL provider is ready for the controlled pilot; "
+                f"TLS mode is {settings.postgresql_sslmode}."
             )
-        )
-        checks.append(
-            DiagnosticCheck(
-                id="provider.schema",
-                status=schema_status,
-                summary=schema_summary,
-                remediation=schema_remediation,
-            )
-        )
+            if not provider_available:
+                ready = "fail"
+                ready_summary = (
+                    "PostgreSQL provider dependencies are unavailable; "
+                    f"TLS mode is {settings.postgresql_sslmode}."
+                )
+                ready_remediation = "Install `shuetl[postgresql]==0.4.0`."
+                schema_status = "fail"
+                schema_summary = (
+                    "PostgreSQL schema cannot be inspected without the optional "
+                    "provider."
+                )
+                schema_remediation = "Install the optional PostgreSQL extra."
+            else:
+                status = inspect_postgresql(settings)
+                server_version = status.server_version
+                if status.state == "head":
+                    schema_status = "pass"
+                    schema_summary = (
+                        "PostgreSQL schema is at the required migration head "
+                        f"{POSTGRESQL_HEAD}."
+                    )
+                else:
+                    ready = "fail"
+                    ready_summary = (
+                        "PostgreSQL provider is not ready; "
+                        f"TLS mode is {settings.postgresql_sslmode}."
+                    )
+                    ready_remediation = _postgresql_schema_remediation(status.state)
+                    schema_status = "fail"
+                    schema_summary = "PostgreSQL schema is not ready."
+                    schema_remediation = ready_remediation
+
         checks.extend(
             [
                 DiagnosticCheck(
+                    id="provider.ready",
+                    status=ready,
+                    summary=ready_summary,
+                    remediation=ready_remediation,
+                ),
+                DiagnosticCheck(
+                    id="provider.schema",
+                    status=schema_status,
+                    summary=schema_summary,
+                    remediation=schema_remediation,
+                ),
+                DiagnosticCheck(
                     id="identity.explicit",
                     status="pass" if settings.identity == "host" else "fail",
-                    summary="Host identity is explicit."
-                    if settings.identity == "host"
-                    else "Identity mode is unsupported.",
-                    remediation=None
-                    if settings.identity == "host"
-                    else "Use SHUETL_IDENTITY=host.",
+                    summary=(
+                        "Host identity is explicit."
+                        if settings.identity == "host"
+                        else "Identity mode is unsupported."
+                    ),
+                    remediation=(
+                        None
+                        if settings.identity == "host"
+                        else "Use SHUETL_IDENTITY=host."
+                    ),
                 ),
                 DiagnosticCheck(
                     id="role.supported",
                     status="pass" if settings.role == "gateway" else "fail",
-                    summary="Gateway role is supported."
-                    if settings.role == "gateway"
-                    else "Role is unsupported.",
-                    remediation=None
-                    if settings.role == "gateway"
-                    else "Use SHUETL_ROLE=gateway.",
+                    summary=(
+                        "Gateway role is supported."
+                        if settings.role == "gateway"
+                        else "Role is unsupported."
+                    ),
+                    remediation=(
+                        None
+                        if settings.role == "gateway"
+                        else "Use SHUETL_ROLE=gateway."
+                    ),
                 ),
                 DiagnosticCheck(
                     id="routes.supported",
                     status="pass" if settings.route_preset == "complete" else "fail",
-                    summary="Complete route preset is supported."
-                    if settings.route_preset == "complete"
-                    else "Route preset is unsupported.",
-                    remediation=None
-                    if settings.route_preset == "complete"
-                    else "Use SHUETL_ROUTE_PRESET=complete.",
+                    summary=(
+                        "Complete route preset is supported."
+                        if settings.route_preset == "complete"
+                        else "Route preset is unsupported."
+                    ),
+                    remediation=(
+                        None
+                        if settings.route_preset == "complete"
+                        else "Use SHUETL_ROUTE_PRESET=complete."
+                    ),
                 ),
                 DiagnosticCheck(
                     id="topology.development_only",
-                    status="warn",
-                    summary="Local providers are development-only.",
-                    remediation="Use a separately operated provider for production workloads.",
+                    status="pass" if provider == "postgresql" else "warn",
+                    summary=(
+                        "Controlled PostgreSQL pilot is not development-only."
+                        if provider == "postgresql"
+                        else "Local providers are development-only."
+                    ),
+                    remediation=(
+                        None
+                        if provider == "postgresql"
+                        else (
+                            "Use a separately operated provider for production "
+                            "workloads."
+                        )
+                    ),
                 ),
             ]
         )
+
+        reported_versions = {name: versions.get(name) for name in CORE_REQUIREMENTS}
+        reported_versions.update(
+            {
+                name: value
+                for name, value in versions.items()
+                if (name.startswith("etlantic-") and name not in CORE_REQUIREMENTS)
+                or (provider == "sqlite" and name in SQLITE_REQUIREMENTS)
+                or (provider == "postgresql" and name in POSTGRESQL_REQUIREMENTS)
+            }
+        )
+        if provider == "postgresql":
+            reported_versions["postgresql-server"] = server_version
+
         return cls(
             schema="shuetl.doctor/1",
-            status="fail"
-            if any(check.status == "fail" for check in checks)
-            else "pass",
+            status=(
+                "fail" if any(check.status == "fail" for check in checks) else "pass"
+            ),
             profile=settings.profile,
             role=settings.role,
             provider=settings.provider,
             identity=settings.identity,
             api_prefix=settings.api_prefix,
             route_preset=settings.route_preset,
-            development_only=True,
+            development_only=provider != "postgresql",
             database_configured=settings.database_url is not None,
             database_driver=settings.database_driver,
-            versions={name: versions.get(name) for name in CORE_REQUIREMENTS}
-            | {
-                name: value
-                for name, value in versions.items()
-                if (name.startswith("etlantic-") and name not in CORE_REQUIREMENTS)
-                or (provider == "sqlite" and name in SQLITE_REQUIREMENTS)
-            },
+            versions=reported_versions,
             configured_capabilities=sorted(configured),
             available_capabilities=sorted(available),
             checks=checks,
@@ -307,7 +408,7 @@ class DoctorReport(BaseModel):
 def _inspect_sqlite_schema(
     settings: ShuETLSettings,
 ) -> tuple[CheckStatus, str, str | None]:
-    """Inspect an existing SQLite file through the optional public APIs."""
+    """Inspect an existing SQLite file without invoking mutating APIs."""
 
     database_url = settings.database_url
     if database_url is None:
@@ -327,17 +428,15 @@ def _inspect_sqlite_schema(
         )
     engine = None
     try:
-        from etlantic_sqlmodel import (  # type: ignore[import-not-found]
-            create_sqlite_engine,
-            current_version,
+        from etlantic_sqlmodel import (
+            create_sqlite_engine,  # type: ignore[import-not-found]
         )
+        from sqlalchemy import inspect as inspect_engine
 
         engine = create_sqlite_engine(
             raw_url,
             connect_args={"timeout": settings.provider_connect_timeout_seconds},
         )
-        from sqlalchemy import inspect as inspect_engine
-
         if (
             "etlantic_sqlmodel_schema_version"
             not in inspect_engine(engine).get_table_names()
@@ -347,7 +446,7 @@ def _inspect_sqlite_schema(
                 "SQLite schema is not provisioned.",
                 f"Provision the database at {SQLITE_HEAD}.",
             )
-        version = current_version(engine)
+        version = _read_sqlite_version(engine)
     except Exception:
         return (
             "fail",
@@ -364,6 +463,20 @@ def _inspect_sqlite_schema(
             f"Provision the database at {SQLITE_HEAD}.",
         )
     return "pass", "SQLite schema is at the required migration head.", None
+
+
+def _postgresql_schema_remediation(state: str) -> str:
+    if state == "fresh":
+        return f"Run `shuetl database upgrade` to provision {POSTGRESQL_HEAD}."
+    if state == "behind":
+        return f"Run `shuetl database upgrade` to reach {POSTGRESQL_HEAD}."
+    if state == "wrong-server":
+        return "Use the qualified PostgreSQL 18.6 server."
+    if state == "unreachable":
+        return "Verify PostgreSQL connectivity, credentials, and TLS settings."
+    if state == "corrupt":
+        return "Restore a provider-owned schema and rerun `shuetl doctor`."
+    return "Use a recognized provider migration head."
 
 
 __all__ = ["DiagnosticCheck", "DoctorReport"]

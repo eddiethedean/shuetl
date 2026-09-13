@@ -7,16 +7,21 @@ from importlib.metadata import PackageNotFoundError, distributions, version
 from .errors import CapabilityError, CompatibilityError
 
 CORE_REQUIREMENTS = {
-    "shuetl": "0.3.0",
-    "etlantic": "0.51.0",
-    "etlantic-fastapi": "0.51.0",
+    "shuetl": "0.4.0",
+    "etlantic": "0.52.0",
+    "etlantic-fastapi": "0.52.0",
     "fastapi": "0.141.1",
     "pydantic": "2.13.5",
     "pydantic-settings": "2.15.0",
 }
 SQLITE_REQUIREMENTS = {
-    "etlantic-sqlmodel": "0.51.0",
+    "etlantic-sqlmodel": "0.52.0",
     "sqlalchemy": "2.0.52",
+}
+POSTGRESQL_REQUIREMENTS = {
+    **SQLITE_REQUIREMENTS,
+    "psycopg": "3.3.5",
+    "psycopg-binary": "3.3.5",
 }
 
 
@@ -31,7 +36,13 @@ def installed_versions() -> dict[str, str | None]:
     """Return the stable core and optional package inventory."""
 
     values = {
-        name: _installed(name) for name in (*CORE_REQUIREMENTS, *SQLITE_REQUIREMENTS)
+        name: _installed(name)
+        for name in (
+            *CORE_REQUIREMENTS,
+            *SQLITE_REQUIREMENTS,
+            "psycopg",
+            "psycopg-binary",
+        )
     }
     for dist in distributions():
         name = str(dist.metadata["Name"] or "").lower()
@@ -53,9 +64,9 @@ def validate_core() -> dict[str, str | None]:
         if (
             name.startswith("etlantic-")
             and installed is not None
-            and installed.split(".")[:2] != ["0", "51"]
+            and installed.split(".")[:2] != ["0", "52"]
         ):
-            mismatches.append(f"{name}={installed} (requires the ETLantic 0.51 train)")
+            mismatches.append(f"{name}={installed} (requires the ETLantic 0.52 train)")
     if mismatches:
         raise CompatibilityError(
             "incompatible ShuETL runtime packages: " + "; ".join(sorted(mismatches))
@@ -75,6 +86,23 @@ def validate_sqlite() -> dict[str, str | None]:
     if missing:
         raise CapabilityError(
             "SQLite capability is unavailable; install "
-            '`pip install "shuetl[sqlite]==0.3.0"`: ' + ", ".join(missing)
+            '`pip install "shuetl[sqlite]==0.4.0"`: ' + ", ".join(missing)
+        )
+    return versions
+
+
+def validate_postgresql() -> dict[str, str | None]:
+    """Validate the exact optional PostgreSQL provider train."""
+
+    versions = validate_core()
+    missing = [
+        f"{name} (requires {required})"
+        for name, required in POSTGRESQL_REQUIREMENTS.items()
+        if versions.get(name) != required
+    ]
+    if missing:
+        raise CapabilityError(
+            "PostgreSQL capability is unavailable; install "
+            '`pip install "shuetl[postgresql]==0.4.0"`: ' + ", ".join(missing)
         )
     return versions

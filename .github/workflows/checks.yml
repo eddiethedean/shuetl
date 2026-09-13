@@ -29,7 +29,7 @@ jobs:
           enable-cache: true
 
       - name: Sync dependencies
-        run: uv sync --locked --all-groups --extra test --extra sqlite
+        run: uv sync --locked --all-groups --extra test --extra sqlite --extra postgresql
 
       - name: Ruff format
         run: uv run ruff format --check .
@@ -46,10 +46,54 @@ jobs:
       - name: Tests
         run: uv run pytest -q
 
-  release-gate:
-    name: Phase 0.3 release gate (Python ${{ matrix.python-version }})
+  postgresql-integration:
+    name: PostgreSQL integration (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    services:
+      postgres:
+        image: postgres:18.6-bookworm
+        env:
+          POSTGRES_USER: shuetl
+          POSTGRES_PASSWORD: shuetl
+          POSTGRES_DB: shuetl
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shuetl -d shuetl"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      SHUETL_PROFILE: postgresql-pilot
+      SHUETL_ROLE: gateway
+      SHUETL_PROVIDER: postgresql
+      SHUETL_IDENTITY: host
+      SHUETL_DATABASE_URL: postgresql+psycopg://shuetl:shuetl@localhost:5432/shuetl
+      SHUETL_POSTGRESQL_SSLMODE: disable
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.3"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --locked --all-groups --extra test --extra sqlite --extra postgresql
+
+      - name: Run PostgreSQL integration tests
+        run: uv run pytest tests/integration/test_postgresql.py -q
+
+  release-gate:
+    name: Phase 0.4 release gate (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: [quality, postgresql-integration]
     strategy:
       fail-fast: false
       matrix:
@@ -65,7 +109,7 @@ jobs:
           enable-cache: true
 
       - name: Sync dependencies
-        run: uv sync --locked --all-groups --extra test --extra sqlite
+        run: uv sync --locked --all-groups --extra test --extra sqlite --extra postgresql
 
       - name: Run release gate
         run: uv run python scripts/check_release.py
@@ -73,7 +117,7 @@ jobs:
       - name: Upload distributions and evidence
         uses: actions/upload-artifact@v4
         with:
-          name: shuetl-0.3-artifacts-${{ matrix.python-version }}
+          name: shuetl-0.4-artifacts-${{ matrix.python-version }}
           path: |
             dist/*
-            docs/evidence/0.3/openapi.normalized.json
+            docs/evidence/0.4/openapi.normalized.json

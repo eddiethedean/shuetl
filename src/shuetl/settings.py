@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, Literal, cast
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from pydantic import (
     Field,
@@ -34,9 +34,13 @@ class ShuETLSettings(BaseSettings):
         secrets_dir=None,
     )
 
-    profile: Literal["local"] = Field(validation_alias="SHUETL_PROFILE")
+    profile: Literal["local", "postgresql-pilot"] = Field(
+        validation_alias="SHUETL_PROFILE"
+    )
     role: Literal["gateway"] = Field(validation_alias="SHUETL_ROLE")
-    provider: Literal["memory", "sqlite"] = Field(validation_alias="SHUETL_PROVIDER")
+    provider: Literal["memory", "sqlite", "postgresql"] = Field(
+        validation_alias="SHUETL_PROVIDER"
+    )
     identity: Literal["host"] = Field(validation_alias="SHUETL_IDENTITY")
     api_prefix: str = Field("/etl", validation_alias="SHUETL_API_PREFIX")
     route_preset: Literal["complete"] = Field(
@@ -51,6 +55,9 @@ class ShuETLSettings(BaseSettings):
         le=30.0,
         validation_alias="SHUETL_PROVIDER_CONNECT_TIMEOUT_SECONDS",
     )
+    postgresql_sslmode: Literal["verify-full", "verify-ca", "require", "disable"] = (
+        Field("verify-full", validation_alias="SHUETL_POSTGRESQL_SSLMODE")
+    )
 
     @field_validator("api_prefix")
     @classmethod
@@ -60,13 +67,32 @@ class ShuETLSettings(BaseSettings):
     @model_validator(mode="after")
     def validate_provider_url(self) -> ShuETLSettings:
         if self.provider == "memory" and self.database_url is not None:
-            raise ValueError("database_url is only valid for the sqlite provider")
+            raise ValueError("database_url is only valid for sqlite or postgresql")
         if self.provider == "sqlite":
             if self.database_url is None:
                 raise ValueError("sqlite provider requires database_url")
             raw_url = _database_url_value(self.database_url)
             assert raw_url is not None
             _validate_sqlite_url(raw_url)
+            if self.profile != "local":
+                raise ValueError("sqlite provider requires the local profile")
+            if self.postgresql_sslmode != "verify-full":
+                raise ValueError("postgresql_sslmode is only valid for postgresql")
+        elif self.provider == "postgresql":
+            if self.profile != "postgresql-pilot":
+                raise ValueError(
+                    "postgresql provider requires the postgresql-pilot profile"
+                )
+            if self.database_url is None:
+                raise ValueError("postgresql provider requires database_url")
+            raw_url = _database_url_value(self.database_url)
+            assert raw_url is not None
+            _validate_postgresql_url(raw_url)
+        else:
+            if self.profile != "local":
+                raise ValueError("memory provider requires the local profile")
+            if self.postgresql_sslmode != "verify-full":
+                raise ValueError("postgresql_sslmode is only valid for postgresql")
         return self
 
     def __init__(self, **data: Any) -> None:
@@ -79,8 +105,12 @@ class ShuETLSettings(BaseSettings):
         super().__init__(**data)
 
     @property
-    def database_driver(self) -> Literal["sqlite"] | None:
-        return "sqlite" if self.provider == "sqlite" else None
+    def database_driver(self) -> Literal["sqlite", "psycopg"] | None:
+        if self.provider == "sqlite":
+            return "sqlite"
+        if self.provider == "postgresql":
+            return "psycopg"
+        return None
 
     @classmethod
     def settings_customise_sources(
@@ -124,6 +154,23 @@ def _validate_sqlite_url(value: str) -> None:
         raise ValueError("database_url must identify a local database file")
     if ":memory:" in parsed.path.lower():
         raise ValueError("in-memory sqlite databases are not supported")
+
+
+def _validate_postgresql_url(value: str) -> None:
+    """Reject ambiguous PostgreSQL URLs while keeping credentials secret."""
+
+    if not isinstance(value, str):
+        raise ValueError("database_url must be a PostgreSQL URL")
+    parsed = urlsplit(value)
+    if parsed.scheme != "postgresql+psycopg":
+        raise ValueError("database_url must use the postgresql+psycopg scheme")
+    if parsed.query or parsed.fragment:
+        raise ValueError("database_url must not contain query or fragment components")
+    if not parsed.username or not parsed.hostname:
+        raise ValueError("database_url must include a PostgreSQL username and host")
+    database = unquote(parsed.path.lstrip("/"))
+    if not database or "/" in database:
+        raise ValueError("database_url must identify one PostgreSQL database")
 
 
 __all__ = ["ShuETLSettings"]

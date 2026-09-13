@@ -14,6 +14,7 @@ questions.
 | [0007](0007-settings-sources-and-precedence.md) | Settings sources and precedence | Accepted |
 | [0008](0008-local-provider-bundles.md) | Local provider bundles | Accepted |
 | [0009](0009-doctor-report-contract.md) | Doctor report contract | Accepted |
+| [0010](0010-postgresql-pilot-and-migration-boundary.md) | PostgreSQL pilot and migration boundary | Accepted |
 
 Any change to an accepted decision requires updating its governing execution
 contract and acceptance/verification mapping.

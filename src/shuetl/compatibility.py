@@ -8,14 +8,14 @@ from .errors import CapabilityError, CompatibilityError
 
 CORE_REQUIREMENTS = {
     "shuetl": "0.4.0",
-    "etlantic": "0.52.0",
-    "etlantic-fastapi": "0.52.0",
+    "etlantic": "0.52.1",
+    "etlantic-fastapi": "0.52.1",
     "fastapi": "0.141.1",
     "pydantic": "2.13.5",
     "pydantic-settings": "2.15.0",
 }
 SQLITE_REQUIREMENTS = {
-    "etlantic-sqlmodel": "0.52.0",
+    "etlantic-sqlmodel": "0.52.1",
     "sqlalchemy": "2.0.52",
 }
 POSTGRESQL_REQUIREMENTS = {

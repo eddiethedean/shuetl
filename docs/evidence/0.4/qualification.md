@@ -10,6 +10,27 @@ they were NOT all rerun during this remediation. Procedures below reconstruct
 the assessable observations recorded there, not recovered scripts or invented
 new execution logs. Actual local environment: macOS arm64, Python 3.12.13,
 uv 0.11.3, installed locked 0.52.0 providers, disposable PostgreSQL 18.6.
+
+## Published 0.52.1 patch-train requalification
+
+The original procedures below retain their historical provenance. The user
+authorized a corrected 0.52.1 train for FINAL-001/002 without changing provider
+ownership, migration heads or the AC IDs. On 2026-09-13, locked PyPI core,
+FastAPI and SQLModel 0.52.1 packages were reinstalled; none retained a local-wheel
+direct URL. See [remediation report](../../plans/PHASE_0_4_FINAL_BLOCKER_REMEDIATION.md#published-train-qualification-and-gates).
+
+| Requirement | Newly executed proof | Result |
+| --- | --- | --- |
+| AC-005 | Seven byte-URL cases plus protected SOL-001 string-error test; both error text and JSON | 8 passed |
+| AC-002/011/015/027 | `uv run pytest tests/integration/test_postgresql.py -q`; fresh public migrations, actual server 18.6, inventory and doctor | PASS |
+| AC-024/025 | Same live suite's two-workspace claim with real leader leases, durable store, canonical IDs, one outbox per scope and restart duplicates | PASS |
+| AC-023/038 | Same live suite's concurrent event appends and unique persistent sequences | PASS |
+| AC-016/037 | Separately reset disposable schema at each of four earlier heads; public registry seed, public upgrade, unchanged canonical logical/revision records, full inventory, repeat upgrade | Four heads passed |
+
+The complete live suite returned 4 passed with no skips. The earlier-head probe
+does not claim to cover every possible persisted record type. It preserves the
+approved canonical definition/revision upgrade proof. No local DDL, semantic
+wrapper or upstream monkey patch was used.
 Newly executed current-change Actions evidence for Python 3.11/3.12/3.13 is
 recorded separately in `ci.md`; it does not imply that all historical manual
 probes were rerun on each interpreter.
@@ -453,7 +474,7 @@ Result: PASS for the referenced check/observation. Limitation: local Python 3.12
 
 ## AC-037
 
-Requirement: The qualified 0.52.0 provider train provisions submission/event tables through production migrations and upgrades preserve data.
+Requirement: The qualified 0.52.1 provider train provisions submission/event tables through production migrations and upgrades preserve data.
 
 Verification: `Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-037, 2026-09-13)`
 
@@ -465,7 +486,7 @@ Result: PASS for the referenced check/observation. Limitation: prior independent
 
 ## AC-038
 
-Requirement: The qualified 0.52.0 provider train provides a supported, tested concurrent event-append outcome meeting AC-023.
+Requirement: The qualified 0.52.1 provider train provides a supported, tested concurrent event-append outcome meeting AC-023.
 
 Verification: `uv run pytest tests/integration/test_postgresql.py::test_concurrent_event_appends_have_unique_sequences -q`
 

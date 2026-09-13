@@ -5,11 +5,13 @@ from __future__ import annotations
 import os
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 
 import pytest
 from etlantic.control_plane import (
     ControlPlaneContext,
     EnvironmentRef,
+    FiringRecord,
     MemoryAuthorizer,
     Principal,
     ScheduleSpec,
@@ -199,3 +201,66 @@ def test_concurrent_event_appends_have_unique_sequences(
     sequences = [event.sequence for event in events if event.event_id in event_ids]
     assert len(sequences) == 20
     assert len(set(sequences)) == 20
+
+
+def test_workspace_firing_and_durable_identity_survive_restart(
+    settings: ShuETLSettings, bundle: PostgreSQLProviderBundle
+) -> None:
+    base = _context()
+    contexts = tuple(
+        replace(base, workspace=WorkspaceRef(base.tenant.tenant_id, workspace))
+        for workspace in ("firing-workspace-a", "firing-workspace-b")
+    )
+
+    def claim(
+        provider: PostgreSQLProviderBundle, ctx: ControlPlaneContext
+    ) -> tuple[FiringRecord, bool]:
+        lease = provider.schedules.acquire_leader_lease(
+            ctx, owner_id="scope-scheduler", ttl_seconds=60
+        )
+        return provider.schedules.claim_firing(
+            ctx,
+            schedule_id="workspace-shared-schedule",
+            revision_id="workspace-shared-revision",
+            nominal_fire_time="2026-09-13T00:00:00Z",
+            owner_id="scope-scheduler",
+            fencing_token=lease.fencing_token,
+            plan_fingerprint="workspace-shared-plan",
+            durable=provider.durable_work,
+        )
+
+    firings = []
+    for ctx in contexts:
+        bundle.schedules.create(
+            ctx,
+            definition_id="workspace-shared-definition",
+            profile_name="production",
+            spec=ScheduleSpec(kind="interval", interval_seconds=60),
+            schedule_id="workspace-shared-schedule",
+        )
+        firing, created = claim(bundle, ctx)
+        assert created
+        assert firing.workspace_id == ctx.workspace.workspace_id
+        assert len(bundle.durable_work.pending_outbox(ctx)) == 1
+        firings.append(firing)
+    assert firings[0].firing_id != firings[1].firing_id
+    assert firings[0].submission_id != firings[1].submission_id
+    bundle.close()
+
+    reopened = PostgreSQLProviderBundle.create(
+        settings,
+        authorizer=MemoryAuthorizer(),
+        context_factory=lambda principal, request: _context(),
+        principal_dependency=lambda request: Principal("phase-0-4"),
+    )
+    try:
+        for ctx, original in zip(contexts, firings, strict=True):
+            replay, created = claim(reopened, ctx)
+            assert not created
+            assert replay == original
+            assert reopened.schedules.list_firings(
+                ctx, "workspace-shared-schedule"
+            ) == (original,)
+            assert len(reopened.durable_work.pending_outbox(ctx)) == 1
+    finally:
+        reopened.close()

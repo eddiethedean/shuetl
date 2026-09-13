@@ -58,7 +58,7 @@ ShuETL 0.4.0 is the current development release. It provides a typed FastAPI fac
 controlled single-tenant PostgreSQL pilot. It accepts a prebuilt
 `etlantic_fastapi.ETLanticAPI`; the 0.3 local bundle additionally wires exact
 upstream memory providers and an opt-in, pre-provisioned SQLite profile. The
-0.4 PostgreSQL bundle wires ETLantic 0.52.0 registry, submission, event,
+0.4 PostgreSQL bundle wires ETLantic 0.52.1 registry, submission, event,
 durable-work, and schedule stores. It does not provide a multi-tenant, HA, or
 exactly-once external-effect guarantee.
 

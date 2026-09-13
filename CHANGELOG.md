@@ -2,7 +2,7 @@
 
 ## 0.4.0 — Durable PostgreSQL pilot (2026-09-13)
 
-- Added the exact ETLantic 0.52.0 compatibility train and a `shuetl[postgresql]`
+- Added the exact ETLantic 0.52.1 compatibility train and a `shuetl[postgresql]`
   extra with SQLModel, SQLAlchemy, and Psycopg 3.3.5 binary support.
 - Added validated `postgresql-pilot` settings and the public
   `PostgreSQLProviderBundle` for registry-backed definitions, submissions,
@@ -12,6 +12,10 @@
 - Qualified fresh/prior-head migrations, restart identity persistence,
   idempotency, schedule/firing claims, event replay, and concurrent PostgreSQL
   appends against PostgreSQL 18.6.
+- Protected byte-valued database URLs from text/JSON validation-error disclosure
+  and rejected invalid UTF-8 without exposing credentials.
+- Qualified the upstream workspace-scoped firing fix in ETLantic 0.52.1,
+  including canonical durable-submission identities across restart.
 
 ## 0.3.0 — Local provider bundle and diagnostics (2026-09-11)
 

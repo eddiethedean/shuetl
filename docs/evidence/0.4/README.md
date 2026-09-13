@@ -1,7 +1,7 @@
 # Phase 0.4 evidence index
 
 This index records reproducible evidence for the PostgreSQL pilot and migration
-boundary.  The release train is ETLantic 0.52.0 and the qualified PostgreSQL
+boundary.  The release train is ETLantic 0.52.1 and the qualified PostgreSQL
 server is 18.6.
 
 | Field | Value |
@@ -9,7 +9,7 @@ server is 18.6.
 | OS and architecture | macOS arm64 (local); Ubuntu 24.04.5 x86_64 (CI executed) |
 | Python version | 3.12.13 local; CI Python 3.11, 3.12 and 3.13 executed; see ci.md |
 | uv version | 0.11.3 |
-| ETLantic source revision | 0.52.0 package |
+| ETLantic source revision | 0.52.1 package |
 | ShuETL import origin | installed project package |
 | ETLantic import origin | installed package |
 | etlantic-fastapi import origin | installed package |
@@ -19,8 +19,8 @@ server is 18.6.
 | Gate A | PASS |
 | Gate B | PASS |
 | Gate C | PASS |
-| SHA-256 wheel | `a36b25ffbcceb65757ee50949395b909aaddfdecd1e9a431409077663319a4a2` |
-| SHA-256 sdist | `bfb06482d5c56413917573e7b01ed9f18bccd1059d97f5c6f7b55d70162e2306` |
+| SHA-256 wheel | `61a6b3a5fe9185e1d6049f241df301f5da1169f710baf4ece2bdb5e6107cafca` |
+| SHA-256 sdist | `c821ce94b4441e3f349248602ac1b61ceb7e788764616ecf8082d4ed6a53b39f` |
 
 ## Acceptance results
 

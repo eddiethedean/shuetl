@@ -55,8 +55,8 @@ def check_wheel(path: Path) -> None:
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
         expected = {
-            "etlantic==0.52.0",
-            "etlantic-fastapi==0.52.0",
+            "etlantic==0.52.1",
+            "etlantic-fastapi==0.52.1",
             "fastapi==0.141.1",
             "pydantic==2.13.5",
             "pydantic-settings==2.15.0",

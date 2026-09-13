@@ -1,4 +1,4 @@
-"""Disposable Phase 0.1 proof against the published ETLantic 0.52.0 train.
+"""Disposable Phase 0.1 proof against the published ETLantic 0.52.1 train.
 
 This module is repository evidence, not a ShuETL runtime API. It deliberately
 uses the upstream ETLantic FastAPI adapter directly so the boundary remains
@@ -222,8 +222,8 @@ def run() -> None:
     ):
         version = metadata.version(distribution)
         print(f"{distribution}={version}")
-    assert metadata.version("etlantic") == "0.52.0"
-    assert metadata.version("etlantic-fastapi") == "0.52.0"
+    assert metadata.version("etlantic") == "0.52.1"
+    assert metadata.version("etlantic-fastapi") == "0.52.1"
 
     graph = build_graph()
     app = build_embedded_app(graph)

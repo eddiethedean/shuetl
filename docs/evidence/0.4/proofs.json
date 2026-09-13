@@ -254,12 +254,12 @@
   "AC-037": {
     "command": "Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria (AC-037, 2026-09-13)",
     "artifact": "qualification.md#ac-037",
-    "requirement": "The qualified 0.52.0 provider train provisions submission/event tables through production migrations and upgrades preserve data.",
+    "requirement": "The qualified 0.52.1 provider train provisions submission/event tables through production migrations and upgrades preserve data.",
     "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",
     "limitation": "prior independent review; not rerun in remediation"
   },
   "AC-038": {
-    "requirement": "The qualified 0.52.0 provider train provides a supported, tested concurrent event-append outcome meeting AC-023.",
+    "requirement": "The qualified 0.52.1 provider train provides a supported, tested concurrent event-append outcome meeting AC-023.",
     "command": "uv run pytest tests/integration/test_postgresql.py::test_concurrent_event_appends_have_unique_sequences -q",
     "artifact": "qualification.md#ac-038",
     "provenance": "tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria",

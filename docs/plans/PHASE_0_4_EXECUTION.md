@@ -13,8 +13,8 @@
 - Qualified PostgreSQL target: PostgreSQL `18.6`
 - Qualified driver target: `psycopg==3.3.5` with
   `psycopg-binary==3.3.5`
-- Qualified upstream train: `etlantic==0.52.0`,
-  `etlantic-fastapi==0.52.0`, and `etlantic-sqlmodel==0.52.0`
+- Qualified upstream train: `etlantic==0.52.1`,
+  `etlantic-fastapi==0.52.1`, and `etlantic-sqlmodel==0.52.1`
 - Previously blocking upstream issues, now closed and verified:
   [ETLantic #131](https://github.com/eddiethedean/etlantic/issues/131) and
   [ETLantic #132](https://github.com/eddiethedean/etlantic/issues/132)
@@ -23,6 +23,17 @@ This document is the implementation contract for Phase 0.4. It resolves
 ShuETL's architecture and public behavior against the published 0.52.0 train;
 the migration head and runtime behavior below were requalified on a real
 PostgreSQL 18.6 server.
+
+### Authorized patch-train requalification
+
+The final release check found FINAL-001 (byte-valued URL error disclosure) and
+FINAL-002 (workspace firing identity collision). The user authorized publishing
+the upstream correction and qualifying the 0.52.1 patch train. Current dependency
+requirements below therefore use 0.52.1; references to original 0.52.0 inspection
+and review evidence remain historical. Scope, public API, migration head, AC IDs,
+runtime support, and ownership boundaries are unchanged. Schedule and durable
+submission deduplication must return the canonical occurrence within the caller's
+tenant/workspace, without returning another workspace's firing.
 
 ## Architecture summary
 
@@ -253,13 +264,13 @@ The PostgreSQL extra is exactly:
 
 ```toml
 postgresql = [
-  "etlantic-sqlmodel==0.52.0",
+  "etlantic-sqlmodel==0.52.1",
   "sqlalchemy==2.0.52",
   "psycopg[binary]==3.3.5",
 ]
 ```
 
-The lock must contain `etlantic-sqlmodel==0.52.0`, `psycopg==3.3.5`, and `psycopg-binary==3.3.5`. Binary
+The lock must contain `etlantic-sqlmodel==0.52.1`, `psycopg==3.3.5`, and `psycopg-binary==3.3.5`. Binary
 Psycopg is an intentional pilot deployment choice for reproducible wheels; a
 future system-libpq packaging option requires separate qualification.
 
@@ -557,8 +568,8 @@ These recommendations are subordinate to the required behavior.
 | AC-034 | Ruff, Pyright, boundary, unit, integration, migration, concurrency, build, artifact, OpenAPI, clean-wheel, redaction, and evidence gates pass. |
 | AC-035 | Documentation states exact setup, TLS, privileges, migration, readiness, cleanup, backup/restore, canonical data, and pilot limitations and contains executable wheel-based examples. |
 | AC-036 | The Phase 0.4 evidence index maps every AC exactly once to passing proof and contains no secret or machine-specific path. |
-| AC-037 | The qualified 0.52.0 provider train provisions submission/event tables through production migrations and upgrades preserve data. |
-| AC-038 | The qualified 0.52.0 provider train provides a supported, tested concurrent event-append outcome meeting AC-023. |
+| AC-037 | The qualified 0.52.1 provider train provisions submission/event tables through production migrations and upgrades preserve data. |
+| AC-038 | The qualified 0.52.1 provider train provides a supported, tested concurrent event-append outcome meeting AC-023. |
 
 ## Verification matrix
 
@@ -609,11 +620,11 @@ These recommendations are subordinate to the required behavior.
 
 - Goal: establish a provider train capable of satisfying the contract.
 - Modules: no ShuETL production modules.
-- Required behavior: ETLantic #131 and #132 remain fixed in published 0.52.0
+- Required behavior: ETLantic #131 and #132 remain fixed in published 0.52.1
   artifacts; exact versions and migration head are recorded; fresh, upgrade,
   submission, event, and concurrency spikes pass on PostgreSQL 18.6.
 - Tests: standalone installed-package qualification, not source-checkout imports.
-- Documentation/configuration: record the qualified 0.52.0 train and
+- Documentation/configuration: record the qualified 0.52.1 train and
   `005_cp1_reference` head in compatibility and evidence files.
 - Dependency: complete; implementation may proceed.
 
@@ -679,8 +690,8 @@ These recommendations are subordinate to the required behavior.
 
 | Risk | Mitigation / release rule |
 |---|---|
-| Upstream migration reports head while required tables are absent | Require the 0.52.0 migration head and minimum table inventory |
-| Concurrent event requests lose writes or leak driver errors | Require the 0.52.0 barrier-controlled event proof |
+| Upstream migration reports head while required tables are absent | Require the 0.52.1 migration head and minimum table inventory |
+| Concurrent event requests lose writes or leak driver errors | Require the 0.52.1 barrier-controlled event proof |
 | `current_version()` mutates fresh databases | Never use it in doctor/startup; private read-only inspection contract |
 | Direct SQLAlchemy engine construction drifts from provider assumptions | Exact pins, public `Engine` constructor seam, real-server store tests |
 | Binary driver/libpq behavior differs from system packages | Limit 0.4 claim to exact Psycopg binary set; record runtime versions |
@@ -734,7 +745,7 @@ their fixes and the qualification evidence remain part of AC-037 and AC-038.
 
 Phase 0.4 is done only when:
 
-- the published exact 0.52.0 upstream train continues to satisfy AC-037 and
+- the published exact 0.52.1 upstream train continues to satisfy AC-037 and
   AC-038;
 - every AC-001 through AC-038 is verified;
 - required 0.2/0.3 compatibility is preserved;

@@ -55,6 +55,12 @@ The 0.52.0 ETLantic provider train supplies the production migration path and
 concurrency-safe event append semantics required by this decision. The original
 qualification findings remain recorded in ETLantic #131 and #132.
 
+The authorized 0.52.1 patch-train requalification additionally corrects
+workspace-scoped firing deduplication (FINAL-002). It preserves this decision's
+exact upstream objects, migration head and concurrency contract; ShuETL adds no
+semantic provider wrapper. Current runtime pins use 0.52.1 rather than the
+originally inspected 0.52.0 packages.
+
 ## Alternatives
 
 - Use `create_control_plane_tables()` to fill migration gaps; rejected because

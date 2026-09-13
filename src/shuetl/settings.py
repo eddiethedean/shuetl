@@ -21,6 +21,28 @@ from ._secrets import _database_url_value
 from .integration import _validate_prefix
 
 
+def _redact_database_url_input(value: Any) -> Any:
+    """Protect URL credentials before Pydantic constructs validation errors.
+
+    Pydantic accepts byte strings for ``SecretStr`` fields, but validation
+    errors serialize the original input value.  Normalize byte-like values
+    before model validation so credentials cannot be echoed in an error
+    payload. Invalid UTF-8 becomes an empty secret URL, which provider URL
+    validation rejects without retaining the original bytes in error context.
+    """
+
+    if isinstance(value, SecretStr):
+        return value
+    if isinstance(value, (bytes, bytearray)):
+        try:
+            return SecretStr(bytes(value).decode("utf-8"))
+        except UnicodeDecodeError:
+            return SecretStr("")
+    if isinstance(value, str):
+        return SecretStr(value)
+    return value
+
+
 class ShuETLSettings(BaseSettings):
     """Configuration for the local ShuETL composition boundary."""
 
@@ -99,9 +121,8 @@ class ShuETLSettings(BaseSettings):
         """Convert explicitly supplied secrets before Pydantic builds errors."""
 
         for key in ("database_url", "SHUETL_DATABASE_URL"):
-            value = data.get(key)
-            if isinstance(value, str):
-                data[key] = SecretStr(value)
+            if key in data:
+                data[key] = _redact_database_url_input(data[key])
         super().__init__(**data)
 
     @property
@@ -126,9 +147,8 @@ class ShuETLSettings(BaseSettings):
         def redacted_env_settings() -> dict[str, Any]:
             values = env_settings()
             for key in ("database_url", "SHUETL_DATABASE_URL"):
-                value = values.get(key)
-                if isinstance(value, str):
-                    values[key] = SecretStr(value)
+                if key in values:
+                    values[key] = _redact_database_url_input(values[key])
             return values
 
         return init_settings, cast(PydanticBaseSettingsSource, redacted_env_settings)

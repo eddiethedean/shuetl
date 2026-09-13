@@ -33,6 +33,28 @@ rendering and preserve valid byte-input compatibility.
 Resolution: Secrets are wrapped before Pydantic can retain either alias in an
 error, including errors unrelated to the URL field.
 
+### Subsequent final-check structured-input remediation
+
+The final check reopened FINAL-001 under AC-005: unsupported mapping inputs
+were returned unchanged by the redaction helper and retained in Pydantic's
+type-error input. The original byte fix remains intact, but was insufficient
+for that input class.
+
+`_redact_database_url_input` now preserves None and accepted secret/string/byte
+inputs while replacing every unsupported type with an empty mapping. This
+contains no original input, invokes no user repr/str, and remains invalid for
+the field, including in the nullable memory profile. It does not coerce invalid
+configuration into an accepted value.
+
+Before-fix verification: all six
+`test_final_001_structured_url_errors_are_redacted` cases failed for disclosed
+sentinel coordinates through both aliases and constructor/model/JSON paths.
+After-fix verification: all 15 tests in `test_settings_redaction.py` passed;
+the focused redaction and protected Phase 0.3/0.4 suites returned 49 passed.
+Additional tests protect unsupported list/object rejection without rendering
+and valid SecretStr/explicit None compatibility. Existing review artifacts and
+quality-gate configuration are unchanged. No follow-up work was included.
+
 ## FINAL-002 — Firing deduplication collides across workspaces
 
 Status: FIXED

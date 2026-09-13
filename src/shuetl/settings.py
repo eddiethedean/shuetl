@@ -29,9 +29,11 @@ def _redact_database_url_input(value: Any) -> Any:
     before model validation so credentials cannot be echoed in an error
     payload. Invalid UTF-8 becomes an empty secret URL, which provider URL
     validation rejects without retaining the original bytes in error context.
+    Unsupported types are replaced with a non-string input containing no
+    original data, preserving type rejection without invoking their repr/str.
     """
 
-    if isinstance(value, SecretStr):
+    if value is None or isinstance(value, SecretStr):
         return value
     if isinstance(value, (bytes, bytearray)):
         try:
@@ -40,7 +42,7 @@ def _redact_database_url_input(value: Any) -> Any:
             return SecretStr("")
     if isinstance(value, str):
         return SecretStr(value)
-    return value
+    return {}
 
 
 class ShuETLSettings(BaseSettings):

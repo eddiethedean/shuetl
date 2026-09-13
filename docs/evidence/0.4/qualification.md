@@ -96,6 +96,19 @@ Verification: `Recorded review: tests/review/PHASE_0_4_REVIEW.md#acceptance-crit
 
 Procedure and evidence: Trace structural URL validation, conversion to SecretStr before errors, exact psycopg scheme/user/host/database, prohibited query/fragment, bounded timeout, TLS enum and verify-full default. Original Sol inspected PostgreSQL validation; old SQLite/redaction tests alone are not this proof.
 
+Subsequent FINAL-001 verification found that invalid structured input could
+still expose credentials. The bounded remediation replaces unsupported URL
+types with a safe non-string input before validation, preserving type rejection
+without rendering the original value. Newly executed
+`uv run pytest tests/unit/test_settings_redaction.py -q` passes all 15 cases:
+the original seven byte cases, six mapping cases covering both aliases and
+constructor/model/JSON validation, rejection without coercing or rendering
+unsupported objects, and accepted SecretStr/None compatibility. The six mapping
+cases failed for disclosed sentinel coordinates before the production fix.
+The focused settings and protected Phase 0.3/0.4 suites returned 49 passed;
+protected review artifacts were unchanged. These are implementation-side
+results, not independent release approval.
+
 Provenance: [Independent Sol record](../../../tests/review/PHASE_0_4_REVIEW.md#acceptance-criteria) — AC-005, 2026-09-13.
 
 Result: PASS for the referenced check/observation. Limitation: prior independent review; not rerun in remediation.

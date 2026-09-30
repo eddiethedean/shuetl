@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, dataclass
 from typing import Any
 
 import pytest
@@ -292,6 +292,34 @@ def test_production_api_requires_adapter_before_router_materialization() -> None
         principal_dependency=principal_from_header,
         profile="production",
     )
+    with pytest.raises(ProviderReadinessError, match="matching host identity adapter"):
+        ShuETL(api=raw_api)
+    assert raw_api._router is None
+
+
+def test_production_preflight_rejects_unhashable_callable_dependencies() -> None:
+    @dataclass
+    class PrincipalDependency:
+        def __call__(self) -> Principal:
+            return Principal(subject="alice")
+
+    @dataclass
+    class ContextFactoryCallable:
+        def __call__(
+            self, principal: Principal, _request: Request
+        ) -> ControlPlaneContext:
+            return _context(principal)
+
+    raw_api = ETLanticAPI(
+        authorizer=MemoryAuthorizer(),
+        definitions=MemoryDefinitionRepository(),
+        submissions=MemorySubmissionStore(),
+        events=MemoryEventStore(),
+        context_factory=ContextFactoryCallable(),
+        principal_dependency=PrincipalDependency(),
+        profile="production",
+    )
+
     with pytest.raises(ProviderReadinessError, match="matching host identity adapter"):
         ShuETL(api=raw_api)
     assert raw_api._router is None

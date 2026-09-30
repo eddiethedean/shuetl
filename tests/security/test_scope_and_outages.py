@@ -11,10 +11,12 @@ from etlantic.control_plane import (
     ControlPlaneContext,
     EnvironmentRef,
     MemoryEventStore,
+    MemoryRegistryProvider,
     MemorySubmissionStore,
     Principal,
     SecurityDomain,
     TenantRef,
+    WorkspaceRecord,
     WorkspaceRef,
 )
 from etlantic.control_plane.memory import MemoryAuthorizer, MemoryDefinitionRepository
@@ -38,6 +40,7 @@ def _context(principal: Principal, tenant: str, workspace: str) -> ControlPlaneC
 def _api_and_contexts(
     *,
     durable_work: Any = None,
+    registry: Any = None,
 ) -> tuple[ETLanticAPI, dict[str, ControlPlaneContext], MemoryAuthorizer]:
     contexts = {
         "alice": _context(
@@ -75,6 +78,7 @@ def _api_and_contexts(
         definitions=MemoryDefinitionRepository(),
         submissions=MemorySubmissionStore(),
         events=MemoryEventStore(),
+        registry=registry,
         context_factory=adapter.context_factory,
         principal_dependency=adapter.principal_dependency,
         profile="development",
@@ -122,6 +126,67 @@ def scoped_app(request: pytest.FixtureRequest):
         ShuETL(api=api).mount(app, prefix="/etl")
         prefix = "/etl"
     return app, api, contexts, authorizer, prefix
+
+
+@pytest.mark.parametrize("mount_mode", ["direct", "mounted"])
+def test_registry_workspace_list_filters_concrete_denials_and_denies_before_lookup(
+    mount_mode: str,
+) -> None:
+    registry = MemoryRegistryProvider()
+    api, contexts, authorizer = _api_and_contexts(registry=registry)
+    for principal, tenant_id, workspace_id in (
+        (contexts["alice"].principal, "tenant-a", "workspace-visible"),
+        (contexts["alice"].principal, "tenant-a", "workspace-hidden"),
+        (contexts["bob"].principal, "tenant-b", "workspace-foreign"),
+    ):
+        workspace_context = _context(principal, tenant_id, workspace_id)
+        registry.workspaces.put(
+            workspace_context,
+            WorkspaceRecord(tenant_id=tenant_id, workspace_id=workspace_id),
+        )
+
+    list_calls: list[tuple[str, str]] = []
+    original_list = registry.workspaces.list
+
+    def list_probe(ctx: ControlPlaneContext) -> Any:
+        list_calls.append((ctx.tenant.tenant_id, ctx.workspace.workspace_id))
+        return original_list(ctx)
+
+    registry.workspaces.list = list_probe  # type: ignore[method-assign]
+    alice = contexts["alice"]
+    authorizer.grant(alice, "registry.workspace.list")
+    authorizer.forbidden_resources.add(
+        (
+            alice.tenant.tenant_id,
+            alice.workspace.workspace_id,
+            "registry.workspace.list",
+            "registry:workspace:workspace-hidden",
+        )
+    )
+
+    integration = ShuETL(api=api)
+    if mount_mode == "direct":
+        app = integration.create_app()
+        path = "/v1/registry/workspaces"
+    else:
+        app = FastAPI()
+        integration.mount(app, prefix="/etl")
+        path = "/etl/v1/registry/workspaces"
+
+    with TestClient(app) as client:
+        denied = client.get(path, headers={"X-Principal": "bob"})
+        assert denied.status_code == 404
+        assert list_calls == []
+
+        visible = client.get(path, headers={"X-Principal": "alice"})
+
+    assert visible.status_code == 200
+    assert {item["workspace_id"] for item in visible.json()["items"]} == {
+        "workspace-visible"
+    }
+    assert "workspace-hidden" not in visible.text
+    assert "workspace-foreign" not in visible.text
+    assert list_calls == [("tenant-a", "workspace-a")]
 
 
 def test_collection_and_item_denials_do_not_disclose_cross_scope_data(

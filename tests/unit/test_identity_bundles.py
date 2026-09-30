@@ -238,7 +238,25 @@ def test_authorizer_must_be_synchronous_and_bind_the_upstream_signature() -> Non
             del ctx, action, resource
             return object()
 
-    for authorizer in (WrongArity(), AsyncAuthorizer(), object()):
+    class AsyncCallable:
+        async def __call__(
+            self,
+            ctx: ControlPlaneContext,
+            action: str,
+            resource: str,
+        ) -> object:
+            del ctx, action, resource
+            return object()
+
+    class AsyncCallableAuthorizer:
+        authorize = AsyncCallable()
+
+    for authorizer in (
+        WrongArity(),
+        AsyncAuthorizer(),
+        AsyncCallableAuthorizer(),
+        object(),
+    ):
         with pytest.raises(TypeError):
             validate_authorizer(authorizer)
 

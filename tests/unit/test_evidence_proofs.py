@@ -54,6 +54,19 @@ def test_manual_proof_requires_its_locatable_result_section(tmp_path: Path) -> N
     assert any("AC-020" in error for error in check_evidence.check(evidence))
 
 
+def test_mutation_inventory_binds_the_exact_authorization_context(
+    tmp_path: Path,
+) -> None:
+    evidence = _copy(tmp_path)
+    inventory = evidence / "route_inventory.json"
+    routes = json.loads(inventory.read_text())
+    routes[0]["authorizations"][0]["context"]["tenant_id"] = "tenant-other"
+    inventory.write_text(json.dumps(routes, indent=2) + "\n")
+
+    errors = check_evidence.check(evidence)
+    assert any("mutation route inventory" in error for error in errors)
+
+
 def test_valid_registry_and_ledger_have_no_proof_errors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

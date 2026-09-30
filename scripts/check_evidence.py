@@ -30,6 +30,19 @@ REDACTION_PATTERNS = (
     r"/var/folders/",
     r"-----BEGIN [A-Z ]+PRIVATE KEY-----",
 )
+PHASE_0_5_MUTATION_CONTEXT = {
+    "principal_subject": "alice",
+    "principal_issuer": None,
+    "principal_kind": "human",
+    "tenant_id": "tenant-a",
+    "workspace_tenant_id": "tenant-a",
+    "workspace_id": "ws-1",
+    "environment": "development",
+    "security_domain": "default",
+    "correlation_key": "phase05-correlation-probe",
+    "idempotency_key": "phase05-idempotency-probe",
+    "request_id": "phase05-request-probe",
+}
 PHASE_0_3_PROOF_TERMS = {
     "AC-001": ("metadata", "packag"),
     "AC-002": ("export", "public"),
@@ -396,6 +409,7 @@ def check(evidence: Path | None = None) -> list[str]:
                         or not item["action"]
                         or not isinstance(item.get("resource"), str)
                         or not item["resource"]
+                        or item.get("context") != PHASE_0_5_MUTATION_CONTEXT
                         for item in authorizations
                     )
                     or route.get("denial_status") != 403

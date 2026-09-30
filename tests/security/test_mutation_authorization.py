@@ -27,13 +27,12 @@ _PATH_PARAMETER = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 class DenyAllAuthorizer:
     def __init__(self) -> None:
-        self.decisions: list[tuple[str, str]] = []
+        self.decisions: list[tuple[ControlPlaneContext, str, str]] = []
 
     def authorize(
         self, ctx: ControlPlaneContext, action: str, resource: str
     ) -> AuthzDecision:
-        del ctx
-        self.decisions.append((action, resource))
+        self.decisions.append((ctx, action, resource))
         return AuthzDecision(
             allowed=False,
             reason="synthetic security proof denial",
@@ -135,18 +134,41 @@ def _request_body(route: APIRoute) -> tuple[bool, Any]:
     return True, _sample_value(annotation)
 
 
-def _mutation_routes(api: ETLanticAPI) -> list[APIRoute]:
+def _mutation_routes(api: ETLanticAPI) -> list[tuple[APIRoute, str]]:
     router = api.router
     return sorted(
         (
-            route
+            (route, method)
             for route in router.routes
-            if isinstance(route, APIRoute)
-            and route.methods is not None
-            and route.methods & MUTATION_METHODS
+            if isinstance(route, APIRoute) and route.methods is not None
+            for method in route.methods & MUTATION_METHODS
         ),
-        key=lambda route: (route.path, route.operation_id or ""),
+        key=lambda route_method: (
+            route_method[0].path,
+            route_method[1],
+            route_method[0].operation_id or "",
+        ),
     )
+
+
+def _context_snapshot(ctx: ControlPlaneContext) -> dict[str, Any]:
+    return {
+        "principal_subject": ctx.principal.subject,
+        "principal_issuer": ctx.principal.issuer,
+        "principal_kind": ctx.principal.kind,
+        "tenant_id": ctx.tenant.tenant_id,
+        "workspace_tenant_id": ctx.workspace.tenant_id,
+        "workspace_id": ctx.workspace.workspace_id,
+        "environment": ctx.environment.name,
+        "security_domain": ctx.security_domain.domain_id,
+        "correlation_key": ctx.correlation_key.value
+        if ctx.correlation_key is not None
+        else None,
+        "idempotency_key": ctx.idempotency_key.value
+        if ctx.idempotency_key is not None
+        else None,
+        "request_id": ctx.request_id,
+    }
 
 
 def collect_inventory() -> list[dict[str, Any]]:
@@ -178,16 +200,18 @@ def collect_inventory() -> list[dict[str, Any]]:
     ShuETL(api=graph.api).mount(app, prefix="/guarded")
     observed: list[dict[str, Any]] = []
     with TestClient(app) as client:
-        for route in _mutation_routes(graph.api):
-            if route.methods is None:
-                raise AssertionError(f"mutation route has no methods: {route.path}")
+        for route, method in _mutation_routes(graph.api):
             path, names = _route_path(route.path)
-            method = sorted(route.methods & MUTATION_METHODS)[0]
             include_body, body = _request_body(route)
             authorizer.decisions.clear()
             store_calls.clear()
             request: dict[str, Any] = {
-                "headers": {"X-Principal": "alice"},
+                "headers": {
+                    "X-Principal": "alice",
+                    "X-Correlation-ID": "phase05-correlation-probe",
+                    "Idempotency-Key": "phase05-idempotency-probe",
+                    "X-Request-ID": "phase05-request-probe",
+                },
             }
             if include_body:
                 request["json"] = body
@@ -207,10 +231,11 @@ def collect_inventory() -> list[dict[str, Any]]:
                     "operation_id": route.operation_id,
                     "authorizations": [
                         {
+                            "context": _context_snapshot(ctx),
                             "action": action,
                             "resource": _normalized_resource(resource, names),
                         }
-                        for action, resource in authorizer.decisions
+                        for ctx, action, resource in authorizer.decisions
                     ],
                     "denial_status": response.status_code,
                     "provider_calls": [],

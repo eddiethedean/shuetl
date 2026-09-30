@@ -162,7 +162,7 @@ Result: PASS
 ## AC-018
 
 Task: concrete list denial
-Command: `uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data -q`
+Command: `uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_registry_workspace_list_filters_concrete_denials_and_denies_before_lookup -q`
 Requirement: Collection denial prevents lookup, and wildcard collection allowance does not expose concrete list-denied definitions/workspaces or foreign-scope protected items.
 Provenance: `contracts.md#acceptance-criteria`
 Limitation: Local Python 3.12.13, macOS arm64; see ci.md for execution scope.

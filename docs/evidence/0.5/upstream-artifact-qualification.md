@@ -10,7 +10,7 @@ On 2026-09-29 the published 0.55.0 core, FastAPI, and SQLModel wheels were downl
 
 ## PB-001 — concrete item denial and bounded visibility
 
-The installed `etlantic_fastapi.collections.visible_items` and `visible_limited_items` apply per-item authorization before returning visible results and before consuming an existing result limit. With a collection grant and an explicit denial for `definition:hidden`, the direct upstream API list omitted that definition. The same upstream API runs under ShuETL's direct factory and prefixed mount, where the security tests preserve item denial and a denied first 100 outbox candidates do not consume a two-visible-item limit. ShuETL adds no post-pagination filter.
+The installed `etlantic_fastapi.collections.visible_items` and `visible_limited_items` apply per-item authorization before returning visible results and before consuming an existing result limit. With a collection grant and an explicit denial for `definition:hidden`, the direct upstream API list omitted that definition. The same upstream API runs under ShuETL's direct factory and prefixed mount, where the security tests preserve item denial and a denied first 100 outbox candidates do not consume a two-visible-item limit. A dedicated registry proof also denies a caller before the workspace provider is queried when collection authorization fails, then filters a concrete denied workspace while returning only its permitted workspace in both graphs. ShuETL adds no post-pagination filter.
 
 ## PB-002 — safe validation route
 

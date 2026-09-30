@@ -5,6 +5,19 @@
     "operation_id": "cp_approval_create",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "approval.write",
         "resource": "approval:create"
       }
@@ -18,6 +31,19 @@
     "operation_id": "cp_approval_decide",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "approval.decide",
         "resource": "approval:{approval_id}"
       }
@@ -31,6 +57,19 @@
     "operation_id": "cp_approval_revoke",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "approval.write",
         "resource": "approval:{approval_id}"
       }
@@ -44,6 +83,19 @@
     "operation_id": "cp_attestation_put",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "attestation.write",
         "resource": "attestation:put"
       }
@@ -57,6 +109,19 @@
     "operation_id": "cp_attestation_verify_schema_observation",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "attestation.verify",
         "resource": "attestation:schema"
       }
@@ -70,6 +135,19 @@
     "operation_id": "cp_attestation_verify_plan",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "attestation.verify",
         "resource": "attestation:verify"
       }
@@ -83,6 +161,19 @@
     "operation_id": "cp_definition_context",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "definition.read",
         "resource": "definition:{definition_id}"
       }
@@ -96,6 +187,19 @@
     "operation_id": "cp_plan_definition",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "definition.plan",
         "resource": "definition:{definition_id}"
       }
@@ -109,6 +213,19 @@
     "operation_id": "cp_submit_run",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "run.submit",
         "resource": "definition:{definition_id}"
       }
@@ -122,6 +239,19 @@
     "operation_id": "cp_create_schedule",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "schedule.write",
         "resource": "definition:{definition_id}:schedules"
       }
@@ -135,6 +265,19 @@
     "operation_id": "cp_validate_definition",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "definition.validate",
         "resource": "definition:{definition_id}"
       }
@@ -148,6 +291,19 @@
     "operation_id": "cp_durable_finish_attempt",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.attempt.write",
         "resource": "durable:attempt:{attempt_id}"
       }
@@ -161,6 +317,19 @@
     "operation_id": "cp_durable_checkpoint_cas",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.checkpoint.write",
         "resource": "durable:checkpoint:{checkpoint_id}"
       }
@@ -174,6 +343,19 @@
     "operation_id": "cp_durable_diagnose_checkpoint",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.checkpoint.write",
         "resource": "durable:checkpoint:{checkpoint_id}"
       }
@@ -187,6 +369,19 @@
     "operation_id": "cp_durable_record_effect",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.effect.write",
         "resource": "durable:effect"
       }
@@ -200,6 +395,19 @@
     "operation_id": "cp_durable_mark_published",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.outbox.write",
         "resource": "durable:outbox:{outbox_id}"
       }
@@ -213,6 +421,19 @@
     "operation_id": "cp_durable_create_preview",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.preview.write",
         "resource": "durable:preview"
       }
@@ -226,6 +447,19 @@
     "operation_id": "cp_durable_authorize_shadow",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.shadow.write",
         "resource": "durable:shadow"
       }
@@ -239,6 +473,19 @@
     "operation_id": "cp_durable_start_attempt",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.attempt.write",
         "resource": "durable:submission:{submission_id}"
       }
@@ -252,6 +499,19 @@
     "operation_id": "cp_durable_cancel",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.cancel",
         "resource": "durable:submission:{submission_id}"
       }
@@ -265,6 +525,19 @@
     "operation_id": "cp_durable_acquire_lease",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.lease.write",
         "resource": "durable:submission:{submission_id}"
       }
@@ -278,6 +551,19 @@
     "operation_id": "cp_durable_heartbeat",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.lease.write",
         "resource": "durable:submission:{submission_id}"
       }
@@ -291,6 +577,19 @@
     "operation_id": "cp_durable_release_lease",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.lease.write",
         "resource": "durable:submission:{submission_id}"
       }
@@ -304,6 +603,19 @@
     "operation_id": "cp_durable_plan_repair",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.repair",
         "resource": "durable:submission:{submission_id}"
       }
@@ -317,6 +629,19 @@
     "operation_id": "cp_durable_replay",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "durable.replay",
         "resource": "durable:submission:{submission_id}"
       }
@@ -330,6 +655,19 @@
     "operation_id": "cp_erasure_execute",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "erasure.execute",
         "resource": "erasure:plan:{plan_id}"
       }
@@ -343,6 +681,19 @@
     "operation_id": "cp_erasure_create",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "erasure.write",
         "resource": "erasure:request"
       }
@@ -356,6 +707,19 @@
     "operation_id": "cp_erasure_plan",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "erasure.write",
         "resource": "erasure:{request_id}"
       }
@@ -369,6 +733,19 @@
     "operation_id": "cp_objective_put",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "objective.write",
         "resource": "objective:put"
       }
@@ -382,6 +759,19 @@
     "operation_id": "cp_objective_evaluate",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "objective.evaluate",
         "resource": "objective:{objective_id}"
       }
@@ -395,6 +785,19 @@
     "operation_id": "cp_objective_notify",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "objective.notify",
         "resource": "objective:{objective_id}"
       }
@@ -408,6 +811,19 @@
     "operation_id": "cp_policy_decide",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "policy.decide",
         "resource": "policy:decide"
       }
@@ -421,6 +837,19 @@
     "operation_id": "cp_proposal_validate",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "definition.read",
         "resource": "proposal:validate"
       }
@@ -434,6 +863,19 @@
     "operation_id": "cp_quota_admit",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "quota.admit",
         "resource": "quota:admit"
       }
@@ -447,6 +889,19 @@
     "operation_id": "cp_quota_contain",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "quota.admin",
         "resource": "quota:contain"
       }
@@ -460,6 +915,19 @@
     "operation_id": "cp_quota_release",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "quota.release",
         "resource": "quota:release"
       }
@@ -473,6 +941,19 @@
     "operation_id": "cp_quota_suspend",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "quota.admin",
         "resource": "quota:suspend"
       }
@@ -486,6 +967,19 @@
     "operation_id": "cp_registry_put_alias",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "registry.alias.write",
         "resource": "registry:alias:{alias}"
       }
@@ -499,6 +993,19 @@
     "operation_id": "cp_registry_promote",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "registry.promote",
         "resource": "registry:logical:phase05-security-probe"
       }
@@ -512,6 +1019,19 @@
     "operation_id": "cp_registry_put_tenant",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "registry.tenant.write",
         "resource": "registry:tenant:{tenant_id}"
       }
@@ -525,6 +1045,19 @@
     "operation_id": "cp_registry_put_workspace",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "registry.workspace.write",
         "resource": "registry:workspace:{workspace_id}"
       }
@@ -538,6 +1071,19 @@
     "operation_id": "cp_cancel_run",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "run.cancel",
         "resource": "run:{run_id}"
       }
@@ -551,6 +1097,19 @@
     "operation_id": "cp_pause_schedule",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "schedule.write",
         "resource": "schedule:{schedule_id}"
       }
@@ -564,6 +1123,19 @@
     "operation_id": "cp_resume_schedule",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "schedule.write",
         "resource": "schedule:{schedule_id}"
       }
@@ -577,6 +1149,19 @@
     "operation_id": "cp_trigger_schedule",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "schedule.write",
         "resource": "schedule:{schedule_id}"
       }
@@ -590,6 +1175,19 @@
     "operation_id": "cp_ack_schema_observation",
     "authorizations": [
       {
+        "context": {
+          "principal_subject": "alice",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "tenant_id": "tenant-a",
+          "workspace_tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "environment": "development",
+          "security_domain": "default",
+          "correlation_key": "phase05-correlation-probe",
+          "idempotency_key": "phase05-idempotency-probe",
+          "request_id": "phase05-request-probe"
+        },
         "action": "schema.observations.ack",
         "resource": "schema:observation:{observation_id}"
       }

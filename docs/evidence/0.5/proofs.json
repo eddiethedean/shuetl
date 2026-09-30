@@ -119,7 +119,7 @@
     "limitation": "Local Python 3.12.13, macOS arm64; see ci.md for execution scope."
   },
   "AC-018": {
-    "command": "uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data -q",
+    "command": "uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_registry_workspace_list_filters_concrete_denials_and_denies_before_lookup -q",
     "artifact": "qualification.md#ac-018",
     "requirement": "Collection denial prevents lookup, and wildcard collection allowance does not expose concrete list-denied definitions/workspaces or foreign-scope protected items.",
     "provenance": "contracts.md#acceptance-criteria",

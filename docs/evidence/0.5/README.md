@@ -20,8 +20,8 @@ This ledger qualifies the current ShuETL 0.5.0 implementation against the publis
 | Gate A | local source / Python matrix | PASS |
 | Gate B | live PostgreSQL 18.6 integration | PASS |
 | Gate C | local build, artifact, wheel and evidence gate | PASS |
-| SHA-256 wheel | `c66ee797804ce79bbac1bb900d0e504566569696fb2c2988220a7bf0099fc234` |
-| SHA-256 sdist | `91f324fa64bec3adf81a26178bc7daeaa3ba50085e00fc0880a05b9e067940cb` |
+| SHA-256 wheel | `cfa560e22d9ab6b4d956408a7062e9cc04752798e5c8b17c394877a292ad84b6` |
+| SHA-256 sdist | `ba463c964f199deb40e970ca9839922651ddae181c1976181b12ad5cd07d0c31` |
 
 ## Acceptance results
 

@@ -54,16 +54,14 @@ through public contracts and FastAPI dependencies.
 
 ## Status
 
-ShuETL [0.4.0](https://pypi.org/project/shuetl/0.4.0/) was published on
-2026-09-13 from the [`v0.4.0` tag](https://github.com/eddiethedean/shuetl/tree/v0.4.0).
-The [release workflow](https://github.com/eddiethedean/shuetl/actions/runs/34778081760)
-passed all checks and published the wheel and source distribution to PyPI.
-It provides a typed FastAPI facade for local development and a
-controlled single-tenant PostgreSQL pilot. It accepts a prebuilt
-`etlantic_fastapi.ETLanticAPI`; the 0.3 local bundle additionally wires exact
-upstream memory providers and an opt-in, pre-provisioned SQLite profile. The
-0.4 PostgreSQL bundle wires ETLantic 0.52.1 registry, submission, event,
-durable-work, and schedule stores. It does not provide a multi-tenant, HA, or
+ShuETL [0.5.0](https://pypi.org/project/shuetl/0.5.0/) was published on
+2026-09-30 UTC from the [`v0.5.0` tag](https://github.com/eddiethedean/shuetl/tree/v0.5.0)
+at commit `d846c3dd15b517def5c736e831202a603ca0e080`. The [release workflow](https://github.com/eddiethedean/shuetl/actions/runs/36659686930)
+passed its checks, built the distributions, and published them to PyPI through
+Trusted Publishing. Version 0.5.0 adds guarded host identity composition and
+security qualification against ETLantic 0.55.0. It retains the typed FastAPI
+facade, local provider bundles, and the controlled single-tenant PostgreSQL
+pilot introduced in prior releases. It does not provide a multi-tenant, HA, or
 exactly-once external-effect guarantee.
 
 The complete design pack is in [`docs/plans/`](docs/plans/README.md).
@@ -79,20 +77,19 @@ The current Phase 0.5 secure host integration contract is in
 [`docs/plans/PHASE_0_5_EXECUTION.md`](docs/plans/PHASE_0_5_EXECUTION.md), with
 host authentication guidance in [`docs/IDENTITY.md`](docs/IDENTITY.md).
 
-The working tree targets ShuETL 0.5.0 and ETLantic 0.55.0. ETLantic 0.55.0 is
-published; ShuETL 0.5.0 is not yet published. The current source adds a guarded
-`HostIdentityAdapter`, explicit local-only `development-static` identity,
-production composition checks, and security qualification for upstream routes.
-The 0.4.0 install commands below continue to install the published release.
+ShuETL 0.5.0 and ETLantic 0.55.0 are published. The 0.5.0 release adds a
+guarded `HostIdentityAdapter`, explicit local-only `development-static`
+identity, production composition checks, and security qualification for
+upstream routes.
 
 ## Install
 
 ```bash
-python -m pip install "shuetl==0.4.0"
+python -m pip install "shuetl==0.5.0"
 # Optional pre-provisioned SQLite provider
-python -m pip install "shuetl[sqlite]==0.4.0"
+python -m pip install "shuetl[sqlite]==0.5.0"
 # Controlled PostgreSQL pilot provider
-python -m pip install "shuetl[postgresql]==0.4.0"
+python -m pip install "shuetl[postgresql]==0.5.0"
 ```
 
 ## Quickstart

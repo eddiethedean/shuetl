@@ -1,7 +1,12 @@
 # Changelog
 
-## 0.5.0 — Secure host integration (unreleased)
+## 0.5.0 — Secure host integration (2026-09-30)
 
+- Published to [PyPI](https://pypi.org/project/shuetl/0.5.0/) through Trusted
+  Publishing from the [`v0.5.0` tag](https://github.com/eddiethedean/shuetl/tree/v0.5.0)
+  at commit `d846c3dd15b517def5c736e831202a603ca0e080`. The tag-triggered
+  [release workflow](https://github.com/eddiethedean/shuetl/actions/runs/36659686930)
+  passed its checks, build, and publication steps.
 - Pin the published ETLantic, `etlantic-fastapi`, and `etlantic-sqlmodel` 0.55.0
   train; retain the qualified FastAPI, Pydantic, PostgreSQL, SQLAlchemy, and
   Psycopg pins.
@@ -14,7 +19,7 @@
   trigger-identity persistence, credential redaction, and the gateway's
   no-execution boundary against ETLantic 0.55.0.
 - Add synthetic OIDC and session host recipes, clean-wheel smoke checks, and
-  current Phase 0.5 acceptance evidence. ShuETL 0.5.0 has not been published.
+  current Phase 0.5 acceptance evidence.
 
 ## 0.4.0 — Durable PostgreSQL pilot (2026-09-13)
 

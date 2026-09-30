@@ -8,13 +8,16 @@
 - Baseline checkout: `ebe42ad6bfb47a9632941deff62a758dec050232`; implementation
   and documentation are committed on `main`.
 - Implementation date: 2026-09-29.
-- Status: **IMPLEMENTATION COMPLETE; AC-017 REVIEW REMEDIATION PASSED LOCALLY; UNPUBLISHED**.
+- Status: **RELEASED as ShuETL 0.5.0 on 2026-09-30 UTC**.
   Published upstream prerequisites, local supported-Python matrix, live
-  PostgreSQL suite, release artifact gates, and hosted CI are qualified for
-  baseline commit `6e69b57`. Hosted run
-  [36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532)
-  passed on Python 3.11–3.13. The added configured-provider foreign-record
-  proof passed locally on Python 3.12.13 after that hosted run.
+  PostgreSQL suite, release artifact gates, and hosted CI are qualified. Tag
+  [`v0.5.0`](https://github.com/eddiethedean/shuetl/tree/v0.5.0) resolves to
+  release commit `d846c3dd15b517def5c736e831202a603ca0e080`. Pre-tag run
+  [36659423353](https://github.com/eddiethedean/shuetl/actions/runs/36659423353)
+  and tag-triggered release run
+  [36659686930](https://github.com/eddiethedean/shuetl/actions/runs/36659686930)
+  passed on Python 3.11–3.13; Trusted Publishing completed. The final hosted
+  checks include the AC-017 configured-provider foreign-record proof.
 
 This contract implements the [0.5 roadmap boundary](ROADMAP.md#05--secure-host-integration).
 It replaces speculative identity examples in the general design pack for this
@@ -860,9 +863,10 @@ confirmed pre-existing warnings/failures outside the boundary are recorded and
 do not demand unrelated repairs. The repository need not be globally defect-free.
 
 The 0.55.0 upstream artifacts satisfy both previously blocking prerequisites.
-The 34 criteria have qualification evidence for baseline commit `6e69b57`,
-including a three-version Python matrix, real PostgreSQL 18.6 integration, and
-hosted run [36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532).
-The follow-up AC-017 configured-provider proof passed locally after that hosted
-run. Do not publish or tag ShuETL from this implementation task; publication
-is a separate release action.
+The 34 criteria have qualification evidence, including a three-version Python
+matrix, real PostgreSQL 18.6 integration, and hosted run
+[36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532)
+for the initial baseline. AC-017 was added afterward and passed locally, then
+passed in the final pre-tag and tag-triggered release runs. ShuETL 0.5.0 was
+published through Trusted Publishing; artifact hashes and workflow records are
+in [the Phase 0.5 evidence index](../evidence/0.5/README.md).

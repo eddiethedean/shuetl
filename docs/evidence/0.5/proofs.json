@@ -112,11 +112,11 @@
     "limitation": "Local Python 3.12.13, macOS arm64; see ci.md for execution scope."
   },
   "AC-017": {
-    "command": "uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_protected_optional_reads_deny_before_unavailable_provider_lookup -q",
+    "command": "uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_protected_optional_reads_deny_before_unavailable_provider_lookup tests/security/test_scope_and_outages.py::test_existing_foreign_registry_and_schedule_records_are_denied_before_lookup -q",
     "artifact": "qualification.md#ac-017",
     "requirement": "Direct definition/run/registry/schedule/report/lineage/artifact-metadata probes preserve upstream 403/404 disclosure and reveal no protected cross-scope existence/content; only the documented caller-scoped run probe may follow denial.",
     "provenance": "contracts.md#acceptance-criteria",
-    "limitation": "Local Python 3.12.13, macOS arm64; see ci.md for execution scope."
+    "limitation": "Local Python 3.12.13, macOS arm64; 14 passed, including direct and mounted configured-provider denial checks. Added after hosted baseline CI run 36654931532, so not included in that run."
   },
   "AC-018": {
     "command": "uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_registry_workspace_list_filters_concrete_denials_and_denies_before_lookup -q",
@@ -200,7 +200,7 @@
     "artifact": "qualification.md#ac-029",
     "requirement": "Existing local raw-callback, PostgreSQL persistence/restart/migration/idempotency/concurrency, CLI, mount/lifecycle/handler and OpenAPI contract assertions pass, except the explicitly documented production-security and corrected upstream list/422 changes.",
     "provenance": "contracts.md#acceptance-criteria",
-    "limitation": "Local Python matrix and PostgreSQL 18.6; all hosted quality jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845)."
+    "limitation": "Local Python matrix and PostgreSQL 18.6; hosted quality jobs passed on Python 3.11–3.13 for baseline commit `6e69b57` in [CI run 36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532)."
   },
   "AC-030": {
     "command": "uv run python scripts/check_clean_wheel.py",
@@ -214,7 +214,7 @@
     "artifact": "qualification.md#ac-031",
     "requirement": "Ruff, Pyright, lock, boundary, unit/security/integration, build, artifact, OpenAPI and release/evidence gates pass; real PostgreSQL and 0.5 security tests execute on Python 3.11/3.12/3.13 in CI without required-test skips.",
     "provenance": "contracts.md#acceptance-criteria",
-    "limitation": "Local release gate and all hosted quality, PostgreSQL, and release-gate jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845)."
+    "limitation": "Local release gate and hosted quality, PostgreSQL, and release-gate jobs passed on Python 3.11–3.13 for baseline commit `6e69b57` in [CI run 36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532)."
   },
   "AC-032": {
     "command": "uv run pytest tests/unit/test_evidence_proofs.py tests/review/test_phase_0_4_evidence_contract.py tests/review/test_phase_0_4_evidence_semantics.py -q",

@@ -8,11 +8,13 @@
 - Baseline checkout: `ebe42ad6bfb47a9632941deff62a758dec050232`; implementation
   and documentation are committed on `main`.
 - Implementation date: 2026-09-29.
-- Status: **IMPLEMENTATION COMPLETE; UNPUBLISHED**. Published upstream
-  prerequisites, local supported-Python matrix, live PostgreSQL suite, release
-  artifact gates, and hosted CI are qualified. Hosted run
-  [36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845)
-  passed on Python 3.11–3.13.
+- Status: **IMPLEMENTATION COMPLETE; AC-017 REVIEW REMEDIATION PASSED LOCALLY; UNPUBLISHED**.
+  Published upstream prerequisites, local supported-Python matrix, live
+  PostgreSQL suite, release artifact gates, and hosted CI are qualified for
+  baseline commit `6e69b57`. Hosted run
+  [36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532)
+  passed on Python 3.11–3.13. The added configured-provider foreign-record
+  proof passed locally on Python 3.12.13 after that hosted run.
 
 This contract implements the [0.5 roadmap boundary](ROADMAP.md#05--secure-host-integration).
 It replaces speculative identity examples in the general design pack for this
@@ -858,7 +860,9 @@ confirmed pre-existing warnings/failures outside the boundary are recorded and
 do not demand unrelated repairs. The repository need not be globally defect-free.
 
 The 0.55.0 upstream artifacts satisfy both previously blocking prerequisites.
-The 34 criteria have local executable evidence, including a three-version
-Python matrix and real PostgreSQL 18.6 integration. Hosted CI passed for the
-reviewed commit. Do not publish or tag ShuETL from this implementation task;
-publication is a separate release action.
+The 34 criteria have qualification evidence for baseline commit `6e69b57`,
+including a three-version Python matrix, real PostgreSQL 18.6 integration, and
+hosted run [36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532).
+The follow-up AC-017 configured-provider proof passed locally after that hosted
+run. Do not publish or tag ShuETL from this implementation task; publication
+is a separate release action.

@@ -12,8 +12,10 @@ from etlantic.control_plane import (
     EnvironmentRef,
     MemoryEventStore,
     MemoryRegistryProvider,
+    MemoryScheduleStore,
     MemorySubmissionStore,
     Principal,
+    ScheduleSpec,
     SecurityDomain,
     TenantRef,
     WorkspaceRecord,
@@ -41,6 +43,7 @@ def _api_and_contexts(
     *,
     durable_work: Any = None,
     registry: Any = None,
+    schedule_store: Any = None,
 ) -> tuple[ETLanticAPI, dict[str, ControlPlaneContext], MemoryAuthorizer]:
     contexts = {
         "alice": _context(
@@ -83,6 +86,7 @@ def _api_and_contexts(
         principal_dependency=adapter.principal_dependency,
         profile="development",
         durable_work=durable_work,
+        schedule_store=schedule_store,
     )
     return api, contexts, authorizer
 
@@ -252,6 +256,110 @@ def test_protected_optional_reads_deny_before_unavailable_provider_lookup(
     assert response.status_code == 404
     assert "sentinel" not in response.text
     assert "not configured" not in response.text.lower()
+
+
+@pytest.mark.parametrize("mount_mode", ["direct", "mounted"])
+def test_existing_foreign_registry_and_schedule_records_are_denied_before_lookup(
+    mount_mode: str,
+) -> None:
+    registry = MemoryRegistryProvider()
+    schedules = MemoryScheduleStore()
+    api, contexts, _authorizer = _api_and_contexts(
+        registry=registry,
+        schedule_store=schedules,
+    )
+    foreign_workspace_context = _context(
+        contexts["bob"].principal,
+        "tenant-b",
+        "foreign-workspace",
+    )
+    registry.workspaces.put(
+        foreign_workspace_context,
+        WorkspaceRecord(
+            tenant_id="tenant-b",
+            workspace_id="foreign-workspace",
+            display_name="foreign-workspace-content-sentinel",
+        ),
+    )
+    schedules.create(
+        contexts["bob"],
+        definition_id="foreign-definition",
+        profile_name="production",
+        spec=ScheduleSpec(kind="interval", interval_seconds=60),
+        schedule_id="foreign-schedule",
+        parameter_refs={"marker": "foreign-schedule-content-sentinel"},
+    )
+    stored_workspace = registry.workspaces.get(
+        foreign_workspace_context,
+        "foreign-workspace",
+    )
+    stored_schedule = schedules.get(contexts["bob"], "foreign-schedule")
+    assert stored_workspace.display_name == "foreign-workspace-content-sentinel"
+    assert stored_schedule.parameter_refs["marker"] == (
+        "foreign-schedule-content-sentinel"
+    )
+
+    provider_lookups: list[str] = []
+    original_workspace_get = registry.workspaces.get
+
+    def workspace_get_probe(ctx: ControlPlaneContext, workspace_id: str) -> Any:
+        provider_lookups.append("registry.workspace.get")
+        return original_workspace_get(ctx, workspace_id)
+
+    registry.workspaces.get = workspace_get_probe  # type: ignore[method-assign]
+    original_schedule_get = schedules.get
+
+    def schedule_get_probe(ctx: ControlPlaneContext, schedule_id: str) -> Any:
+        provider_lookups.append("schedule.get")
+        return original_schedule_get(ctx, schedule_id)
+
+    schedules.get = schedule_get_probe  # type: ignore[method-assign]
+
+    authorizations: list[tuple[ControlPlaneContext, str, str]] = []
+
+    class DenyForeignItemAuthorizer:
+        def authorize(
+            self,
+            ctx: ControlPlaneContext,
+            action: str,
+            resource: str,
+        ) -> AuthzDecision:
+            authorizations.append((ctx, action, resource))
+            return AuthzDecision(
+                allowed=False,
+                reason="cross-scope record is not visible",
+                disclosure="forbidden",
+            )
+
+    api.authorizer = DenyForeignItemAuthorizer()  # type: ignore[assignment]
+    integration = ShuETL(api=api)
+    if mount_mode == "direct":
+        app = integration.create_app()
+        prefix = ""
+    else:
+        app = FastAPI()
+        integration.mount(app, prefix="/etl")
+        prefix = "/etl"
+
+    with TestClient(app) as client:
+        workspace_response = client.get(
+            f"{prefix}/v1/registry/workspaces/foreign-workspace",
+            headers={"X-Principal": "alice"},
+        )
+        schedule_response = client.get(
+            f"{prefix}/v1/schedules/foreign-schedule",
+            headers={"X-Principal": "alice"},
+        )
+
+    assert workspace_response.status_code == schedule_response.status_code == 403
+    assert "foreign-workspace-content-sentinel" not in workspace_response.text
+    assert "foreign-schedule-content-sentinel" not in schedule_response.text
+    assert [(action, resource) for _ctx, action, resource in authorizations] == [
+        ("registry.workspace.read", "registry:workspace:foreign-workspace"),
+        ("schedule.read", "schedule:foreign-schedule"),
+    ]
+    assert all(ctx is contexts["alice"] for ctx, _action, _resource in authorizations)
+    assert provider_lookups == []
 
 
 @dataclass(frozen=True)

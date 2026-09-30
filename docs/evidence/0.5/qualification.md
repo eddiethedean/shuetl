@@ -153,10 +153,10 @@ Result: PASS
 ## AC-017
 
 Task: cross-scope denial probes
-Command: `uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_protected_optional_reads_deny_before_unavailable_provider_lookup -q`
+Command: `uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_protected_optional_reads_deny_before_unavailable_provider_lookup tests/security/test_scope_and_outages.py::test_existing_foreign_registry_and_schedule_records_are_denied_before_lookup -q`
 Requirement: Direct definition/run/registry/schedule/report/lineage/artifact-metadata probes preserve upstream 403/404 disclosure and reveal no protected cross-scope existence/content; only the documented caller-scoped run probe may follow denial.
 Provenance: `contracts.md#acceptance-criteria`
-Limitation: Local Python 3.12.13, macOS arm64; see ci.md for execution scope.
+Limitation: Local Python 3.12.13, macOS arm64; 14 passed, including direct and mounted configured-provider denial checks. Added after hosted baseline CI run 36654931532, so not included in that run.
 Result: PASS
 
 ## AC-018
@@ -264,7 +264,7 @@ Task: 0.4 compatibility regressions
 Command: `uv run pytest -q`
 Requirement: Existing local raw-callback, PostgreSQL persistence/restart/migration/idempotency/concurrency, CLI, mount/lifecycle/handler and OpenAPI contract assertions pass, except the explicitly documented production-security and corrected upstream list/422 changes.
 Provenance: `contracts.md#acceptance-criteria`
-Limitation: Local Python matrix and PostgreSQL 18.6; all hosted quality jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845).
+Limitation: Local Python matrix and PostgreSQL 18.6; hosted quality jobs passed on Python 3.11–3.13 for baseline commit `6e69b57` in [CI run 36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532).
 Result: PASS
 
 ## AC-030
@@ -282,7 +282,7 @@ Task: local release gate matrix
 Command: `uv run python scripts/check_release.py`
 Requirement: Ruff, Pyright, lock, boundary, unit/security/integration, build, artifact, OpenAPI and release/evidence gates pass; real PostgreSQL and 0.5 security tests execute on Python 3.11/3.12/3.13 in CI without required-test skips.
 Provenance: `contracts.md#acceptance-criteria`
-Limitation: Local release gate and all hosted quality, PostgreSQL, and release-gate jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845).
+Limitation: Local release gate and hosted quality, PostgreSQL, and release-gate jobs passed on Python 3.11–3.13 for baseline commit `6e69b57` in [CI run 36654931532](https://github.com/eddiethedean/shuetl/actions/runs/36654931532).
 Result: PASS
 
 ## AC-032

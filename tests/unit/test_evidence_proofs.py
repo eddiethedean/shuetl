@@ -1,4 +1,4 @@
-"""Implementation-side integrity checks for the audited Phase 0.4 proofs."""
+"""Implementation-side integrity checks for current release proof bindings."""
 
 from __future__ import annotations
 
@@ -13,12 +13,12 @@ from scripts import check_evidence
 
 
 def _copy(tmp_path: Path) -> Path:
-    evidence = tmp_path / "0.4"
+    evidence = tmp_path / check_evidence.EVIDENCE.name
     shutil.copytree(check_evidence.EVIDENCE, evidence)
     return evidence
 
 
-@pytest.mark.parametrize("criterion", ["AC-012", "AC-016", "AC-018", "AC-025"])
+@pytest.mark.parametrize("criterion", ["AC-012", "AC-016", "AC-020", "AC-032"])
 def test_another_acs_passing_proof_cannot_replace_recorded_proof(
     tmp_path: Path, criterion: str
 ) -> None:
@@ -40,18 +40,18 @@ def test_registry_cannot_redefine_the_approved_requirement(tmp_path: Path) -> No
     evidence = _copy(tmp_path)
     registry = evidence / "proofs.json"
     proofs = json.loads(registry.read_text())
-    proofs["AC-021"]["requirement"] = "Package metadata is valid."
+    proofs["AC-020"]["requirement"] = "Package metadata is valid."
     registry.write_text(json.dumps(proofs))
     assert any(
-        "approved contract: AC-021" in error for error in check_evidence.check(evidence)
+        "approved contract: AC-020" in error for error in check_evidence.check(evidence)
     )
 
 
 def test_manual_proof_requires_its_locatable_result_section(tmp_path: Path) -> None:
     evidence = _copy(tmp_path)
     record = evidence / "qualification.md"
-    record.write_text(record.read_text().replace("## AC-021\n", "## Removed\n"))
-    assert any("AC-021" in error for error in check_evidence.check(evidence))
+    record.write_text(record.read_text().replace("## AC-020\n", "## Removed\n"))
+    assert any("AC-020" in error for error in check_evidence.check(evidence))
 
 
 def test_valid_registry_and_ledger_have_no_proof_errors(

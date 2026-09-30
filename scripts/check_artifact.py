@@ -1,4 +1,4 @@
-"""Check that built artifacts contain only the Phase 0.4 package surface."""
+"""Check that built artifacts contain only the Phase 0.5 package surface."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ ALLOWED_WHEEL_FILES = {
     "shuetl/__init__.py",
     "shuetl/errors.py",
     "shuetl/integration.py",
+    "shuetl/identity.py",
     "shuetl/compatibility.py",
     "shuetl/_secrets.py",
     "shuetl/settings.py",
@@ -55,8 +56,8 @@ def check_wheel(path: Path) -> None:
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
         expected = {
-            "etlantic==0.52.1",
-            "etlantic-fastapi==0.52.1",
+            "etlantic==0.55.0",
+            "etlantic-fastapi==0.55.0",
             "fastapi==0.141.1",
             "pydantic==2.13.5",
             "pydantic-settings==2.15.0",
@@ -67,6 +68,37 @@ def check_wheel(path: Path) -> None:
         if not expected <= actual:
             raise ValueError(
                 f"runtime dependencies missing: {sorted(expected - actual)}"
+            )
+        optional_train = {
+            line.removeprefix("Requires-Dist: ").strip()
+            for line in requires_dist
+            if "extra == 'sqlite'" in line
+            or 'extra == "sqlite"' in line
+            or "extra == 'postgresql'" in line
+            or 'extra == "postgresql"' in line
+        }
+        if not any(
+            line.startswith("etlantic-sqlmodel==0.55.0") for line in optional_train
+        ):
+            raise ValueError(
+                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.55.0"
+            )
+        forbidden_auth_dependencies = {
+            "authlib",
+            "authmate",
+            "cryptography",
+            "jose",
+            "pyjwt",
+            "python-jose",
+        }
+        actual_names = {
+            line.split(";", 1)[0].split("[", 1)[0].split("=", 1)[0].lower()
+            for line in actual
+        }
+        if forbidden_auth_dependencies & actual_names:
+            raise ValueError(
+                "core/extra metadata adds a credential-validation dependency: "
+                f"{sorted(forbidden_auth_dependencies & actual_names)}"
             )
         if not any(
             "extra == 'test'" in line or 'extra == "test"' in line

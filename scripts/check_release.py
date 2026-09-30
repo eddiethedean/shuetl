@@ -1,4 +1,4 @@
-"""Run the complete local Phase 0.4 release gate."""
+"""Run the complete local Phase 0.5 release gate."""
 
 from __future__ import annotations
 

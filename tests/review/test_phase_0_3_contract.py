@@ -84,7 +84,7 @@ def test_sol_002_sqlite_inventory_includes_qualified_sqlalchemy(monkeypatch) -> 
 
 
 def test_sol_002_capability_errors_are_not_wrapped(monkeypatch) -> None:
-    expected = 'pip install "shuetl[sqlite]==0.4.0"'
+    expected = 'pip install "shuetl[sqlite]==0.5.0"'
     monkeypatch.setattr(providers, "validate_core", lambda: {})
 
     def unavailable() -> None:
@@ -213,12 +213,13 @@ def test_sol_005_public_export_order_matches_contract() -> None:
         "CompatibilityError",
         "CapabilityError",
         "ProviderReadinessError",
+        "HostIdentityAdapter",
     )
 
 
 def test_sol_005_version_output_matches_contract(capsys) -> None:
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out == "shuetl 0.4.0\n"
+    assert capsys.readouterr().out == "shuetl 0.5.0\n"
 
 
 def test_sol_005_doctor_text_contains_every_json_fact() -> None:
@@ -231,7 +232,7 @@ def test_sol_005_doctor_text_contains_every_json_fact() -> None:
         "route_preset: complete",
         "database_configured: false",
         "database_driver: none",
-        "etlantic: 0.52.1",
+        "etlantic: 0.55.0",
         "provider.memory",
         "Use a separately operated provider for production workloads.",
     ):
@@ -242,10 +243,10 @@ def test_sol_005_sqlite_doctor_reports_sqlalchemy_version(
     tmp_path: Path, monkeypatch
 ) -> None:
     versions = {
-        "shuetl": "0.4.0",
-        "etlantic": "0.52.1",
-        "etlantic-fastapi": "0.52.1",
-        "etlantic-sqlmodel": "0.52.1",
+        "shuetl": "0.5.0",
+        "etlantic": "0.55.0",
+        "etlantic-fastapi": "0.55.0",
+        "etlantic-sqlmodel": "0.55.0",
         "fastapi": "0.141.1",
         "pydantic": "2.13.5",
         "pydantic-settings": "2.15.0",
@@ -259,7 +260,7 @@ def test_sol_005_sqlite_doctor_reports_sqlalchemy_version(
             database_url=f"sqlite:///{tmp_path / 'missing.db'}",
         )
     )
-    assert report.versions["etlantic-sqlmodel"] == "0.52.1"
+    assert report.versions["etlantic-sqlmodel"] == "0.55.0"
     assert report.versions["sqlalchemy"] == "2.0.52"
 
 
@@ -351,7 +352,7 @@ def test_sol_006_clean_wheel_uses_separate_core_sqlite_and_postgresql_environmen
 
     monkeypatch.setattr(check_clean_wheel.shutil, "which", lambda name: "/usr/bin/uv")
     monkeypatch.setattr(check_clean_wheel, "_run", record)
-    check_clean_wheel.verify(tmp_path / "shuetl-0.4.0-py3-none-any.whl")
+    check_clean_wheel.verify(tmp_path / "shuetl-0.5.0-py3-none-any.whl")
 
     venv_commands = [command for command in calls if command[1:2] == ["venv"]]
     memory_run = next(

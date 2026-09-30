@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from typing import cast
 
 import pytest
 from etlantic.control_plane import (
@@ -20,9 +22,16 @@ from etlantic.control_plane import (
     WorkspaceRef,
 )
 from etlantic_sqlmodel.migrations import upgrade
+from fastapi import Request
+from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from shuetl import PostgreSQLProviderBundle, ShuETL, ShuETLSettings
+from shuetl import (
+    HostIdentityAdapter,
+    PostgreSQLProviderBundle,
+    ShuETL,
+    ShuETLSettings,
+)
 from shuetl.diagnostics import DoctorReport
 from shuetl.postgresql import (
     POSTGRESQL_HEAD,
@@ -46,13 +55,26 @@ def _settings() -> ShuETLSettings:
     )
 
 
-def _context() -> ControlPlaneContext:
+def _context(principal: Principal | None = None) -> ControlPlaneContext:
     return ControlPlaneContext(
-        principal=Principal("phase-0-4"),
+        principal=principal or Principal("phase-0-4", issuer="https://test.example"),
         tenant=TenantRef("tenant-0-4"),
         workspace=WorkspaceRef("tenant-0-4", "workspace-0-4"),
         environment=EnvironmentRef("production"),
         security_domain=SecurityDomain("default"),
+    )
+
+
+def _identity_adapter() -> HostIdentityAdapter:
+    def principal_dependency(_request: Request) -> Principal:
+        return Principal("phase-0-4", issuer="https://test.example")
+
+    def context_factory(principal: Principal, _request: Request) -> ControlPlaneContext:
+        return _context(principal)
+
+    return HostIdentityAdapter.create(
+        principal_dependency=principal_dependency,
+        context_factory=context_factory,
     )
 
 
@@ -75,8 +97,7 @@ def bundle(settings: ShuETLSettings) -> Generator[PostgreSQLProviderBundle, None
     result = PostgreSQLProviderBundle.create(
         settings,
         authorizer=MemoryAuthorizer(),
-        context_factory=lambda principal, request: _context(),
-        principal_dependency=lambda request: Principal("phase-0-4"),
+        identity_adapter=_identity_adapter(),
     )
     try:
         yield result
@@ -100,8 +121,7 @@ def test_schema_head_graph_and_doctor(settings: ShuETLSettings) -> None:
     bundle = PostgreSQLProviderBundle.create(
         settings,
         authorizer=MemoryAuthorizer(),
-        context_factory=lambda principal, request: _context(),
-        principal_dependency=lambda request: Principal("phase-0-4"),
+        identity_adapter=_identity_adapter(),
     )
     try:
         assert bundle.provider == "postgresql"
@@ -171,8 +191,7 @@ def test_restart_idempotency_events_schedules_and_firings(
     reopened = PostgreSQLProviderBundle.create(
         settings,
         authorizer=MemoryAuthorizer(),
-        context_factory=lambda principal, request: _context(),
-        principal_dependency=lambda request: Principal("phase-0-4"),
+        identity_adapter=_identity_adapter(),
     )
     try:
         assert reopened.schedules.get(ctx, "schedule-1").schedule_id == "schedule-1"
@@ -201,6 +220,60 @@ def test_concurrent_event_appends_have_unique_sequences(
     sequences = [event.sequence for event in events if event.event_id in event_ids]
     assert len(sequences) == 20
     assert len(set(sequences)) == 20
+
+
+def test_triggering_identity_is_persisted_without_host_credentials(
+    settings: ShuETLSettings,
+    bundle: PostgreSQLProviderBundle,
+) -> None:
+    ctx = _context()
+    cast(MemoryAuthorizer, bundle.authorizer).grant(ctx, "run.submit")
+    bundle.definitions.put(ctx, "identity-definition", {"fingerprint": "safe-fp"})
+    app = ShuETL(api=bundle.api).create_app(prefix="/etl")
+    bearer = "bearer-credential-sentinel"
+    cookie = "session-cookie-sentinel"
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/etl/v1/definitions/identity-definition/runs",
+            headers={
+                "Authorization": f"Bearer {bearer}",
+                "Cookie": f"session={cookie}",
+                "Idempotency-Key": "phase-0-5-trigger-identity",
+            },
+            json={"payload": {"input_snapshot": "safe-input-reference"}},
+        )
+    assert response.status_code == 202
+    submission_id = response.json()["submission_id"]
+    query = text(
+        "SELECT payload_json FROM cp_durable_submission_entity "
+        "WHERE store_id = 'default' AND submission_id = :submission_id"
+    )
+    with bundle._engine.connect() as connection:
+        row = connection.execute(query, {"submission_id": submission_id}).scalar_one()
+    persisted = json.loads(row)
+    assert persisted["principal_subject"] == "phase-0-4"
+    assert persisted["principal_issuer"] == "https://test.example"
+    assert persisted["principal_kind"] == "human"
+    assert bearer not in row
+    assert cookie not in row
+
+    bundle.close()
+    reopened = PostgreSQLProviderBundle.create(
+        settings,
+        authorizer=MemoryAuthorizer(),
+        identity_adapter=_identity_adapter(),
+    )
+    try:
+        with reopened._engine.connect() as connection:
+            replayed = connection.execute(
+                query, {"submission_id": submission_id}
+            ).scalar_one()
+        assert json.loads(replayed) == persisted
+        assert bearer not in replayed
+        assert cookie not in replayed
+    finally:
+        reopened.close()
 
 
 def test_workspace_firing_and_durable_identity_survive_restart(

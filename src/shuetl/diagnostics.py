@@ -27,6 +27,85 @@ from .settings import ShuETLSettings
 CheckStatus = Literal["pass", "warn", "fail", "skip"]
 
 
+def _identity_check(
+    identity: str | None,
+    bundle: LocalProviderBundle | PostgreSQLProviderBundle | None,
+) -> DiagnosticCheck:
+    if identity == "development-static":
+        if bundle is not None and (
+            bundle.identity_adapter is None
+            or not bundle.identity_adapter.development_only
+        ):
+            return DiagnosticCheck(
+                id="identity.explicit",
+                status="fail",
+                summary=(
+                    "Configured development-static mode does not match "
+                    "the bundle adapter."
+                ),
+                remediation="Use a local development-static identity adapter.",
+            )
+        return DiagnosticCheck(
+            id="identity.explicit",
+            status="warn",
+            summary=(
+                "Development-static identity is local-only and is not "
+                "suitable for production."
+                if bundle is not None
+                else "Development-static identity is configured; the runtime "
+                "adapter was not inspected."
+            ),
+            remediation="Use SHUETL_IDENTITY=host for authenticated host deployments.",
+        )
+    if identity == "host":
+        if bundle is None:
+            return DiagnosticCheck(
+                id="identity.explicit",
+                status="warn",
+                summary=(
+                    "Host identity is configured; the runtime adapter was not "
+                    "inspected."
+                ),
+                remediation=(
+                    "Pass the provider bundle to inspect its composition; "
+                    "doctor does not authenticate."
+                ),
+            )
+        adapter = bundle.identity_adapter
+        if adapter is None and isinstance(bundle, LocalProviderBundle):
+            return DiagnosticCheck(
+                id="identity.explicit",
+                status="warn",
+                summary=(
+                    "Legacy local host callbacks are unguarded development "
+                    "compatibility mode."
+                ),
+                remediation=(
+                    "Use HostIdentityAdapter for guarded host identity composition."
+                ),
+            )
+        if adapter is None or adapter.development_only:
+            return DiagnosticCheck(
+                id="identity.explicit",
+                status="fail",
+                summary="Host identity settings do not match the runtime adapter.",
+                remediation="Use a host-mode HostIdentityAdapter.",
+            )
+        return DiagnosticCheck(
+            id="identity.explicit",
+            status="pass",
+            summary=(
+                "Host identity adapter is composed; authentication was not inspected."
+            ),
+        )
+    return DiagnosticCheck(
+        id="identity.explicit",
+        status="fail",
+        summary="Identity mode is unsupported.",
+        remediation="Use SHUETL_IDENTITY=host or development-static.",
+    )
+
+
 class DiagnosticCheck(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -98,7 +177,7 @@ class DoctorReport(BaseModel):
         except Exception:
             core_status = "fail"
             core_summary = "Core package versions are incompatible."
-            core_remediation = "Install the qualified ShuETL 0.4 package set."
+            core_remediation = "Install the qualified ShuETL 0.5 package set."
         checks.append(
             DiagnosticCheck(
                 id="compatibility.core",
@@ -108,7 +187,7 @@ class DoctorReport(BaseModel):
             )
         )
         train_ok = all(
-            value is None or value.split(".")[:2] == ["0", "52"]
+            value is None or value.split(".")[:2] == ["0", "55"]
             for name, value in versions.items()
             if name.startswith("etlantic-")
         )
@@ -117,14 +196,14 @@ class DoctorReport(BaseModel):
                 id="compatibility.etlantic_train",
                 status="pass" if train_ok else "fail",
                 summary=(
-                    "Installed ETLantic extensions share the 0.52 train."
+                    "Installed ETLantic extensions share the 0.55 train."
                     if train_ok
-                    else "An ETLantic extension is outside the 0.52 train."
+                    else "An ETLantic extension is outside the 0.55 train."
                 ),
                 remediation=(
                     None
                     if train_ok
-                    else "Align every installed etlantic-* package to 0.52."
+                    else "Align every installed etlantic-* package to 0.55."
                 ),
             )
         )
@@ -170,9 +249,9 @@ class DoctorReport(BaseModel):
         provider_remediation = None
         if not provider_available:
             provider_remediation = (
-                "Install `shuetl[sqlite]==0.4.0`."
+                "Install `shuetl[sqlite]==0.5.0`."
                 if provider == "sqlite"
-                else "Install `shuetl[postgresql]==0.4.0`."
+                else "Install `shuetl[postgresql]==0.5.0`."
             )
         checks.append(
             DiagnosticCheck(
@@ -213,7 +292,7 @@ class DoctorReport(BaseModel):
             if not provider_available:
                 ready = "fail"
                 ready_summary = "SQLite provider dependencies are unavailable."
-                ready_remediation = "Install `shuetl[sqlite]==0.4.0`."
+                ready_remediation = "Install `shuetl[sqlite]==0.5.0`."
                 schema_status = "fail"
                 schema_summary = (
                     "SQLite schema cannot be inspected without the optional provider."
@@ -238,7 +317,7 @@ class DoctorReport(BaseModel):
                     "PostgreSQL provider dependencies are unavailable; "
                     f"TLS mode is {settings.postgresql_sslmode}."
                 )
-                ready_remediation = "Install `shuetl[postgresql]==0.4.0`."
+                ready_remediation = "Install `shuetl[postgresql]==0.5.0`."
                 schema_status = "fail"
                 schema_summary = (
                     "PostgreSQL schema cannot be inspected without the optional "
@@ -279,20 +358,7 @@ class DoctorReport(BaseModel):
                     summary=schema_summary,
                     remediation=schema_remediation,
                 ),
-                DiagnosticCheck(
-                    id="identity.explicit",
-                    status="pass" if settings.identity == "host" else "fail",
-                    summary=(
-                        "Host identity is explicit."
-                        if settings.identity == "host"
-                        else "Identity mode is unsupported."
-                    ),
-                    remediation=(
-                        None
-                        if settings.identity == "host"
-                        else "Use SHUETL_IDENTITY=host."
-                    ),
-                ),
+                _identity_check(settings.identity, bundle),
                 DiagnosticCheck(
                     id="role.supported",
                     status="pass" if settings.role == "gateway" else "fail",

@@ -9,6 +9,8 @@ from re import fullmatch
 from typing import Any, Final
 
 from etlantic.control_plane import ControlPlaneError
+from etlantic.plugin_trust import is_production_profile
+from etlantic.profile import Profile
 from etlantic_fastapi import (
     ETLanticAPI,
     control_plane_error_handler,
@@ -20,7 +22,12 @@ from fastapi.routing import APIRoute
 from starlette.routing import Mount, Route, WebSocketRoute
 
 from .compatibility import validate_core
-from .errors import InvalidPrefixError, MountConflictError
+from .errors import (
+    InvalidPrefixError,
+    MountConflictError,
+    ProviderReadinessError,
+)
+from .identity import is_host_guard_pair, validate_authorizer
 
 _PREFIX_SEGMENT: Final = r"[A-Za-z0-9._~-]+"
 _PREFIX_PATTERN: Final = rf"/(?:{_PREFIX_SEGMENT})(?:/(?:{_PREFIX_SEGMENT}))*"
@@ -179,6 +186,31 @@ def _conflict(message: str) -> MountConflictError:
     return MountConflictError(message)
 
 
+def _requires_host_identity(profile: object) -> bool:
+    if profile is None:
+        return False
+    if isinstance(profile, str):
+        return profile not in {"development", "local", "test", "dev"}
+    if isinstance(profile, Profile):
+        return is_production_profile(profile)
+    return True
+
+
+def _validate_production_identity(api: ETLanticAPI) -> None:
+    if not _requires_host_identity(api.profile):
+        return
+    if not is_host_guard_pair(api.principal_dependency, api.context_factory):
+        raise ProviderReadinessError(
+            "production API requires a matching host identity adapter"
+        )
+    try:
+        validate_authorizer(api.authorizer)
+    except TypeError:
+        raise ProviderReadinessError(
+            "production API requires a conforming synchronous authorizer"
+        ) from None
+
+
 class ShuETL:
     """Compose a caller-owned ETLantic API into FastAPI applications."""
 
@@ -188,6 +220,7 @@ class ShuETL:
         validate_core()
         if not isinstance(api, ETLanticAPI):
             raise TypeError("api must be an etlantic_fastapi.ETLanticAPI instance")
+        _validate_production_identity(api)
         self._api = api
 
     @property
@@ -199,6 +232,7 @@ class ShuETL:
     def _preflight(self, app: FastAPI, prefix: str) -> None:
         if not isinstance(app, FastAPI):
             raise TypeError("app must be a FastAPI instance")
+        _validate_production_identity(self.api)
         if _state_contains(app, "shuetl"):
             raise _conflict("mount conflict: app.state.shuetl is already present")
         if _state_contains(app, "etlantic_api"):

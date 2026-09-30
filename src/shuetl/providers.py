@@ -24,11 +24,12 @@ from etlantic.control_plane.memory import (
     MemorySubmissionStore,
 )
 from etlantic_fastapi import ETLanticAPI
-from etlantic_fastapi.auth import ContextFactory, PrincipalDependency
+from etlantic_fastapi.auth import ContextFactory
 
 from ._secrets import _database_url_value
 from .compatibility import validate_core, validate_postgresql, validate_sqlite
 from .errors import CapabilityError, CompatibilityError, ProviderReadinessError
+from .identity import HostIdentityAdapter, validate_authorizer
 from .postgresql import (
     POSTGRESQL_HEAD,
     create_postgresql_engine,
@@ -57,6 +58,7 @@ class LocalProviderBundle:
     events: EventStore
     provider: Literal["memory", "sqlite"]
     development_only: Literal[True]
+    identity_adapter: HostIdentityAdapter | None
     _engine: Any = field(default=None, repr=False, compare=False)
     _state: _BundleState = field(
         default_factory=_BundleState, repr=False, compare=False
@@ -68,19 +70,24 @@ class LocalProviderBundle:
         settings: ShuETLSettings,
         *,
         authorizer: Authorizer,
-        context_factory: ContextFactory,
-        principal_dependency: PrincipalDependency,
+        identity_adapter: HostIdentityAdapter | None = None,
+        context_factory: ContextFactory | None = None,
+        principal_dependency: Any | None = None,
     ) -> LocalProviderBundle:
         """Build a local API using caller-provided identity and authorization."""
 
-        if not isinstance(authorizer, Authorizer):
-            raise TypeError("authorizer must implement authorize")
-        if not _accepts_positional(context_factory, 2):
-            raise TypeError("context_factory must accept principal and request")
-        if not _accepts_positional(principal_dependency, 1):
-            raise TypeError("principal_dependency must accept request")
         if type(settings) is not ShuETLSettings:
             raise TypeError("settings must be a ShuETLSettings instance")
+        adapter, api_context_factory, api_principal_dependency = (
+            _resolve_bundle_identity(
+                settings,
+                authorizer=authorizer,
+                identity_adapter=identity_adapter,
+                context_factory=context_factory,
+                principal_dependency=principal_dependency,
+                production=False,
+            )
+        )
 
         engine: Any = None
         try:
@@ -138,8 +145,8 @@ class LocalProviderBundle:
                 definitions=definitions,
                 submissions=submissions,
                 events=events,
-                context_factory=context_factory,
-                principal_dependency=principal_dependency,
+                context_factory=api_context_factory,
+                principal_dependency=api_principal_dependency,
                 profile="development",
             )
             return cls(
@@ -151,6 +158,7 @@ class LocalProviderBundle:
                 events=events,
                 provider=settings.provider,
                 development_only=True,
+                identity_adapter=adapter,
                 _engine=engine,
             )
         except (ProviderReadinessError, CompatibilityError, CapabilityError):
@@ -194,6 +202,7 @@ class PostgreSQLProviderBundle:
     schedules: ScheduleStore
     provider: Literal["postgresql"]
     development_only: Literal[False]
+    identity_adapter: HostIdentityAdapter
     _engine: Any = field(default=None, repr=False, compare=False)
     _state: _BundleState = field(
         default_factory=_BundleState, repr=False, compare=False
@@ -205,17 +214,12 @@ class PostgreSQLProviderBundle:
         settings: ShuETLSettings,
         *,
         authorizer: Authorizer,
-        context_factory: ContextFactory,
-        principal_dependency: PrincipalDependency,
+        identity_adapter: HostIdentityAdapter | None = None,
+        context_factory: ContextFactory | None = None,
+        principal_dependency: Any | None = None,
     ) -> PostgreSQLProviderBundle:
         """Build the qualified production-profile provider graph."""
 
-        if not isinstance(authorizer, Authorizer):
-            raise TypeError("authorizer must implement authorize")
-        if not _accepts_positional(context_factory, 2):
-            raise TypeError("context_factory must accept principal and request")
-        if not _accepts_positional(principal_dependency, 1):
-            raise TypeError("principal_dependency must accept request")
         if type(settings) is not ShuETLSettings:
             raise TypeError("settings must be a ShuETLSettings instance")
         if settings.profile != "postgresql-pilot" or settings.provider != "postgresql":
@@ -223,6 +227,21 @@ class PostgreSQLProviderBundle:
                 "PostgreSQLProviderBundle requires the postgresql-pilot "
                 "PostgreSQL profile"
             )
+        if settings.identity != "host":
+            raise ProviderReadinessError(
+                "PostgreSQLProviderBundle requires host identity"
+            )
+        adapter, api_context_factory, api_principal_dependency = (
+            _resolve_bundle_identity(
+                settings,
+                authorizer=authorizer,
+                identity_adapter=identity_adapter,
+                context_factory=context_factory,
+                principal_dependency=principal_dependency,
+                production=True,
+            )
+        )
+        assert adapter is not None
 
         engine: Any = None
         try:
@@ -256,8 +275,8 @@ class PostgreSQLProviderBundle:
                 registry=registry,
                 submissions=submissions,
                 events=events,
-                context_factory=context_factory,
-                principal_dependency=principal_dependency,
+                context_factory=api_context_factory,
+                principal_dependency=api_principal_dependency,
                 profile="production",
                 durable_work=durable_work,
                 schedule_store=schedules,
@@ -274,6 +293,7 @@ class PostgreSQLProviderBundle:
                 schedules=schedules,
                 provider="postgresql",
                 development_only=False,
+                identity_adapter=adapter,
                 _engine=engine,
             )
         except (ProviderReadinessError, CompatibilityError, CapabilityError):
@@ -342,6 +362,52 @@ def _accepts_positional(value: Any, count: int) -> bool:
     except (TypeError, ValueError):
         return False
     return True
+
+
+def _resolve_bundle_identity(
+    settings: ShuETLSettings,
+    *,
+    authorizer: Authorizer,
+    identity_adapter: HostIdentityAdapter | None,
+    context_factory: ContextFactory | None,
+    principal_dependency: Any | None,
+    production: bool,
+) -> tuple[HostIdentityAdapter | None, ContextFactory, Any]:
+    """Validate callback form and normalize production callbacks before I/O."""
+
+    validate_authorizer(authorizer)
+    has_raw_callback = context_factory is not None or principal_dependency is not None
+    if identity_adapter is not None:
+        if has_raw_callback:
+            raise TypeError("provide identity_adapter or both raw callbacks, not both")
+        if not isinstance(identity_adapter, HostIdentityAdapter):
+            raise TypeError("identity_adapter must be a HostIdentityAdapter")
+        if settings.identity == "development-static":
+            if not identity_adapter.development_only:
+                raise TypeError("development-static settings require a static adapter")
+        elif identity_adapter.development_only:
+            raise TypeError("host settings require a host identity adapter")
+        return (
+            identity_adapter,
+            identity_adapter.context_factory,
+            identity_adapter.principal_dependency,
+        )
+
+    if settings.identity == "development-static":
+        raise TypeError("development-static identity requires identity_adapter")
+    if context_factory is None or principal_dependency is None:
+        raise TypeError("provide identity_adapter or both raw callbacks")
+    if production:
+        adapter = HostIdentityAdapter.create(
+            principal_dependency=principal_dependency,
+            context_factory=context_factory,
+        )
+        return adapter, adapter.context_factory, adapter.principal_dependency
+    if not _accepts_positional(context_factory, 2):
+        raise TypeError("context_factory must accept principal and request")
+    if not _accepts_positional(principal_dependency, 1):
+        raise TypeError("principal_dependency must accept request")
+    return None, context_factory, principal_dependency
 
 
 __all__ = [

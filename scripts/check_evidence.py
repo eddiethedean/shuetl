@@ -16,6 +16,13 @@ PROJECT_VERSION = str(PROJECT["project"]["version"])
 RELEASE_SERIES = ".".join(PROJECT_VERSION.split(".")[:2])
 EVIDENCE = ROOT / "docs" / "evidence" / RELEASE_SERIES
 DIST = ROOT / "dist"
+PLAN_BY_SERIES = {
+    "0.2": ROOT / "docs/plans/PHASE_0_2_EXECUTION.md",
+    "0.3": ROOT / "docs/plans/PHASE_0_3_EXECUTION.md",
+    "0.4": ROOT / "docs/plans/PHASE_0_4_EXECUTION.md",
+    "0.5": ROOT / "docs/plans/PHASE_0_5_EXECUTION.md",
+}
+CRITERION_COUNTS = {"0.2": 36, "0.3": 42, "0.4": 38, "0.5": 34}
 REDACTION_PATTERNS = (
     r"/Users/",
     r"/Volumes/",
@@ -86,7 +93,11 @@ def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str,
         errors.append("current proof registry must be an AC-keyed object")
         return {}
     result: dict[str, dict[str, str]] = {}
-    plan = (ROOT / "docs/plans/PHASE_0_4_EXECUTION.md").read_text(encoding="utf-8")
+    plan_path = PLAN_BY_SERIES.get(evidence_dir.name)
+    if plan_path is None:
+        errors.append(f"no approved execution plan for {evidence_dir.name}")
+        return result
+    plan = plan_path.read_text(encoding="utf-8")
     approved = plan.split("## Acceptance criteria", 1)[1].split(
         "## Verification matrix", 1
     )[0]
@@ -157,7 +168,9 @@ def check(evidence: Path | None = None) -> list[str]:
         return errors
     text = index.read_text(encoding="utf-8")
     registry = (
-        proof_registry(evidence_dir, errors) if evidence_dir.name == "0.4" else {}
+        proof_registry(evidence_dir, errors)
+        if evidence_dir.name in {"0.4", "0.5"}
+        else {}
     )
     required_fields = (
         "OS and architecture",
@@ -201,10 +214,9 @@ def check(evidence: Path | None = None) -> list[str]:
             if field not in header:
                 errors.append(f"acceptance evidence has no {field!r} column")
         rows = [line for line in section.splitlines() if line.startswith("| AC-")]
-        criterion_counts = {"0.2": 36, "0.3": 42, "0.4": 38}
         expected = {
             f"AC-{number:03d}"
-            for number in range(1, criterion_counts.get(evidence_dir.name, 43) + 1)
+            for number in range(1, CRITERION_COUNTS.get(evidence_dir.name, 43) + 1)
         }
         seen: dict[str, str] = {}
         proofs: dict[str, str] = {}
@@ -220,7 +232,7 @@ def check(evidence: Path | None = None) -> list[str]:
             proofs[criterion] = " ".join(cells[1:4]).lower()
             if status != "PASS":
                 errors.append(f"acceptance criterion is not PASS: {criterion}")
-            if evidence_dir.name == "0.4":
+            if evidence_dir.name in {"0.4", "0.5"}:
                 command, artifact = cells[2], cells[3]
                 if not command:
                     errors.append(
@@ -254,8 +266,11 @@ def check(evidence: Path | None = None) -> list[str]:
         missing = sorted(expected - seen.keys())
         if missing:
             errors.append(f"acceptance evidence omits criteria: {missing}")
-        if evidence_dir.name == "0.4" and registry.keys() != expected:
-            errors.append("current proof registry must cover exactly AC-001–AC-038")
+        if evidence_dir.name in {"0.4", "0.5"} and registry.keys() != expected:
+            errors.append(
+                "current proof registry must cover exactly "
+                f"AC-001–AC-{CRITERION_COUNTS[evidence_dir.name]:03d}"
+            )
         proof_terms = PHASE_0_3_PROOF_TERMS if evidence_dir.name == "0.3" else {}
         if proof_terms:
             for criterion, terms in proof_terms.items():
@@ -293,15 +308,21 @@ def check(evidence: Path | None = None) -> list[str]:
         digest = hashlib.sha256(artifacts[0].read_bytes()).hexdigest()
         if recorded_hashes.get(kind) != digest:
             errors.append(f"recorded {kind} SHA-256 does not match built artifact")
-    max_criterion = {"0.2": 36, "0.3": 42, "0.4": 38}.get(evidence_dir.name, 42)
+    max_criterion = CRITERION_COUNTS.get(evidence_dir.name, 42)
     for number in range(1, max_criterion + 1):
         criterion = f"AC-{number:03d}"
         if criterion not in text:
             errors.append(f"evidence index does not mention {criterion}")
+    outcome = {
+        "0.2": "proceed-to-0.2",
+        "0.3": "proceed-to-0.3",
+        "0.4": "proceed-to-0.4",
+        "0.5": "proceed-to-0.5",
+    }.get(evidence_dir.name)
     outcomes = (
-        ("proceed-to-0.2", "blocked-on-upstream", "merge-into-etlantic-fastapi")
-        if evidence_dir.name != "0.4"
-        else ("proceed-to-0.4", "blocked-on-upstream", "merge-into-etlantic-fastapi")
+        (outcome, "blocked-on-upstream", "merge-into-etlantic-fastapi")
+        if outcome
+        else ("blocked-on-upstream", "merge-into-etlantic-fastapi")
     )
     if sum(text.count(outcome) for outcome in outcomes) != 1:
         errors.append("evidence index must record exactly one boundary outcome")
@@ -314,23 +335,96 @@ def check(evidence: Path | None = None) -> list[str]:
         "materially easier",
         "contributed to `etlantic-fastapi`",
     )
-    if evidence_dir.name == "0.4":
+    if evidence_dir.name in {"0.4", "0.5"}:
         boundary_answers = (
             "integration burden",
             "public composition hooks",
             "copied route",
         )
+    if evidence_dir.name == "0.5":
+        boundary_answers = (
+            "integration burden",
+            "public composition hooks",
+            "copied route",
+            "contributed to `etlantic-fastapi`",
+            "materially easier",
+        )
     for answer in boundary_answers:
         if answer not in text:
             errors.append(f"boundary review omits answer: {answer}")
+    if evidence_dir.name == "0.5":
+        inventory = evidence_dir / "route_inventory.json"
+        try:
+            routes = json.loads(inventory.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            errors.append(f"cannot read mutation route inventory: {exc}")
+            routes = []
+        if not isinstance(routes, list) or not routes:
+            errors.append("mutation route inventory must be a non-empty array")
+        else:
+            route_keys: set[tuple[str, str, str]] = set()
+            for route in routes:
+                if not isinstance(route, dict):
+                    errors.append("mutation route inventory contains a non-object")
+                    continue
+                method = route.get("method")
+                path = route.get("path")
+                operation_id = route.get("operation_id")
+                if (
+                    not isinstance(method, str)
+                    or not method
+                    or not isinstance(path, str)
+                    or not path
+                    or not isinstance(operation_id, str)
+                    or not operation_id
+                ):
+                    errors.append(
+                        "mutation route inventory has an incomplete route key"
+                    )
+                    continue
+                key = (method, path, operation_id)
+                if key in route_keys:
+                    errors.append(f"duplicate mutation route inventory entry: {key}")
+                route_keys.add(key)
+                authorizations = route.get("authorizations")
+                if (
+                    not isinstance(authorizations, list)
+                    or not authorizations
+                    or any(
+                        not isinstance(item, dict)
+                        or not isinstance(item.get("action"), str)
+                        or not item["action"]
+                        or not isinstance(item.get("resource"), str)
+                        or not item["resource"]
+                        for item in authorizations
+                    )
+                    or route.get("denial_status") != 403
+                    or route.get("provider_calls") != []
+                ):
+                    errors.append(
+                        "mutation route inventory must record authorization, "
+                        f"403 denial, and zero provider calls: {key}"
+                    )
+    if evidence_dir.name == "0.5":
+        for name in (
+            "proofs.json",
+            "qualification.md",
+            "ci.md",
+            "route_inventory.json",
+        ):
+            path = evidence_dir / name
+            if not path.is_file():
+                errors.append(f"missing Phase 0.5 evidence artifact: {name}")
     redaction_files = [index, contracts, ownership]
-    if evidence_dir.name == "0.4":
+    if evidence_dir.name in {"0.4", "0.5"}:
         redaction_files.extend(
             path
             for path in (
                 evidence_dir / "proofs.json",
                 evidence_dir / "qualification.md",
                 evidence_dir / "ci.md",
+                evidence_dir / "route_inventory.json",
+                evidence_dir / "upstream-artifact-qualification.md",
             )
             if path.is_file()
         )

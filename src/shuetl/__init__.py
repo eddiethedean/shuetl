@@ -9,6 +9,7 @@ from .errors import (
     ProviderReadinessError,
     ShuETLError,
 )
+from .identity import HostIdentityAdapter
 from .integration import ShuETL
 from .providers import LocalProviderBundle, PostgreSQLProviderBundle
 from .settings import ShuETLSettings
@@ -26,4 +27,5 @@ __all__ = (
     "CompatibilityError",
     "CapabilityError",
     "ProviderReadinessError",
+    "HostIdentityAdapter",
 )

@@ -325,6 +325,12 @@ relational providers and migrations.
 
 ## 0.5 — Secure Host Integration
 
+> Planning status: **implementation complete in the working tree; unpublished**.
+> Published ETLantic 0.55.0 artifacts qualify the two previously blocking
+> list-denial and redacted-422 prerequisites. Hosted CI for the reviewed commit
+> remains a pre-publication check. The implementation contract and evidence ledger are in
+> [PHASE_0_5_EXECUTION.md](PHASE_0_5_EXECUTION.md).
+
 ### Outcome
 
 Qualify authenticated, authorized single-tenant FastAPI deployments.

@@ -15,6 +15,7 @@ questions.
 | [0008](0008-local-provider-bundles.md) | Local provider bundles | Accepted |
 | [0009](0009-doctor-report-contract.md) | Doctor report contract | Accepted |
 | [0010](0010-postgresql-pilot-and-migration-boundary.md) | PostgreSQL pilot and migration boundary | Accepted |
+| [0011](0011-host-identity-composition-and-production-guards.md) | Host identity composition and production guards | Accepted and implemented for 0.5; published 0.55.0 prerequisites qualified |
 
 Any change to an accepted decision requires updating its governing execution
 contract and acceptance/verification mapping.

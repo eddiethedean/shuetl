@@ -33,12 +33,18 @@ def find_wheel(dist: Path) -> Path:
 
 def verify(wheel: Path) -> None:
     wheel = wheel.resolve()
-    example = ROOT / "examples" / "phase_0_3_quickstart.py"
-    sqlite_example = ROOT / "examples" / "phase_0_3_sqlite.py"
-    if not example.exists():
-        raise FileNotFoundError(example)
-    if not sqlite_example.exists():
-        raise FileNotFoundError(sqlite_example)
+    examples = {
+        "core": [
+            ROOT / "examples" / "phase_0_3_quickstart.py",
+            ROOT / "examples" / "phase_0_5_oidc_host.py",
+            ROOT / "examples" / "phase_0_5_session_host.py",
+            ROOT / "examples" / "phase_0_5_development_static.py",
+        ],
+        "sqlite": [ROOT / "examples" / "phase_0_3_sqlite.py"],
+    }
+    for example in (path for paths in examples.values() for path in paths):
+        if not example.exists():
+            raise FileNotFoundError(example)
     with tempfile.TemporaryDirectory(prefix=f"shuetl-{VERSION}-wheel-") as temp:
         temp_root = Path(temp)
         work_dir = temp_root / "work"
@@ -47,10 +53,12 @@ def verify(wheel: Path) -> None:
         if uv is None:
             raise RuntimeError("uv is required for clean-wheel verification")
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-        isolated_example = work_dir / example.name
-        isolated_sqlite_example = work_dir / sqlite_example.name
-        shutil.copy2(example, isolated_example)
-        shutil.copy2(sqlite_example, isolated_sqlite_example)
+        isolated_examples: dict[str, list[Path]] = {"core": [], "sqlite": []}
+        for extra, paths in examples.items():
+            for example in paths:
+                destination = work_dir / example.name
+                shutil.copy2(example, destination)
+                isolated_examples[extra].append(destination)
         env = {
             **os.environ,
             "PYTHONPATH": "",
@@ -59,7 +67,7 @@ def verify(wheel: Path) -> None:
         }
 
         def verify_environment(
-            name: str, example_path: Path | None, extra: str
+            name: str, example_paths: list[Path], extra: str
         ) -> None:
             venv_dir = temp_root / f"venv-{name}"
             _run(
@@ -79,9 +87,36 @@ def verify(wheel: Path) -> None:
                 cwd=work_dir,
                 env=env,
             )
-            if example_path:
+            _run(
+                [
+                    str(python),
+                    "-c",
+                    f"""
+import importlib.metadata as metadata
+import importlib.util
+import pathlib
+import sysconfig
+
+purelib = pathlib.Path(sysconfig.get_paths()["purelib"]).resolve()
+modules = ("shuetl", "etlantic", "etlantic_fastapi", "fastapi", "pydantic")
+origins = {{}}
+for name in modules:
+    spec = importlib.util.find_spec(name)
+    assert spec is not None and spec.origin is not None, name
+    origins[name] = pathlib.Path(spec.origin).resolve()
+assert all(path.is_relative_to(purelib) for path in origins.values()), origins
+assert metadata.version("shuetl") == "{VERSION}"
+assert metadata.version("etlantic") == "0.55.0"
+assert metadata.version("etlantic-fastapi") == "0.55.0"
+print(origins)
+""",
+                ],
+                cwd=work_dir,
+                env=env,
+            )
+            for example_path in example_paths:
                 _run([str(python), str(example_path)], cwd=work_dir, env=env)
-            else:
+            if name == "postgresql":
                 _run(
                     [
                         str(python),
@@ -95,9 +130,9 @@ def verify(wheel: Path) -> None:
                     env=env,
                 )
 
-        verify_environment("core", isolated_example, "")
-        verify_environment("sqlite", isolated_sqlite_example, "sqlite")
-        verify_environment("postgresql", None, "postgresql")
+        verify_environment("core", isolated_examples["core"], "")
+        verify_environment("sqlite", isolated_examples["sqlite"], "sqlite")
+        verify_environment("postgresql", [], "postgresql")
 
 
 def main(argv: list[str] | None = None) -> int:

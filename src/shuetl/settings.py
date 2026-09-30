@@ -65,7 +65,9 @@ class ShuETLSettings(BaseSettings):
     provider: Literal["memory", "sqlite", "postgresql"] = Field(
         validation_alias="SHUETL_PROVIDER"
     )
-    identity: Literal["host"] = Field(validation_alias="SHUETL_IDENTITY")
+    identity: Literal["host", "development-static"] = Field(
+        validation_alias="SHUETL_IDENTITY"
+    )
     api_prefix: str = Field("/etl", validation_alias="SHUETL_API_PREFIX")
     route_preset: Literal["complete"] = Field(
         "complete", validation_alias="SHUETL_ROUTE_PRESET"
@@ -90,6 +92,8 @@ class ShuETLSettings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_provider_url(self) -> ShuETLSettings:
+        if self.identity == "development-static" and self.profile != "local":
+            raise ValueError("development-static identity requires the local profile")
         if self.provider == "memory" and self.database_url is not None:
             raise ValueError("database_url is only valid for sqlite or postgresql")
         if self.provider == "sqlite":

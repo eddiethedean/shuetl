@@ -7,15 +7,15 @@ from importlib.metadata import PackageNotFoundError, distributions, version
 from .errors import CapabilityError, CompatibilityError
 
 CORE_REQUIREMENTS = {
-    "shuetl": "0.4.0",
-    "etlantic": "0.52.1",
-    "etlantic-fastapi": "0.52.1",
+    "shuetl": "0.5.0",
+    "etlantic": "0.55.0",
+    "etlantic-fastapi": "0.55.0",
     "fastapi": "0.141.1",
     "pydantic": "2.13.5",
     "pydantic-settings": "2.15.0",
 }
 SQLITE_REQUIREMENTS = {
-    "etlantic-sqlmodel": "0.52.1",
+    "etlantic-sqlmodel": "0.55.0",
     "sqlalchemy": "2.0.52",
 }
 POSTGRESQL_REQUIREMENTS = {
@@ -64,9 +64,9 @@ def validate_core() -> dict[str, str | None]:
         if (
             name.startswith("etlantic-")
             and installed is not None
-            and installed.split(".")[:2] != ["0", "52"]
+            and installed.split(".")[:2] != ["0", "55"]
         ):
-            mismatches.append(f"{name}={installed} (requires the ETLantic 0.52 train)")
+            mismatches.append(f"{name}={installed} (requires the ETLantic 0.55 train)")
     if mismatches:
         raise CompatibilityError(
             "incompatible ShuETL runtime packages: " + "; ".join(sorted(mismatches))
@@ -86,7 +86,7 @@ def validate_sqlite() -> dict[str, str | None]:
     if missing:
         raise CapabilityError(
             "SQLite capability is unavailable; install "
-            '`pip install "shuetl[sqlite]==0.4.0"`: ' + ", ".join(missing)
+            '`pip install "shuetl[sqlite]==0.5.0"`: ' + ", ".join(missing)
         )
     return versions
 
@@ -103,6 +103,6 @@ def validate_postgresql() -> dict[str, str | None]:
     if missing:
         raise CapabilityError(
             "PostgreSQL capability is unavailable; install "
-            '`pip install "shuetl[postgresql]==0.4.0"`: ' + ", ".join(missing)
+            '`pip install "shuetl[postgresql]==0.5.0"`: ' + ", ".join(missing)
         )
     return versions

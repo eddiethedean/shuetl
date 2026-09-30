@@ -75,6 +75,15 @@ the Phase 0.3 contract in
 [`docs/plans/PHASE_0_3_EXECUTION.md`](docs/plans/PHASE_0_3_EXECUTION.md).
 The Phase 0.4 PostgreSQL contract is in
 [`docs/plans/PHASE_0_4_EXECUTION.md`](docs/plans/PHASE_0_4_EXECUTION.md).
+The current Phase 0.5 secure host integration contract is in
+[`docs/plans/PHASE_0_5_EXECUTION.md`](docs/plans/PHASE_0_5_EXECUTION.md), with
+host authentication guidance in [`docs/IDENTITY.md`](docs/IDENTITY.md).
+
+The working tree targets ShuETL 0.5.0 and ETLantic 0.55.0. ETLantic 0.55.0 is
+published; ShuETL 0.5.0 is not yet published. The current source adds a guarded
+`HostIdentityAdapter`, explicit local-only `development-static` identity,
+production composition checks, and security qualification for upstream routes.
+The 0.4.0 install commands below continue to install the published release.
 
 ## Install
 
@@ -161,14 +170,16 @@ The supported settings are:
 | `SHUETL_PROFILE` | `local` or `postgresql-pilot` | required |
 | `SHUETL_ROLE` | Runtime role; currently `gateway` | required |
 | `SHUETL_PROVIDER` | `memory`, `sqlite`, or `postgresql` | required |
-| `SHUETL_IDENTITY` | Host-supplied identity mode; currently `host` | required |
+| `SHUETL_IDENTITY` | `host` or local-only `development-static` | required |
 | `SHUETL_API_PREFIX` | Mount prefix | `/etl` |
 | `SHUETL_ROUTE_PRESET` | Route set; currently `complete` | `complete` |
 | `SHUETL_DATABASE_URL` | Existing SQLite file or `postgresql+psycopg` URL | none |
 | `SHUETL_PROVIDER_CONNECT_TIMEOUT_SECONDS` | Provider connection timeout | `2.0` |
 | `SHUETL_POSTGRESQL_SSLMODE` | `verify-full`, `verify-ca`, `require`, or explicit CI-only `disable` | `verify-full` |
 
-The four required values fail closed when omitted. Constructor arguments take
+The four required values fail closed when omitted. `development-static` must be
+explicitly configured and is accepted only with the local profile and a matching
+`HostIdentityAdapter.development_static(...)`. Constructor arguments take
 precedence over environment variables. Names are case-sensitive and only the
 listed `SHUETL_*` environment variables are read; dotenv files, secret files,
 and structured configuration sources are not consulted. Database URLs are
@@ -229,7 +240,14 @@ credentials, TLS keys, or external side effects.
 
 The memory and SQLite profiles remain development-only. The PostgreSQL profile
 is a controlled single-tenant pilot; it is not a multi-tenant, high-availability,
-or exactly-once external-effect claim.
+or exactly-once external-effect claim. Production-profile bundles and prebuilt
+production APIs require a matching `HostIdentityAdapter` and a conforming
+ETLantic authorizer before ShuETL constructs or mounts the API. The host still
+owns credential verification, membership, and lifecycle; see
+[`docs/IDENTITY.md`](docs/IDENTITY.md) and the
+[OIDC](examples/phase_0_5_oidc_host.py),
+[session](examples/phase_0_5_session_host.py), and
+[local static identity](examples/phase_0_5_development_static.py) recipes.
 
 ```bash
 shuetl doctor
@@ -251,20 +269,14 @@ uv run python scripts/capture_openapi.py
 uv run python scripts/check_release.py
 ```
 
-## Planned ShuETL capabilities
+## Beyond Phase 0.5
 
-- mount a curated ETLantic API into an existing FastAPI application;
-- create a complete FastAPI application from explicit ETLantic providers;
-- validate provider compatibility and production readiness at startup;
-- configure ETLantic definition, submission, event, schedule, and persistence
-  providers without exposing their implementation details to application code;
-- offer safe local-development defaults;
-- document and test separate gateway, scheduler, and worker roles for production;
-- integrate host authentication/authorization with ETLantic's control-plane
-  context and authorizer contracts;
-- publish a tested compatibility matrix across FastAPI and ETLantic packages;
-- provide optional Hedron and AuthMate composition adapters when those packages
-  are available.
+The current source includes the FastAPI facade, local and PostgreSQL provider
+bundles, compatibility/doctor checks, and host identity composition. Later
+phases may qualify separate gateway, scheduler, and worker roles, expand
+operability and recovery, and add optional Hedron or AuthMate composition when
+their public contracts and support boundaries are ready. These are not part of
+the Phase 0.5 production claim.
 
 ## Deployment goal
 

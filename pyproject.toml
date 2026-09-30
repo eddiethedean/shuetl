@@ -1,6 +1,6 @@
 [project]
 name = "shuetl"
-version = "0.4.0"
+version = "0.5.0"
 description = "Typed FastAPI composition facade for ETLantic."
 readme = "README.md"
 license = "MIT"
@@ -17,8 +17,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "etlantic==0.52.1",
-    "etlantic-fastapi==0.52.1",
+    "etlantic==0.55.0",
+    "etlantic-fastapi==0.55.0",
     "fastapi==0.141.1",
     "pydantic==2.13.5",
     "pydantic-settings==2.15.0",
@@ -35,11 +35,11 @@ test = [
     "httpx2==2.12.0",
 ]
 sqlite = [
-    "etlantic-sqlmodel==0.52.1",
+    "etlantic-sqlmodel==0.55.0",
     "sqlalchemy==2.0.52",
 ]
 postgresql = [
-    "etlantic-sqlmodel==0.52.1",
+    "etlantic-sqlmodel==0.55.0",
     "sqlalchemy==2.0.52",
     "psycopg[binary]==3.3.5",
 ]
@@ -80,6 +80,7 @@ exclude = [
     "/docs/evidence/0.2/README.md",
     "/docs/evidence/0.3/README.md",
     "/docs/evidence/0.4/README.md",
+    "/docs/evidence/0.5/README.md",
 ]
 
 [tool.pytest.ini_options]

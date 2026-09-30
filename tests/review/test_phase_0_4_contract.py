@@ -8,15 +8,36 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from etlantic.control_plane import Principal
 from etlantic.control_plane.memory import MemoryAuthorizer
-from etlantic_fastapi.auth import principal_from_header, static_context_factory
+from etlantic_fastapi.auth import static_context_factory
+from fastapi import Request
 
-from shuetl import PostgreSQLProviderBundle, ShuETLSettings, diagnostics, providers
+from shuetl import (
+    HostIdentityAdapter,
+    PostgreSQLProviderBundle,
+    ShuETLSettings,
+    diagnostics,
+    providers,
+)
 from shuetl.compatibility import CORE_REQUIREMENTS, POSTGRESQL_REQUIREMENTS
 from shuetl.diagnostics import DoctorReport
 from shuetl.postgresql import POSTGRESQL_HEAD, PostgreSQLSchemaStatus
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _review_principal(_request: Request) -> Principal:
+    return Principal(subject="review", issuer="https://review.example")
+
+
+def _review_identity() -> HostIdentityAdapter:
+    return HostIdentityAdapter.create(
+        principal_dependency=_review_principal,
+        context_factory=static_context_factory(
+            tenant_id="review", workspace_id="review"
+        ),
+    )
 
 
 def _settings() -> ShuETLSettings:
@@ -30,22 +51,24 @@ def _settings() -> ShuETLSettings:
     )
 
 
-def test_sol_010_phase_0_4_evidence_matches_current_ac_meanings() -> None:
+def test_phase_0_5_evidence_matches_current_ac_meanings() -> None:
     """A recycled PASS ledger is not proof of the current acceptance contract."""
-    index = (ROOT / "docs/evidence/0.4/README.md").read_text()
+    index = (ROOT / "docs/evidence/0.5/README.md").read_text()
     rows = re.findall(r"^\| (AC-\d{3}) \| (.+)$", index, re.MULTILINE)
-    assert len(rows) == 38
-    assert len(dict(rows)) == 38
-    # Distinct release-critical invariants, not equivalent input permutations.
+    assert len(rows) == 34
+    assert len(dict(rows)) == 34
+    # Distinct identity, route, upstream, and release proof obligations.
     required_proof_topics = {
-        "AC-002": ("server", "18.6"),
-        "AC-016": ("upgrade", "earlier"),
-        "AC-018": ("revision", "restart"),
-        "AC-021": ("concurrent", "submission"),
-        "AC-023": ("concurrent", "event"),
-        "AC-025": ("firing", "durable"),
-        "AC-029": ("backup", "restore"),
-        "AC-036": ("evidence",),
+        "AC-001": ("metadata", "lock"),
+        "AC-016": ("mutation", "route"),
+        "AC-020": ("concurrent", "principal"),
+        "AC-021": ("sse", "cursor"),
+        "AC-024": ("trigger", "identity"),
+        "AC-028": ("host", "recipe"),
+        "AC-031": ("release", "matrix"),
+        "AC-032": ("evidence", "proof"),
+        "AC-033": ("list", "denial"),
+        "AC-034": ("validation", "redaction"),
     }
     proofs = {
         criterion: " ".join(cells.split("|")[:3]).lower() for criterion, cells in rows
@@ -72,10 +95,7 @@ def test_sol_011_bundle_definitions_are_the_api_definitions(monkeypatch) -> None
     bundle = PostgreSQLProviderBundle.create(
         _settings(),
         authorizer=MemoryAuthorizer(),
-        context_factory=static_context_factory(
-            tenant_id="review", workspace_id="review"
-        ),
-        principal_dependency=principal_from_header,
+        identity_adapter=_review_identity(),
     )
     try:
         assert bundle.api.definitions is bundle.definitions
@@ -147,9 +167,6 @@ def test_sol_014_cancelled_construction_disposes_engine_once(monkeypatch) -> Non
         PostgreSQLProviderBundle.create(
             _settings(),
             authorizer=MemoryAuthorizer(),
-            context_factory=static_context_factory(
-                tenant_id="review", workspace_id="review"
-            ),
-            principal_dependency=principal_from_header,
+            identity_adapter=_review_identity(),
         )
     engine.dispose.assert_called_once_with()

@@ -131,12 +131,19 @@ These decisions must close before work intended to survive into 0.2 is merged:
 2. provider-owned migration invocation outside startup —
    [ADR-0010](../adr/0010-postgresql-pilot-and-migration-boundary.md).
 
-Phase 0.4 is unblocked against the published 0.52.0 provider train. The
+Phase 0.4 is released against the published 0.52.1 provider train. The
 qualification evidence and exact migration head are recorded in
 [PHASE_0_4_EXECUTION.md](PHASE_0_4_EXECUTION.md); a future train change requires
 requalification.
 
-### Deferred until first use
+### Resolved for Phase 0.5
+
+Phase 0.5 identity composition and production guard decisions are recorded in
+[ADR-0011](../adr/0011-host-identity-composition-and-production-guards.md).
+The implementation and published ETLantic 0.55.0 artifact qualification are
+recorded in [PHASE_0_5_EXECUTION.md](PHASE_0_5_EXECUTION.md) and
+[`docs/evidence/0.5/`](../evidence/0.5/). Hosted CI for the reviewed commit
+remains a pre-publication check.
 
 These are required by the named later release, not by the 0.1 boundary proof:
 

@@ -86,6 +86,6 @@ def test_doctor_json_is_stable_and_redacted() -> None:
 
 def test_cli_version_and_json(capsys) -> None:
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.strip() == "shuetl 0.4.0"
+    assert capsys.readouterr().out.strip() == "shuetl 0.5.0"
     assert main(["doctor", "--format", "json"]) == 1
     assert json.loads(capsys.readouterr().out)["schema"] == "shuetl.doctor/1"

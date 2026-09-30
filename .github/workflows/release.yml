@@ -19,17 +19,17 @@ jobs:
 
   build:
     name: Build distributions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: checks
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10
         with:
           version: "0.11.3"
           python-version: "3.11"
-          enable-cache: true
+          enable-cache: false
 
       - name: Verify tag matches package version
         env:
@@ -42,14 +42,14 @@ jobs:
         run: uv build
 
       - name: Upload distributions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: shuetl-release-${{ github.ref_name }}
           path: dist/*
 
   publish:
     name: Publish to PyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     permissions:
       id-token: write
@@ -58,10 +58,10 @@ jobs:
       url: https://pypi.org/p/shuetl
     steps:
       - name: Download distributions
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: shuetl-release-${{ github.ref_name }}
           path: dist
 
       - name: Publish distributions with Trusted Publishing
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.14.2

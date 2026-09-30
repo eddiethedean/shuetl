@@ -264,7 +264,7 @@ Task: 0.4 compatibility regressions
 Command: `uv run pytest -q`
 Requirement: Existing local raw-callback, PostgreSQL persistence/restart/migration/idempotency/concurrency, CLI, mount/lifecycle/handler and OpenAPI contract assertions pass, except the explicitly documented production-security and corrected upstream list/422 changes.
 Provenance: `contracts.md#acceptance-criteria`
-Limitation: Local Python matrix and PostgreSQL 18.6; GitHub-hosted checks remain a pre-publication gate.
+Limitation: Local Python matrix and PostgreSQL 18.6; all hosted quality jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845).
 Result: PASS
 
 ## AC-030
@@ -282,7 +282,7 @@ Task: local release gate matrix
 Command: `uv run python scripts/check_release.py`
 Requirement: Ruff, Pyright, lock, boundary, unit/security/integration, build, artifact, OpenAPI and release/evidence gates pass; real PostgreSQL and 0.5 security tests execute on Python 3.11/3.12/3.13 in CI without required-test skips.
 Provenance: `contracts.md#acceptance-criteria`
-Limitation: Release gates execute locally; GitHub Actions for this unpushed working tree were not run.
+Limitation: Local release gate and all hosted quality, PostgreSQL, and release-gate jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845).
 Result: PASS
 
 ## AC-032

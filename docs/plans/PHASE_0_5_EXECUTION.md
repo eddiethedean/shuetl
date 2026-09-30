@@ -6,12 +6,13 @@
 - Baseline release: `v0.4.0`, release commit
   `69f140f6f7343cc6e2bdbb97c34dba3d4eb324e0`.
 - Baseline checkout: `ebe42ad6bfb47a9632941deff62a758dec050232`; implementation
-  and documentation are in the current working tree.
+  and documentation are committed on `main`.
 - Implementation date: 2026-09-29.
-- Status: **IMPLEMENTATION COMPLETE IN THE WORKING TREE; UNPUBLISHED**. Published
-  upstream prerequisites, local supported-Python matrix, live PostgreSQL suite,
-  and release artifact gates are qualified. GitHub-hosted checks for the
-  unpushed edits remain a pre-publication gate.
+- Status: **IMPLEMENTATION COMPLETE; UNPUBLISHED**. Published upstream
+  prerequisites, local supported-Python matrix, live PostgreSQL suite, release
+  artifact gates, and hosted CI are qualified. Hosted run
+  [36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845)
+  passed on Python 3.11–3.13.
 
 This contract implements the [0.5 roadmap boundary](ROADMAP.md#05--secure-host-integration).
 It replaces speculative identity examples in the general design pack for this
@@ -858,6 +859,6 @@ do not demand unrelated repairs. The repository need not be globally defect-free
 
 The 0.55.0 upstream artifacts satisfy both previously blocking prerequisites.
 The 34 criteria have local executable evidence, including a three-version
-Python matrix and real PostgreSQL 18.6 integration. Hosted CI for the reviewed
-commit is still required before publishing. Do not publish or tag ShuETL from
-this implementation task; publication is a separate release action.
+Python matrix and real PostgreSQL 18.6 integration. Hosted CI passed for the
+reviewed commit. Do not publish or tag ShuETL from this implementation task;
+publication is a separate release action.

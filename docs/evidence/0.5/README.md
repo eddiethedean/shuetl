@@ -2,12 +2,12 @@
 
 This ledger qualifies the current ShuETL 0.5.0 implementation against the published ETLantic 0.55.0 train. ETLantic 0.55.0 is published; ShuETL 0.5.0 remains unreleased. No ShuETL publication or tag is claimed. See [the approved contract](contracts.md), [ownership](ownership.md), [per-criterion qualification](qualification.md), [workflow limits](ci.md), and [the exact upstream artifacts](upstream-artifact-qualification.md).
 
-## Working-tree qualification
+## Implementation qualification
 
 | Field | Value |
 | --- | --- |
 | OS and architecture | macOS 26.5.2 arm64 local |
-| Python version | 3.11.15, 3.12.13, and 3.13.11 local; hosted CI not run for these edits |
+| Python version | 3.11.15, 3.12.13, and 3.13.11 local; hosted CI passed on 3.11, 3.12, and 3.13 |
 | uv version | 0.11.3 |
 | ETLantic source revision | etlantic, etlantic-fastapi and etlantic-sqlmodel 0.55.0 release wheels |
 | ShuETL import origin | installed project or isolated built wheel; see clean-wheel gate |
@@ -16,16 +16,16 @@ This ledger qualifies the current ShuETL 0.5.0 implementation against the publis
 | FastAPI import origin | installed exact dependency; see clean-wheel gate |
 | Pydantic import origin | installed exact dependency; see clean-wheel gate |
 | HTTPX import origin | installed httpx2 2.12.0 test extra; see clean-wheel gate |
-| PostgreSQL server | 18.6 local disposable service; hosted matrix not run for these edits |
+| PostgreSQL server | 18.6 local disposable service and hosted PostgreSQL matrix |
 | Gate A | local source / Python matrix | PASS |
 | Gate B | live PostgreSQL 18.6 integration | PASS |
 | Gate C | local build, artifact, wheel and evidence gate | PASS |
 | SHA-256 wheel | `cfa560e22d9ab6b4d956408a7062e9cc04752798e5c8b17c394877a292ad84b6` |
-| SHA-256 sdist | `ba463c964f199deb40e970ca9839922651ddae181c1976181b12ad5cd07d0c31` |
+| SHA-256 sdist | `6e1afd3e8bee74d93d85abed01ef9f8bd8bcd1af81f3ce6c06731118f499b7f9` |
 
 ## Acceptance results
 
-The proof registry binds the exact approved requirement, executable command, qualification section, provenance, and limitation. Commands and outcomes are not carried forward from 0.4. `PASS` records local implementation evidence; it does not substitute for the hosted CI run required before publishing.
+The proof registry binds the exact approved requirement, executable command, qualification section, provenance, and limitation. Commands and outcomes are not carried forward from 0.4. Local qualification and hosted CI both pass; the hosted matrix is recorded in [ci.md](ci.md).
 
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -57,9 +57,9 @@ The proof registry binds the exact approved requirement, executable command, qua
 | AC-026 | validation and credential redaction | `uv run pytest tests/integration/test_identity_dependencies.py::test_upstream_validation_errors_are_redacted_without_changing_host_routes -q` | `qualification.md#ac-026` | PASS | Local Python 3.12.13, macOS arm64; see ci.md for execution scope. | implementation run | 2026-09-29 |
 | AC-027 | doctor identity facts | `uv run pytest tests/unit/test_identity_bundles.py::test_doctor_reports_configured_and_inspected_identity_without_authenticating -q` | `qualification.md#ac-027` | PASS | Local Python 3.12.13, macOS arm64; see ci.md for execution scope. | implementation run | 2026-09-29 |
 | AC-028 | host OIDC and session recipes | `uv run python scripts/check_clean_wheel.py` | `qualification.md#ac-028` | PASS | Local Python 3.12.13, macOS arm64; see ci.md for execution scope. | implementation run | 2026-09-29 |
-| AC-029 | 0.4 compatibility regressions | `uv run pytest -q` | `qualification.md#ac-029` | PASS | Local Python matrix and PostgreSQL 18.6; GitHub-hosted checks remain a pre-publication gate. | implementation run | 2026-09-29 |
+| AC-029 | 0.4 compatibility regressions | `uv run pytest -q` | `qualification.md#ac-029` | PASS | Local Python matrix and PostgreSQL 18.6; all hosted quality jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845). | implementation run | 2026-09-29 |
 | AC-030 | clean wheel imports | `uv run python scripts/check_clean_wheel.py` | `qualification.md#ac-030` | PASS | Clean wheel environments use the local Python 3.12.13 interpreter. | implementation run | 2026-09-29 |
-| AC-031 | local release gate matrix | `uv run python scripts/check_release.py` | `qualification.md#ac-031` | PASS | Release gates execute locally; GitHub Actions for this unpushed working tree were not run. | implementation run | 2026-09-29 |
+| AC-031 | local release gate matrix | `uv run python scripts/check_release.py` | `qualification.md#ac-031` | PASS | Local release gate and all hosted quality, PostgreSQL, and release-gate jobs passed on Python 3.11–3.13 in [CI run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845). | implementation run | 2026-09-29 |
 | AC-032 | evidence proof integrity | `uv run pytest tests/unit/test_evidence_proofs.py tests/review/test_phase_0_4_evidence_contract.py tests/review/test_phase_0_4_evidence_semantics.py -q` | `qualification.md#ac-032` | PASS | Local Python 3.12.13, macOS arm64; see ci.md for execution scope. | implementation run | 2026-09-29 |
 | AC-033 | ETLantic 0.55 list-denial correction | `uv run pytest tests/security/test_scope_and_outages.py::test_collection_and_item_denials_do_not_disclose_cross_scope_data tests/security/test_scope_and_outages.py::test_limited_lists_expand_until_visible_items_fill_existing_limit -q` | `qualification.md#ac-033` | PASS | Published 0.55.0 installed artifacts; no ETLantic source is copied into ShuETL. | implementation run | 2026-09-29 |
 | AC-034 | ETLantic 0.55 validation redaction | `uv run pytest tests/integration/test_identity_dependencies.py::test_upstream_validation_errors_are_redacted_without_changing_host_routes -q` | `qualification.md#ac-034` | PASS | Published 0.55.0 installed artifacts; unrelated host routes keep ordinary FastAPI errors. | implementation run | 2026-09-29 |
@@ -68,4 +68,4 @@ The proof registry binds the exact approved requirement, executable command, qua
 
 The integration burden remains in ShuETL's composition layer, public composition hooks remain injected, and no copied route or pipeline model is introduced. ShuETL remains materially easier to maintain than a parallel control-plane implementation; no behavior is contributed to `etlantic-fastapi`.
 
-Boundary outcome: **proceed-to-0.5** for source implementation and local qualification. GitHub-hosted CI for the current edits remains a required pre-publication check because the worktree has not been submitted to CI. The exact 0.55.0 upstream artifacts satisfy PB-001 and PB-002; their issue tracker entries remain open. No ShuETL tag or PyPI release was created.
+Boundary outcome: **proceed-to-0.5** for source implementation and local and hosted qualification. GitHub-hosted CI passed in [run 36654619845](https://github.com/eddiethedean/shuetl/actions/runs/36654619845). The exact 0.55.0 upstream artifacts satisfy PB-001 and PB-002; their issue tracker entries remain open. No ShuETL tag or PyPI release was created.

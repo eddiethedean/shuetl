@@ -78,6 +78,7 @@ merged into or replaced by `etlantic-fastapi` rather than duplicate it.
 - [PHASE_0_3_EXECUTION.md](PHASE_0_3_EXECUTION.md) — authoritative 0.3 settings, local-provider, diagnostics, and implementation contract
 - [PHASE_0_4_EXECUTION.md](PHASE_0_4_EXECUTION.md) — authoritative 0.4 PostgreSQL pilot contract, acceptance criteria, qualification evidence, and implementation sequence
 - [PHASE_0_5_EXECUTION.md](PHASE_0_5_EXECUTION.md) — 0.5 secure host identity contract, 34 acceptance criteria, verification matrix, and qualification against published ETLantic 0.55.0
+- [PHASE_0_6_EXECUTION.md](PHASE_0_6_EXECUTION.md) — role-separated PostgreSQL preview plan, upstream runtime prerequisite, process contract, failure matrix, and release gate
 - [../IDENTITY.md](../IDENTITY.md) — host-owned authentication, membership, OIDC, session, and local static identity guidance
 - [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) — decisions and blocking ADRs
 

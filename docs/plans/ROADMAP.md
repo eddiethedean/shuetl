@@ -325,10 +325,9 @@ relational providers and migrations.
 
 ## 0.5 — Secure Host Integration
 
-> Planning status: **implementation complete in the working tree; unpublished**.
-> Published ETLantic 0.55.0 artifacts qualify the two previously blocking
-> list-denial and redacted-422 prerequisites. Hosted CI for the reviewed commit
-> remains a pre-publication check. The implementation contract and evidence ledger are in
+> Release status: **0.5.0 published** from `v0.5.0` on 2026-09-30 UTC.
+> Published ETLantic 0.55.0 artifacts satisfy the list-denial and redacted-422
+> prerequisites. The implementation contract and release evidence are in
 > [PHASE_0_5_EXECUTION.md](PHASE_0_5_EXECUTION.md).
 
 ### Outcome
@@ -384,6 +383,12 @@ Qualify authenticated, authorized single-tenant FastAPI deployments.
 ---
 
 ## 0.6 — Role-Separated Production Preview
+
+The [Phase 0.6 execution contract](PHASE_0_6_EXECUTION.md) defines the exact
+reference topology, upstream prerequisite, process boundary, acceptance
+criteria, fault matrix, and release gate. The installed ETLantic 0.55.0 CLI
+uses file-backed scheduler and worker stores, and its worker default runner
+does no pipeline work. Those paths do not qualify the PostgreSQL preview.
 
 ### Outcome
 

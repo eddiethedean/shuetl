@@ -142,10 +142,27 @@ Phase 0.5 identity composition and production guard decisions are recorded in
 [ADR-0011](../adr/0011-host-identity-composition-and-production-guards.md).
 The implementation and published ETLantic 0.55.0 artifact qualification are
 recorded in [PHASE_0_5_EXECUTION.md](PHASE_0_5_EXECUTION.md) and
-[`docs/evidence/0.5/`](../evidence/0.5/). Hosted CI for the reviewed commit
-remains a pre-publication check.
+[`docs/evidence/0.5/`](../evidence/0.5/). The final source commit passed hosted
+CI, and the tag-triggered release workflow published ShuETL 0.5.0.
 
-These are required by the named later release, not by the 0.1 boundary proof:
+### Required before Phase 0.6 implementation
+
+The [Phase 0.6 execution contract](PHASE_0_6_EXECUTION.md) records the
+installed 0.55.0 runtime gap and the acceptance boundary. Resolve an ADR for:
+
+1. the published upstream PostgreSQL role service or the strictly generic
+   ShuETL process supervisor that invokes public ETLantic services;
+2. a trusted host factory, scoped scheduler/worker service identity and context,
+   and real worker runner with no no-op fallback;
+3. role-local readiness transport and drain behavior.
+
+The exact upstream package train and these choices must be qualified before
+`shuetl serve --role gateway|scheduler|worker` can make a production-preview
+claim. The existing `complete` route preset remains the baseline; add a
+different production preset only if route inventory demonstrates a need and
+an ADR preserves upstream route ownership.
+
+These decisions belong to the named later release, not the 0.1 boundary proof:
 
 1. gateway, scheduler, and worker CLI/process entry points — 0.6;
 2. production route-selection presets, if distinct from the upstream surface —

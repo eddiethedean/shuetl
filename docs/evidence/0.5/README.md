@@ -32,7 +32,7 @@ digests identify the immutable release distributions:
 | Gate C | local build, artifact, wheel and evidence gate | PASS |
 | Build hash scope | deterministic builds of this documentation-updated checkout; published PyPI digests are listed above |
 | SHA-256 wheel | `e928dccd879a11411c12aa05eeb2480f9946ce3cb8b10672afbc4d0da2cd623a` |
-| SHA-256 sdist | `f1bd97e75d1940678d5050cc9b0de0fa2ea83f1fab7f5d19710e3ee17c4da786` |
+| SHA-256 sdist | `e33d7b77acd745cec54a5dd3a8015c052c41f15a1a4dfa0b85c3eea0db82e930` |
 
 ## Acceptance results
 

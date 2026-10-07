@@ -520,7 +520,6 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
     profile = Profile(
         name=f"phase06-{suffix}",
         security_mode="production",
-        sql_engine="sql",
         plugin_allowlist={
             "etlantic-sql": ">=0.50.0,<0.57.0",
             "etlantic-local": "==0.50.0",
@@ -732,43 +731,6 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         )
         assert manual_receipt is not None and manual_receipt.run_id is not None
         assert worker.service is not None and worker.context is not None
-        worker_errors: list[str] = []
-        worker_outcomes: list[str] = []
-        original_runner = worker.service.runner
-
-        def observe_runner(ctx: Any, **kwargs: Any) -> Any:
-            try:
-                outcome = original_runner(ctx, **kwargs)
-                status = getattr(outcome, "status", None)
-                diagnostics = getattr(outcome, "diagnostics", ())
-                diagnostic_details = [
-                    (
-                        f"{getattr(item, 'code', 'unknown')}: "
-                        f"{getattr(item, 'message', '')}".replace(
-                            runtime_database_url, "[redacted]"
-                        )
-                    )
-                    for item in diagnostics
-                ]
-                worker_outcomes.append(
-                    f"status={status}; diagnostics={diagnostic_details!r}"
-                )
-                return outcome
-            except Exception as exc:
-                message = str(exc).replace(runtime_database_url, "[redacted]")
-                causes: list[str] = []
-                cause = exc.__cause__
-                while cause is not None:
-                    cause_message = str(cause).replace(
-                        runtime_database_url, "[redacted]"
-                    )
-                    causes.append(f"{type(cause).__name__}: {cause_message}")
-                    cause = cause.__cause__
-                detail = f"; caused by {' <- '.join(causes)}" if causes else ""
-                worker_errors.append(f"{type(exc).__name__}: {message}{detail}")
-                raise
-
-        worker.service.runner = observe_runner
         assert worker.service.tick(worker.context, limit=1) == 1
         manual_publication = (
             gateway.backend.api.durable_work.get_latest_result_publication(
@@ -785,8 +747,7 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         assert manual_publication is not None, (
             "Worker did not publish a durable run result; "
             f"submission_status={submission_after_tick.status}; "
-            f"attempts={attempts_after_tick!r}; "
-            f"runner_errors={worker_errors!r}; outcomes={worker_outcomes!r}"
+            f"attempts={attempts_after_tick!r}"
         )
         manual_report = service.get_run_report(service_ctx, manual_receipt.run_id)
         assert manual_report["status"] == "succeeded", manual_report

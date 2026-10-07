@@ -11,8 +11,10 @@
 | Other providers and write modes | Not enabled by the reference deployment. | Unsupported until listed and qualified here. |
 
 The first role integration test provisions distinct PostgreSQL source, target,
-and effect-ledger tables. Its production profile selects the SQL engine and
-allows `etlantic-sql` with `>=0.50.0,<0.57.0` and `etlantic-local` with
+and effect-ledger tables. Its production profile uses ETLantic's local
+dataframe engine for the straight-through transfer; PostgreSQL source and sink
+access still use the `etlantic-sql` connectors. The profile allows
+`etlantic-sql` with `>=0.50.0,<0.57.0` and `etlantic-local` with
 `==0.50.0`. ETLantic SQL 0.56.0 exposes its SQL plugin at 0.56.0 and its SQL
 transform compiler at 0.50.0 under the same plugin identity; ETLantic core's
 `etlantic-local` compiler is also 0.50.0 and is not a separate distribution.

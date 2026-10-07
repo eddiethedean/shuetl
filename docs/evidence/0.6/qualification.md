@@ -443,21 +443,21 @@ Requirement: A representative real ETL fixture performs an observable, idempoten
 
 Command: uv run python scripts/check_clean_wheel.py
 
-Result: OPEN
+Result: PASS
 
-Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
+Observed result: Hosted run 37664305784 passed the installed-wheel PostgreSQL fixture on PostgreSQL 18.6 with Python 3.11, 3.12, and 3.13. Manual and scheduled runs succeeded, sink and effect rows were observed, and both gateway health endpoints returned 200 while the worker executed.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 625a7b3f38e35fef2124accdfd0eba3dc0d6c847.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: GitHub Actions Ubuntu 24.04, CPython 3.11–3.13, uv 0.11.3, PostgreSQL 18.6; isolated installed-wheel qualification fixture.
 
-Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: observable ETL sink effect.
+Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: tests/integration/test_postgresql.py::test_preview_runtime_executes_manual_and_scheduled_postgresql_work.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: The installed-wheel fixture is configured for PostgreSQL CI but has not run locally or in hosted CI for this revision.
+Limitation: Hosted qualification exercised two distinct gateway ASGI runtimes while a worker executed the PostgreSQL sink write. The gateways use in-process TestClient instances; separate OS-process contention remains unqualified.
 
 ## AC-021
 

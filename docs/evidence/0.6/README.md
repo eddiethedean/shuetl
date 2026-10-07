@@ -25,7 +25,7 @@ provider status, transition, and CI definition provide supporting context.
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
 | Gate C | Hosted artifact and installed-wheel qualification matrix, run 37661869120 | PASS |
 | SHA-256 wheel | `fc35a0be53c5f57f034f67062006b53d48907d4a5ad5cc3e692e56f67042e37a` |
-| SHA-256 sdist | `09a1827699f625a636c71c5d3e71d475b3ecdf5a78c584101d2bf10f3ccf00c9` |
+| SHA-256 sdist | `4191b6555bbd3574214cd7b912ef378f89a1d541bc16e3e81148f9032e8cb6fc` |
 
 ## Acceptance results
 
@@ -55,7 +55,7 @@ evidence, or a configured workflow alone.
 | AC-017 | stale fencing | NOT RUN (no process-level stale-worker fixture exists) | qualification.md#ac-017 | OPEN | No stale worker completion has been rejected after ownership or fencing-token change in this runtime. | implementation run | 2026-10-07 |
 | AC-018 | cancellation outcomes | NOT RUN (no live cancellation fixture exists) | qualification.md#ac-018 | OPEN | Accepted, leased, and running cancellation outcomes and uncertain effects have not been exercised. | implementation run | 2026-10-07 |
 | AC-019 | database outage recovery | NOT RUN (no runtime disconnect/reconnect fixture exists) | qualification.md#ac-019 | OPEN | Readiness recovery and upstream work resumption after database restoration have not been demonstrated. | implementation run | 2026-10-07 |
-| AC-020 | observable ETL sink effect | uv run python scripts/check_clean_wheel.py | qualification.md#ac-020 | OPEN | The installed-wheel fixture is configured for PostgreSQL CI but has not run locally or in hosted CI for this revision. | implementation run | 2026-10-07 |
+| AC-020 | observable ETL sink effect | uv run python scripts/check_clean_wheel.py | qualification.md#ac-020 | PASS | Hosted qualification exercised two distinct gateway ASGI runtimes while a worker executed the PostgreSQL sink write. The gateways use in-process TestClient instances; separate OS-process contention remains unqualified. | implementation run | 2026-10-07 |
 | AC-021 | credential and secret redaction | uv run python scripts/check_clean_wheel.py | qualification.md#ac-021 | OPEN | The CLI mismatch smoke checks URL redaction; durable payload, report, event, log, and worker-secret boundaries are not comprehensively tested. | implementation run | 2026-10-07 |
 | AC-022 | deployment recipes | NOT RUN (Compose and systemd services have not been rehearsed) | qualification.md#ac-022 | OPEN | Compose and systemd examples are present; digest identity, ordinary supervisor startup, and shutdown have not been rehearsed. | implementation run | 2026-10-07 |
 | AC-023 | hosted release matrix | GitHub Actions run 37661869120 | qualification.md#ac-023 | PASS | The PR run used `--allow-open`; it does not establish all acceptance criteria or authorize the preview release. | implementation run | 2026-10-07 |

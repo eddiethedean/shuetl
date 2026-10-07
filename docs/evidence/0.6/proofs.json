@@ -156,8 +156,8 @@
     "artifact": "qualification.md#ac-020",
     "requirement": "A representative real ETL fixture performs an observable, idempotency-keyed sink effect in a worker while both gateways remain responsive.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The installed-wheel fixture is configured for PostgreSQL CI but has not run locally or in hosted CI for this revision.",
-    "status": "OPEN"
+    "limitation": "Hosted qualification exercised two distinct gateway ASGI runtimes while a worker executed the PostgreSQL sink write. The gateways use in-process TestClient instances; separate OS-process contention remains unqualified.",
+    "status": "PASS"
   },
   "AC-021": {
     "command": "uv run python scripts/check_clean_wheel.py",

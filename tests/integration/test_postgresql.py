@@ -756,8 +756,9 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                 )
                 responsive_during_execution = False
                 while not execution.done():
-                    assert client.get("/health").status_code == 200
-                    assert second_client.get("/health").status_code == 200
+                    health_path = f"{settings.api_prefix.rstrip('/')}/health"
+                    assert client.get(health_path).status_code == 200
+                    assert second_client.get(health_path).status_code == 200
                     responsive_during_execution = True
                     sleep(0.01)
                 assert execution.result() == 1

@@ -60,7 +60,7 @@
     "artifact": "qualification.md#ac-008",
     "requirement": "Every role performs read-only compatibility/connectivity/schema preflight and health inspection. Backend construction under a runtime role without schema-creation privileges may issue only the documented upstream version-table `CREATE TABLE IF NOT EXISTS`, with no schema change; missing/incorrect schema fails before construction. Migration is possible only through the explicit operator command.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "CI provisions a runtime role without schema CREATE and the installed-wheel fixture checks schema snapshots, but no PostgreSQL 18.6 result is recorded yet.",
+    "limitation": "The fixture now grants schema CREATE to exercise the rest of the managed runtime and verifies no schema changes occur during construction. This does not meet the approved no-schema-CREATE boundary; AC-008 remains open until ETLantic provides a read-only version check or the grant contract is explicitly revised.",
     "status": "OPEN"
   },
   "AC-009": {

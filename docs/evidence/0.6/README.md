@@ -10,7 +10,7 @@ provider status, transition, and CI definition provide supporting context.
 
 | Field | Value |
 | --- | --- |
-| Source commit | d5c9b52bf3593a31960d613841e0dd874317a9b8 (implementation source; this evidence update follows it) |
+| Source commit | e0f59996d6a88b41f9bc4c95ede8dd2e9c8eed8c (implementation source; this evidence update follows it) |
 | OS and architecture | macOS 26.6.2 arm64 local |
 | Python version | CPython 3.13.9 local; Python 3.11–3.13 matrix configured but not run for this revision |
 | uv version | 0.11.3 |
@@ -25,7 +25,7 @@ provider status, transition, and CI definition provide supporting context.
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
 | Gate C | Local wheel, artifact, isolated dependency/import checks | PASS |
 | SHA-256 wheel | `3ad027fd1d2a9be46b6626c77f0fe8fe1936b8c0f273436de381d78dd46f6d97` |
-| SHA-256 sdist | `f24e7817acd3d2fd161314b9b839299196863a336fe001097a4eee6cd8e183b8` |
+| SHA-256 sdist | `24e63c16216c9f62dadd680621b15fd21ce26732a119a663bfe862da2468926e` |
 
 ## Acceptance results
 
@@ -43,7 +43,7 @@ evidence, or a configured workflow alone.
 | AC-005 | gateway execution boundary | uv run pytest tests/unit/test_phase_0_6_runtime.py -k gateway -q && uv run python -c 'import sys; import etlantic_fastapi; print([n for n in sys.modules if n.startswith("etlantic.runtime.") and ("execution_host" in n or n.endswith(".execute"))])' | qualification.md#ac-005 | OPEN | The public etlantic_fastapi import itself loads etlantic.runtime.execute and etlantic.runtime.action_execution_host. ShuETL request gating is unit-tested, but the gateway cannot satisfy runner-import isolation until ETLantic provides an import boundary or equivalent upstream fix. | implementation run | 2026-10-07 |
 | AC-006 | runtime identity and ownership | uv run pytest tests/unit/test_phase_0_6_runtime.py -k context -q | qualification.md#ac-006 | OPEN | Typed scope checks are present; process startup and credential-verifier import isolation have not been exercised. | implementation run | 2026-10-07 |
 | AC-007 | shared store and scheduler recovery | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_role_builder_uses_shared_headless_backend_and_bound_scheduler_callback -q | qualification.md#ac-007 | OPEN | The bound callback is unit-checked; crash and retry behavior across firing, acceptance, and linking commits has not been tested. | implementation run | 2026-10-07 |
-| AC-008 | restricted database startup | uv run python scripts/check_clean_wheel.py | qualification.md#ac-008 | OPEN | CI provisions a runtime role without schema CREATE and the installed-wheel fixture checks schema snapshots, but no PostgreSQL 18.6 result is recorded yet. | implementation run | 2026-10-07 |
+| AC-008 | restricted database startup | uv run python scripts/check_clean_wheel.py | qualification.md#ac-008 | OPEN | The fixture now grants schema CREATE to exercise the rest of the managed runtime and verifies no schema changes occur during construction. This does not meet the approved no-schema-CREATE boundary; AC-008 remains open until ETLantic provides a read-only version check or the grant contract is explicitly revised. | implementation run | 2026-10-07 |
 | AC-009 | readiness and liveness | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_probe_lifecycle_reports_outage_drain_and_stale_state_without_secrets -q | qualification.md#ac-009 | OPEN | Probe state is unit-tested; real process startup, schema mismatch, and database outage transitions remain unqualified. | implementation run | 2026-10-07 |
 | AC-010 | signal drain and cleanup | NOT RUN (no signal-driven in-flight process fixture exists) | qualification.md#ac-010 | OPEN | SIGTERM/SIGINT during active acceptance, lease claim, effect, and grace expiry have no process-level evidence. | implementation run | 2026-10-07 |
 | AC-011 | concurrent gateway idempotency | NOT RUN (no separate-process gateway contention fixture exists) | qualification.md#ac-011 | OPEN | Concurrent gateway acceptance and canonical retry identity have not been exercised across OS processes. | implementation run | 2026-10-07 |

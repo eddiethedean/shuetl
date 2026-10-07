@@ -9,7 +9,7 @@ been established. AC-024 passes only as a ledger-integrity criterion.
 
 ## Environment and source
 
-- Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+- Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 - Upstream: published ETLantic, etlantic-fastapi, and
   etlantic-sqlmodel wheels at 0.56.0; optional SQL and Foundry packages
   are pinned to 0.56.0.
@@ -29,7 +29,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -51,7 +51,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -73,7 +73,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -95,7 +95,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -117,7 +117,7 @@ Result: OPEN
 
 Observed result: Gateway request gating is unit-tested. A fresh interpreter importing the public `etlantic_fastapi` package loads `etlantic.runtime.execute` and `etlantic.runtime.action_execution_host` into `sys.modules`, so the no-runner-import requirement is not met by ETLantic 0.56.0.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -139,7 +139,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -161,7 +161,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -183,7 +183,7 @@ Result: OPEN
 
 Observed result: The first PostgreSQL 18.6 CI attempt failed during ETLantic 0.56.0 backend construction with `permission denied for schema public` at `CREATE TABLE IF NOT EXISTS etlantic_sqlmodel_schema_version`, although the version table already existed. PostgreSQL requires schema `CREATE` for this statement.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -205,7 +205,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -227,7 +227,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -249,7 +249,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -271,7 +271,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -293,7 +293,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -315,7 +315,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -337,7 +337,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -359,7 +359,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -381,7 +381,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -403,7 +403,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -425,7 +425,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -447,7 +447,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -469,7 +469,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -491,7 +491,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -513,7 +513,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -535,7 +535,7 @@ Result: PASS
 
 Observed result: The evidence checker validates the record and references.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -557,7 +557,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -579,7 +579,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -601,7 +601,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -623,7 +623,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -645,7 +645,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -667,7 +667,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -689,7 +689,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -711,7 +711,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
@@ -733,7 +733,7 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 4cb234c8baea293c29ea52738a73d5875b85c9b1.
+Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
 
 Upstream: published ETLantic 0.56.0 wheels.
 

@@ -10,9 +10,9 @@ provider status, transition, and CI definition provide supporting context.
 
 | Field | Value |
 | --- | --- |
-| Source commit | a3018159e4243fd53a8f6ac3bde9a31e2adb91c8 (implementation source; hosted run 37661869120) |
+| Source commit | 3b27a55f28c9c4671a8eb7f057a81ac775d5420c (implementation source; hosted run 37668515171) |
 | OS and architecture | macOS 26.6.2 arm64 local |
-| Python version | CPython 3.13.9 local; hosted Python 3.11–3.13 matrix passed in run 37661869120 |
+| Python version | CPython 3.13.9 local; hosted Python 3.11–3.13 matrix passed in run 37668515171 |
 | uv version | 0.11.3 |
 | ETLantic source revision | Published etlantic, etlantic-fastapi, and etlantic-sqlmodel 0.56.0 wheels; optional SQL/Foundry pins are 0.56.0 |
 | ShuETL import origin | Editable local source at src/shuetl; isolated wheel uses site-packages |
@@ -21,9 +21,9 @@ provider status, transition, and CI definition provide supporting context.
 | FastAPI import origin | FastAPI 0.141.1 installed dependency; isolated wheel check uses site-packages |
 | Pydantic import origin | Pydantic 2.13.5 installed dependency; isolated wheel check uses site-packages |
 | HTTPX import origin | httpx2 2.12.0 test extra in isolated site-packages; clean-wheel output records its import origin |
-| Gate A | Hosted quality and regression matrix on Python 3.11–3.13, run 37661869120 | PASS |
+| Gate A | Hosted quality and regression matrix on Python 3.11–3.13, run 37668515171 | PASS |
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
-| Gate C | Hosted artifact and installed-wheel qualification matrix, run 37661869120 | PASS |
+| Gate C | Hosted artifact and installed-wheel qualification matrix, run 37668515171 | PASS |
 | SHA-256 wheel | `267d4d9e9c6c18a099ed9bb5f369af93ec2252e89f7de8278da8c18b1332cd85` |
 | SHA-256 sdist | `2df201f321dcd54be15ac735581561b6bbea266805d74ae1861990b4effe93b2` |
 
@@ -58,7 +58,7 @@ evidence, or a configured workflow alone.
 | AC-020 | observable ETL sink effect | uv run python scripts/check_clean_wheel.py | qualification.md#ac-020 | PASS | Hosted qualification exercised two distinct gateway ASGI runtimes while a worker executed the PostgreSQL sink write. The gateways use in-process TestClient instances; separate OS-process contention remains unqualified. | implementation run | 2026-10-07 |
 | AC-021 | credential and secret redaction | uv run python scripts/check_clean_wheel.py | qualification.md#ac-021 | OPEN | The CLI mismatch smoke checks URL redaction; durable payload, report, event, log, and worker-secret boundaries are not comprehensively tested. | implementation run | 2026-10-07 |
 | AC-022 | deployment recipes | NOT RUN (Compose and systemd services have not been rehearsed) | qualification.md#ac-022 | OPEN | Compose and systemd examples are present; digest identity, ordinary supervisor startup, and shutdown have not been rehearsed. | implementation run | 2026-10-07 |
-| AC-023 | hosted release matrix | GitHub Actions run 37661869120 | qualification.md#ac-023 | PASS | The PR run used `--allow-open`; it does not establish all acceptance criteria or authorize the preview release. | implementation run | 2026-10-07 |
+| AC-023 | hosted release matrix | GitHub Actions run 37668515171 | qualification.md#ac-023 | PASS | The PR run used `--allow-open`; it does not establish all acceptance criteria or authorize the preview release. | implementation run | 2026-10-07 |
 | AC-024 | criterion evidence ledger | uv run python scripts/check_evidence.py --evidence docs/evidence/0.6 | qualification.md#ac-024 | PASS | This check validates ledger structure and references only; it does not establish the underlying runtime acceptance results. | implementation run | 2026-10-07 |
 | AC-025 | fresh-store cutover and rollback | NOT RUN (no migration or rollback rehearsal exists) | qualification.md#ac-025 | OPEN | The handoff sequence is documented; live re-enrollment, reconciliation, sole-authority rollback, and no-replay behavior remain untested. | implementation run | 2026-10-07 |
 | AC-026 | trusted factory and typed bindings | uv run pytest tests/unit/test_phase_0_6_runtime.py -q | qualification.md#ac-026 | OPEN | Core binding and scope checks are unit-tested; full malformed-factory, redaction, and installed-role matrix is open. | implementation run | 2026-10-07 |
@@ -79,7 +79,7 @@ remain injected; no copied route or ETL state machine has been introduced. The
 boundary outcome is qualification-open until the remaining acceptance criteria
 and Gate B are satisfied.
 
-Hosted run 37661869120 passed Gate A, Gate C, and the PostgreSQL integration
+Hosted run 37668515171 passed Gate A, Gate C, and the PostgreSQL integration
 matrix. Gate B remains open because its runtime role has schema `CREATE`; the
 run used `--allow-open`, so remaining acceptance criteria and the preview
 decision remain open.

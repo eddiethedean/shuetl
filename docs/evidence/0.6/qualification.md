@@ -507,17 +507,17 @@ Limitation: Compose and systemd examples are present; digest identity, ordinary 
 
 Requirement: The release gate and hosted Python 3.11–3.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases.
 
-Command: GitHub Actions run 37661869120
+Command: GitHub Actions run 37668515171
 
 Result: PASS
 
-Observed result: Hosted PR run 37661869120 passed quality, PostgreSQL integration, and all qualification-gate jobs on Python 3.11–3.13; required PostgreSQL tests were not skipped.
+Observed result: Hosted PR run 37668515171 passed quality, PostgreSQL integration, and all qualification-gate jobs on Python 3.11–3.13; required PostgreSQL tests were not skipped.
 
-Source commit: a3018159e4243fd53a8f6ac3bde9a31e2adb91c8.
+Source commit: 3b27a55f28c9c4671a8eb7f057a81ac775d5420c.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
-Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; hosted PR run 37661869120.
+Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; hosted PR run 37668515171.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: hosted release matrix.
 

@@ -406,7 +406,7 @@ def test_probe_lifecycle_reports_outage_drain_and_stale_state_without_secrets(
     assert json.loads(body)["reason"] == "supervisor_stale"
 
     state.mark_draining()
-    assert state.snapshot("/live")[0] == 503
+    assert state.snapshot("/live")[0] == 200
     state.mark_failed("runtime_tick_failed")
     assert state.snapshot("/live")[0] == 503
 

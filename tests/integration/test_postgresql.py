@@ -732,7 +732,30 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         )
         assert manual_receipt is not None and manual_receipt.run_id is not None
         assert worker.service is not None and worker.context is not None
+        worker_errors: list[str] = []
+        original_runner = worker.service.runner
+
+        def observe_runner(ctx: Any, **kwargs: Any) -> Any:
+            try:
+                return original_runner(ctx, **kwargs)
+            except Exception as exc:
+                message = str(exc).replace(runtime_database_url, "[redacted]")
+                worker_errors.append(f"{type(exc).__name__}: {message}")
+                raise
+
+        worker.service.runner = observe_runner
         assert worker.service.tick(worker.context, limit=1) == 1
+        manual_publication = (
+            gateway.backend.api.durable_work.get_latest_result_publication(
+                service_ctx, manual_receipt.submission_id
+            )
+        )
+        assert manual_publication is not None, (
+            "Worker did not publish a durable run result; "
+            f"submission_status={gateway.backend.api.durable_work.get_submission(service_ctx, manual_receipt.submission_id).status}; "
+            f"attempts={gateway.backend.api.durable_work.list_attempts(service_ctx, manual_receipt.submission_id)!r}; "
+            f"runner_errors={worker_errors!r}"
+        )
         manual_report = service.get_run_report(service_ctx, manual_receipt.run_id)
         assert manual_report["status"] == "succeeded", manual_report
 

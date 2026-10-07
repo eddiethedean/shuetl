@@ -10,7 +10,7 @@ provider status, transition, and CI definition provide supporting context.
 
 | Field | Value |
 | --- | --- |
-| Source commit | 6b947b82c7b46c5b38471142f1958f4dc6083144 (implementation source; this evidence update follows it) |
+| Source commit | 6fac91c842811f419251d81bb6035a94776117ce (implementation source; this evidence update follows it) |
 | OS and architecture | macOS 26.6.2 arm64 local |
 | Python version | CPython 3.13.9 local; Python 3.11–3.13 matrix configured but not run for this revision |
 | uv version | 0.11.3 |
@@ -24,8 +24,8 @@ provider status, transition, and CI definition provide supporting context.
 | Gate A | Local CPython 3.13 format, lint, typing, boundary, and regression checks | PASS |
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
 | Gate C | Local wheel, artifact, isolated dependency/import checks | PASS |
-| SHA-256 wheel | `4b6c324e0fed14b2b4f21ab0d0c8ca5983a4a5c4323f9f9d4fb3468b5cf34876` |
-| SHA-256 sdist | `3647d64d12f5ec2b4e0b1bb83ed405f906b78fb1e64e43887498f948b6909693` |
+| SHA-256 wheel | `c843551c77116144d488de6d2f48318aca31b123b4570e5f44af7338fe58005b` |
+| SHA-256 sdist | `0c3037dc69f927ac3af44f715764fdbf467ec6a8c94128b15f4a1bad1d2b9ecd` |
 
 ## Acceptance results
 

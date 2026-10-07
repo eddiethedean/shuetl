@@ -15,13 +15,21 @@ PROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 RELEASE_SERIES = ".".join(str(PROJECT["project"]["version"]).split(".")[:2])
 
 
-def run_step(label: str, command: list[str]) -> None:
+def run_step(
+    label: str,
+    command: list[str],
+    *,
+    unset_env: tuple[str, ...] = (),
+) -> None:
     print(f"== {label} ==")
+    step_env = {**os.environ, "SOURCE_DATE_EPOCH": "1580601600"}
+    for name in unset_env:
+        step_env.pop(name, None)
     subprocess.run(
         command,
         cwd=ROOT,
         check=True,
-        env={**os.environ, "SOURCE_DATE_EPOCH": "1580601600"},
+        env=step_env,
     )
 
 
@@ -69,7 +77,19 @@ def main(argv: list[str] | None = None) -> int:
             f"docs/evidence/{RELEASE_SERIES}/openapi.normalized.json",
         ],
     )
-    run_step("tests", [*uv_run, "pytest", "-q"])
+    run_step(
+        "tests",
+        [*uv_run, "pytest", "-q"],
+        unset_env=(
+            "SHUETL_PROFILE",
+            "SHUETL_ROLE",
+            "SHUETL_PROVIDER",
+            "SHUETL_IDENTITY",
+            "SHUETL_DATABASE_URL",
+            "SHUETL_RUNTIME_DATABASE_URL",
+            "SHUETL_POSTGRESQL_SSLMODE",
+        ),
+    )
     run_step("build", [uv, "build"])
     run_step("artifact", [*uv_run, "python", "scripts/check_artifact.py"])
     run_step(

@@ -14,8 +14,11 @@ ETLantic 0.56.0's `current_version` helper runs
 role graph but leaves AC-008's planned no-`CREATE` startup boundary open. The
 release gate runs the PostgreSQL role fixture from an isolated installed wheel.
 `check_pytest_no_skips.py` rejects skips in required PostgreSQL integration
-tests. PRs run the implementation gate with open acceptance rows allowed; tag
-runs use strict evidence mode.
+tests. The release gate clears the PostgreSQL profile environment for the
+general test suite, then retains it for the installed-wheel PostgreSQL check;
+the dedicated integration job runs its PostgreSQL tests with that environment.
+PRs run the implementation gate with open acceptance rows allowed; tag runs use
+strict evidence mode.
 
 | Gate | Workflow job | Current evidence |
 | --- | --- | --- |

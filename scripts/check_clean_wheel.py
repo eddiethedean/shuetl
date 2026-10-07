@@ -13,6 +13,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
+POSTGRESQL_SETTINGS_ENV = (
+    "SHUETL_PROFILE",
+    "SHUETL_ROLE",
+    "SHUETL_PROVIDER",
+    "SHUETL_IDENTITY",
+    "SHUETL_DATABASE_URL",
+    "SHUETL_RUNTIME_DATABASE_URL",
+    "SHUETL_POSTGRESQL_SSLMODE",
+)
 
 
 def _python(venv_dir: Path) -> Path:
@@ -124,8 +133,17 @@ print(origins)
                 cwd=work_dir,
                 env=env,
             )
+            example_env = env
+            if name != "postgresql":
+                example_env = env.copy()
+                for setting in POSTGRESQL_SETTINGS_ENV:
+                    example_env.pop(setting, None)
             for example_path in example_paths:
-                _run([str(python), str(example_path)], cwd=work_dir, env=env)
+                _run(
+                    [str(python), str(example_path)],
+                    cwd=work_dir,
+                    env=example_env,
+                )
             if name == "postgresql":
                 _run(
                     [

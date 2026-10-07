@@ -345,14 +345,24 @@ def test_sol_006_sqlite_example_leaves_file_creation_to_upstream(
 def test_sol_006_clean_wheel_uses_separate_core_sqlite_and_postgresql_environments(
     tmp_path: Path, monkeypatch
 ) -> None:
-    calls: list[list[str]] = []
+    calls: list[tuple[list[str], dict[str, str]]] = []
 
     def record(command: list[str], *, cwd: Path, env: dict[str, str]) -> None:
-        del cwd, env
-        calls.append(command)
+        del cwd
+        calls.append((command, env.copy()))
 
     monkeypatch.setattr(check_clean_wheel.shutil, "which", lambda name: "/usr/bin/uv")
     monkeypatch.setattr(check_clean_wheel, "_run", record)
+    for name, value in {
+        "SHUETL_PROFILE": "postgresql-pilot",
+        "SHUETL_ROLE": "gateway",
+        "SHUETL_PROVIDER": "postgresql",
+        "SHUETL_IDENTITY": "host",
+        "SHUETL_DATABASE_URL": "postgresql+psycopg://shuetl@localhost/shuetl",
+        "SHUETL_RUNTIME_DATABASE_URL": "postgresql+psycopg://runtime@localhost/shuetl",
+        "SHUETL_POSTGRESQL_SSLMODE": "disable",
+    }.items():
+        monkeypatch.setenv(name, value)
     monkeypatch.setattr(
         check_clean_wheel.subprocess,
         "run",
@@ -364,19 +374,30 @@ def test_sol_006_clean_wheel_uses_separate_core_sqlite_and_postgresql_environmen
     )
     check_clean_wheel.verify(tmp_path / "shuetl-0.6.0-py3-none-any.whl")
 
-    venv_commands = [command for command in calls if command[1:2] == ["venv"]]
-    memory_run = next(
-        command for command in calls if command[-1].endswith("phase_0_3_quickstart.py")
+    venv_commands = [command for command, _ in calls if command[1:2] == ["venv"]]
+    memory_run, memory_env = next(
+        (command, env)
+        for command, env in calls
+        if command[-1].endswith("phase_0_3_quickstart.py")
     )
-    sqlite_run = next(
-        command for command in calls if command[-1].endswith("phase_0_3_sqlite.py")
+    sqlite_run, sqlite_env = next(
+        (command, env)
+        for command, env in calls
+        if command[-1].endswith("phase_0_3_sqlite.py")
     )
     assert len(venv_commands) == 4
     assert memory_run[0] != sqlite_run[0]
-    postgres_run = next(
-        command for command in calls if any("psycopg" in item for item in command)
+    assert all(
+        name not in memory_env and name not in sqlite_env
+        for name in check_clean_wheel.POSTGRESQL_SETTINGS_ENV
+    )
+    postgres_run, postgres_env = next(
+        (command, env)
+        for command, env in calls
+        if any("psycopg" in item for item in command)
     )
     assert postgres_run[0] not in {memory_run[0], sqlite_run[0]}
+    assert postgres_env["SHUETL_DATABASE_URL"].startswith("postgresql+")
 
 
 def test_sol_007_readme_documents_the_complete_settings_contract() -> None:

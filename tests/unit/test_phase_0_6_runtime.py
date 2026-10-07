@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import socket
 import threading
@@ -504,8 +505,12 @@ def test_gateway_gates_requests_until_provider_recovers_and_serves_local_probes(
             self.config = config
             self.started = False
 
-        def run(self) -> None:
+        async def startup(self, sockets: Any = None) -> None:
+            del sockets
             self.started = True
+
+        def run(self) -> None:
+            asyncio.run(self.startup())
             with TestClient(self.config.app) as client:
                 assert client.get("/etl/health").json() == {"status": "ok"}
                 deadline = time.monotonic() + 2.0

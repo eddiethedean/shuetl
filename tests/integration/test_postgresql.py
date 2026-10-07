@@ -730,10 +730,10 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         manual_receipt = gateway.backend.api.durable_work.get_submission(
             gateway_ctx, manual_response.json()["submission_id"]
         )
-        assert manual_receipt is not None and manual_receipt.resource_id is not None
+        assert manual_receipt is not None and manual_receipt.run_id is not None
         assert worker.service is not None and worker.context is not None
         assert worker.service.tick(worker.context, limit=1) == 1
-        manual_report = service.get_run_report(service_ctx, manual_receipt.resource_id)
+        manual_report = service.get_run_report(service_ctx, manual_receipt.run_id)
         assert manual_report["status"] == "succeeded", manual_report
 
         assert scheduler.context is not None and scheduler.service is not None
@@ -758,9 +758,9 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
             service_ctx, firings[0].submission_id
         )
         assert scheduled_submission is not None
-        assert scheduled_submission.resource_id is not None
+        assert scheduled_submission.run_id is not None
         scheduled_report = service.get_run_report(
-            service_ctx, scheduled_submission.resource_id
+            service_ctx, scheduled_submission.run_id
         )
         assert scheduled_report["status"] == "succeeded", scheduled_report
 

@@ -81,8 +81,9 @@ class _ProbeState:
     def snapshot(self, path: str) -> tuple[int, bytes]:
         now = time.monotonic()
         with self._lock:
-            live = self._lifecycle not in {"failed", "stopped"} and (
-                now - self._supervisor_checked <= self.stale_after
+            live = self._lifecycle == "draining" or (
+                self._lifecycle not in {"failed", "stopped"}
+                and now - self._supervisor_checked <= self.stale_after
             )
             ready = (
                 self._lifecycle == "running"
@@ -130,6 +131,7 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
     probe_started = False
     monitor_started = False
     result = 0
+    previous_sigterm_handler: Any | None = None
     try:
         import uvicorn
         from fastapi.responses import JSONResponse
@@ -156,11 +158,22 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
         )
 
         class ProbeAwareServer(uvicorn.Server):
+            async def startup(self, sockets: Any = None) -> None:
+                await super().startup(sockets=sockets)
+                if self.started:
+                    state.mark_running()
+
             def handle_exit(self, sig: int, frame: Any) -> None:
                 state.mark_draining()
                 super().handle_exit(sig, frame)
 
         server = ProbeAwareServer(config)
+        if threading.current_thread() is threading.main_thread():
+            # Uvicorn re-raises captured SIGTERM after graceful shutdown. Keep
+            # that re-raise inside this function until its cleanup has run.
+            previous_sigterm_handler = signal.signal(
+                signal.SIGTERM, server.handle_exit
+            )
         probe = _make_probe_server(settings.probe_port, state)
         probe_thread = threading.Thread(
             target=probe.serve_forever,
@@ -171,7 +184,6 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
         probe_started = True
         monitor.start()
         monitor_started = True
-        state.mark_running()
         server.run()
         if not server.started:
             result = 1
@@ -192,7 +204,10 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
             probe_thread.join(timeout=2)
         if result == 0:
             state.mark_stopped()
-        _close_runtime(runtime)
+        if not _close_runtime(runtime):
+            result = 1
+        if previous_sigterm_handler is not None:
+            signal.signal(signal.SIGTERM, previous_sigterm_handler)
     return result
 
 
@@ -292,7 +307,8 @@ def serve_runtime_role(runtime: ManagedRuntime) -> int:
             result = 1
         elif result == 0:
             state.mark_stopped()
-        _close_runtime(runtime)
+        if not _close_runtime(runtime):
+            result = 1
         for signum in (signal.SIGINT, signal.SIGTERM):
             previous = previous_handlers.get(signum)
             if previous is not None:
@@ -390,11 +406,13 @@ def _drain_service(service: Any) -> None:
             _LOG.error("Upstream drain failed (reason=upstream_drain_failed)")
 
 
-def _close_runtime(runtime: ManagedRuntime) -> None:
+def _close_runtime(runtime: ManagedRuntime) -> bool:
     try:
         runtime.close()
     except Exception:
         _LOG.error("Runtime cleanup failed (reason=resource_close_failed)")
+        return False
+    return True
 
 
 def _is_database_error(error: Exception) -> bool:

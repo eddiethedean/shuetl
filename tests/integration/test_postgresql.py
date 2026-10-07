@@ -740,7 +740,16 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                 return original_runner(ctx, **kwargs)
             except Exception as exc:
                 message = str(exc).replace(runtime_database_url, "[redacted]")
-                worker_errors.append(f"{type(exc).__name__}: {message}")
+                causes: list[str] = []
+                cause = exc.__cause__
+                while cause is not None:
+                    cause_message = str(cause).replace(
+                        runtime_database_url, "[redacted]"
+                    )
+                    causes.append(f"{type(cause).__name__}: {cause_message}")
+                    cause = cause.__cause__
+                detail = f"; caused by {' <- '.join(causes)}" if causes else ""
+                worker_errors.append(f"{type(exc).__name__}: {message}{detail}")
                 raise
 
         worker.service.runner = observe_runner
@@ -750,10 +759,17 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                 service_ctx, manual_receipt.submission_id
             )
         )
+        durable_work = gateway.backend.api.durable_work
+        submission_after_tick = durable_work.get_submission(
+            service_ctx, manual_receipt.submission_id
+        )
+        attempts_after_tick = durable_work.list_attempts(
+            service_ctx, manual_receipt.submission_id
+        )
         assert manual_publication is not None, (
             "Worker did not publish a durable run result; "
-            f"submission_status={gateway.backend.api.durable_work.get_submission(service_ctx, manual_receipt.submission_id).status}; "
-            f"attempts={gateway.backend.api.durable_work.list_attempts(service_ctx, manual_receipt.submission_id)!r}; "
+            f"submission_status={submission_after_tick.status}; "
+            f"attempts={attempts_after_tick!r}; "
             f"runner_errors={worker_errors!r}"
         )
         manual_report = service.get_run_report(service_ctx, manual_receipt.run_id)

@@ -37,7 +37,7 @@ from .postgresql import (
 )
 from .settings import ShuETLSettings
 
-SQLITE_HEAD = "005_cp1_reference"
+SQLITE_HEAD = "014_cp1_complete_principal_idempotency_0_56"
 
 
 @dataclass

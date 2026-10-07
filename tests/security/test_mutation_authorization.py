@@ -20,7 +20,7 @@ from spikes.phase_0_1_memory_mount import build_graph
 from shuetl import ShuETL
 
 ROOT = Path(__file__).resolve().parents[2]
-INVENTORY = ROOT / "docs/evidence/0.5/route_inventory.json"
+INVENTORY = ROOT / "docs/evidence/0.6/route_inventory.json"
 MUTATION_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 _PATH_PARAMETER = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
@@ -74,7 +74,7 @@ def _sample_value(annotation: Any) -> Any:
     if annotation is Any or annotation is object:
         return {}
     if annotation is str:
-        return "phase05-security-probe"
+        return "phase06-security-probe"
     if annotation is int:
         return 1
     if annotation is float:
@@ -100,8 +100,8 @@ def _sample_value(annotation: Any) -> Any:
                 values[name] = field.default
         return annotation(**values).model_dump(mode="json")
     if isinstance(annotation, type) and issubclass(annotation, str):
-        return "phase05-security-probe"
-    return "phase05-security-probe"
+        return "phase06-security-probe"
+    return "phase06-security-probe"
 
 
 def _route_path(path: str) -> tuple[str, dict[str, str]]:
@@ -208,9 +208,9 @@ def collect_inventory() -> list[dict[str, Any]]:
             request: dict[str, Any] = {
                 "headers": {
                     "X-Principal": "alice",
-                    "X-Correlation-ID": "phase05-correlation-probe",
-                    "Idempotency-Key": "phase05-idempotency-probe",
-                    "X-Request-ID": "phase05-request-probe",
+                    "X-Correlation-ID": "phase06-correlation-probe",
+                    "Idempotency-Key": "phase06-idempotency-probe",
+                    "X-Request-ID": "phase06-request-probe",
                 },
             }
             if include_body:

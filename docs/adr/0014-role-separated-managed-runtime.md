@@ -1,6 +1,6 @@
 # ADR-0014: Role-Separated Managed Runtime on ETLantic 0.56.0
 
-- Status: Proposed; concrete Phase 0.6 design, implementation unqualified.
+- Status: Accepted for implementation; PostgreSQL role qualification remains open.
 - Date: 2026-10-07.
 - Governing contract: [Phase 0.6](../plans/PHASE_0_6_EXECUTION.md).
 
@@ -8,13 +8,15 @@
 
 The published 0.56 managed backend supplies shared services and a real worker.
 Its scheduler requires public-service wiring, its worker has no readiness
-method, and its constructor's version inspector issues a non-mutating DDL
-statement on an already migrated store. The managed firing, submission and
-link operations span recoverable commit boundaries. ADR-0013 requires the
-standard host path to supply specifications and identity/resource integration
-without building ETL service graphs.
+method, and its constructor's version inspector issues a
+`CREATE TABLE IF NOT EXISTS` for the schema-version table. The managed firing,
+submission and link operations span recoverable commit boundaries. ADR-0013
+requires the standard host path to supply specifications and identity/resource
+integration without building ETL service graphs. Source-level composition is
+implemented; installed-wheel PostgreSQL 18.6 role and privilege behavior has
+not yet been qualified.
 
-## Proposed decision
+## Decision
 
 ### Standard composition
 
@@ -27,26 +29,45 @@ Dispose the temporary preflight engine before constructing the backend.
 
 The standard CLI is `shuetl serve --role ROLE --factory package.module:callable`.
 `ROLE` must match required `SHUETL_ROLE`. The explicitly trusted factory has
-the planned signature `factory(settings: ShuETLSettings) -> HostRuntimeBindings`.
+the signature `factory(settings: ShuETLSettings) -> HostRuntimeBindings`.
 `HostRuntimeBindings` is a frozen ShuETL composition object, not an ETL domain
-model. Freeze its exact Python field types during W02 against installed APIs.
+model. Its implemented Python fields are:
+
+```python
+from dataclasses import field
+
+
+@dataclass(frozen=True, slots=True)
+class HostRuntimeBindings:
+    authorizer: Authorizer
+    identity_adapter: HostIdentityAdapter | None = None
+    service_context: ControlPlaneContext | None = None
+    planning_context_factory: Callable[[Any, Any], PlanningContext] | None = None
+    action_handlers: Mapping[str, ActionHandler] = field(default_factory=dict)
+    secret_alias_authorizer: SecretAliasAuthorizer | None = None
+    gateway_app_factory: Callable[[ShuETL], FastAPI] | None = None
+    close: Callable[[], None] | None = None
+```
 
 | Binding | Meaning and role constraint |
 | --- | --- |
 | `authorizer` | Public ETLantic authorizer; required in all roles. |
-| `context_factory` | Public upstream context factory with guarded scope outputs; required by the managed constructor. No request authentication is performed by runtime roles. |
 | `identity_adapter` | Existing `HostIdentityAdapter`; required for gateway request identity, absent in runtime bindings. |
 | `service_context` | Upstream `ControlPlaneContext` with a trusted service/workload `Principal` and matching tenant/workspace; required for scheduler/worker, absent in gateway bindings. |
 | `planning_context_factory` | Optional upstream resource/planning bridge. May supply authorized resource references and metadata, never row transforms or a preparation coordinator. |
 | `gateway_app_factory` | Optional trusted hook accepting the constructed ShuETL integration and returning a host ASGI app; gateway-only and not invoked or imported by runtime bindings. Without it, ShuETL builds the dedicated guarded app. |
 | `close` | Optional cleanup of host-owned binding resources, invoked once after backend cleanup. No provider engine or execution loop is owned by these bindings. |
 
-Backend profile and provider plugins are selected by deployment configuration.
+For gateway requests, ShuETL passes the adapter's guarded context and principal
+dependencies to the managed constructor. Scheduler and worker API dependencies
+reject HTTP identities; those roles call public upstream services with the
+explicit service context. Backend profile and provider plugins are selected by deployment configuration.
 Execution/resource implementations belong to independent packages. No standard
 binding accepts an alternate scheduler, worker runner, store or row callback.
 Preserve existing explicit facade/bundle injection as an advanced interface.
-Factories for different roles may live in separate installed modules so that
-runtime startup does not import a host authentication stack.
+The CLI accepts one trusted module reference per process; the host can use
+role-specific modules so runtime startup does not import a host authentication
+stack.
 
 ### Role wiring
 
@@ -79,7 +100,7 @@ Their supervisor stops dispatch and waits for active action ticks on signals;
 no nonexistent upstream action-host `drain()` method is assumed. Handler
 loading uses public package APIs fixed in W02, never host row/action callbacks.
 
-### Configuration to freeze
+### Configuration contract
 
 Keep constructor-over-environment precedence and required role/profile/provider
 settings. `identity=host` continues to describe gateway request identity;
@@ -93,7 +114,7 @@ copied from a request. Add the following planned preview configuration:
 | `execution_profile` | Required installed, operator-approved upstream profile; preserve full qualified settings. |
 | `worker_kind` | `runs` by default; `actions` selects a dedicated provider-action worker, valid only for worker roles. |
 | `owner_id` | Generated unique role-prefixed value per start; any operator override must still be unique. |
-| `poll_interval_seconds` | 1 second; finite range 0.1–30. Controls supervision pacing only. |
+| `runtime_poll_interval_seconds` / `SHUETL_RUNTIME_POLL_INTERVAL_SECONDS` | 1 second; finite range 0.1–30. Controls supervision pacing only. |
 | `lease_ttl_seconds` | 30 seconds; integer at least 3 and poll interval less than TTL/3. Passed upstream; this does not establish a maximum tick duration. |
 | `probe_port` | Required for runtime roles; loopback-only, distinct per process. Gateway keeps upstream HTTP probes. |
 | `probe_refresh_seconds` | 1 second; positive, independent of the synchronous execution tick. |
@@ -101,9 +122,11 @@ copied from a request. Add the following planned preview configuration:
 | `shutdown_grace_seconds` | 30 seconds; positive supervisor grace budget, not a guarantee that all effects can be interrupted. |
 | `artifact_root` / resource volume | Explicit shared location when file/artifact capabilities are advertised; identical resource identity across processes. Paths are absent from public diagnostics. |
 
-Probe settings apply only to runtime roles. Record exact aliases and public
-settings schema in W02; reject incompatible role fields before factory loading.
-Any temporary testing TTL or deadline is recorded with the result.
+Probe settings are required in `postgresql-preview`; factory references and
+settings are validated before database access or trusted module loading. A
+preview requires PostgreSQL, host identity, store/scope/profile identifiers,
+and a loopback probe port. `postgresql-pilot` remains gateway-only. A
+`worker_kind` is valid only for a worker, where it defaults to `runs`.
 
 ### Lifecycle and probes
 
@@ -139,13 +162,36 @@ deployment's admission/scheduling, reconciling external effects and then
 enabling the retained old deployment. Pending work is never automatically
 replayed across stores.
 
-## Validation and acceptance
+## Consequences
 
-W02 finalizes the signatures and records accepted decision status only after
-the installed-wheel PostgreSQL 18.6 Gate 0 fixture supports them. AC-002,
-AC-007–010, AC-025–027 and AC-032/033 verify this decision. The remaining Phase
-0.6 criteria establish the release claim. See the
-[verification plan](../plans/PHASE_0_6_VERIFICATION.md).
+ShuETL owns process lifecycle and provider health checks; ETLantic remains the
+authority for schedule, durable admission, execution, leases, reports, and
+recovery. Operators must supply a trusted host factory, restricted database
+role, fresh 0.56 store, shared artifact resources where used, and separate
+processes. The reference deployment remains a preview until its live role and
+failure evidence is recorded.
+
+## Alternatives
+
+- Continue using ETLantic's file-backed CLI stores; rejected because the
+  reference requires one PostgreSQL-backed graph shared by gateway, scheduler,
+  and worker processes.
+- Add ShuETL-owned scheduler or execution semantics; rejected because those
+  duplicate upstream state, lease, recovery, and report behavior.
+- Use the released 0.5 pilot store or automatically upgrade it; rejected
+  because 0.56 requires an isolated fresh store and no converter is qualified.
+
+## Validation
+
+The implementation now records these signatures and role mappings. The
+installed-wheel PostgreSQL 18.6 Gate 0 fixture must support them before this
+decision is qualified. AC-002, AC-007–010, AC-025–027 and AC-032/033 verify this
+decision. The remaining Phase 0.6 criteria establish the release claim. See the
+[verification plan](../plans/PHASE_0_6_VERIFICATION.md) and the current
+[`contracts`](../evidence/0.6/contracts.md) and
+[`ownership`](../evidence/0.6/ownership.md) records.
+
+## Revisit trigger
 
 Revisit if these public APIs cannot support the isolated graph, bound-method
 recovery, actual runtime grants or safe lifecycle. Missing semantics stay

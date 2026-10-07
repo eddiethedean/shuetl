@@ -1,0 +1,141 @@
+name: shuetl-phase-0-6
+
+x-application-image: &application-image "${SHUETL_IMAGE:?Set SHUETL_IMAGE to the host application image by sha256 digest}"
+x-runtime: &runtime
+  image: *application-image
+  restart: unless-stopped
+  environment: &runtime-environment
+    SHUETL_PROFILE: postgresql-preview
+    SHUETL_PROVIDER: postgresql
+    SHUETL_IDENTITY: host
+    SHUETL_FACTORY: "${SHUETL_FACTORY:?Set an installed trusted host factory}"
+    SHUETL_DATABASE_URL: "${SHUETL_RUNTIME_DATABASE_URL:?Set a secret-backed runtime database URL}"
+    SHUETL_POSTGRESQL_SSLMODE: "${SHUETL_POSTGRESQL_SSLMODE:-disable}"
+    SHUETL_STORE_ID: "${SHUETL_STORE_ID:?Set one shared store ID}"
+    SHUETL_TENANT_ID: "${SHUETL_TENANT_ID:?Set the preview tenant}"
+    SHUETL_WORKSPACE_ID: "${SHUETL_WORKSPACE_ID:?Set the preview workspace}"
+    SHUETL_EXECUTION_PROFILE: /app/profiles/preview.json
+    SHUETL_PROBE_PORT: "9100"
+    SHUETL_GATEWAY_PORT: "8000"
+    SHUETL_ARTIFACT_ROOT: /var/lib/shuetl/artifacts
+  volumes:
+    - run-artifacts:/var/lib/shuetl/artifacts
+    - "${SHUETL_PROFILE_DIR:?Mount the approved upstream profile}:/app/profiles:ro"
+  healthcheck: &runtime-healthcheck
+    test:
+      - CMD
+      - python
+      - -c
+      - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9100/ready', timeout=2)"
+    interval: 10s
+    timeout: 3s
+    retries: 3
+    start_period: 15s
+
+services:
+  postgres:
+    image: postgres:18.6-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:?Set POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_ADMIN_USER:?Set a bootstrap-only database administrator}"
+      POSTGRES_PASSWORD: "${POSTGRES_ADMIN_PASSWORD:?Inject a bootstrap password from a secret manager}"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  migrate:
+    image: *application-image
+    profiles: [operations]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SHUETL_PROFILE: postgresql-pilot
+      SHUETL_ROLE: gateway
+      SHUETL_PROVIDER: postgresql
+      SHUETL_IDENTITY: host
+      SHUETL_DATABASE_URL: "${SHUETL_MIGRATION_DATABASE_URL:?Inject a separate migration database URL}"
+      SHUETL_POSTGRESQL_SSLMODE: "${SHUETL_POSTGRESQL_SSLMODE:-disable}"
+    command: [shuetl, database, upgrade]
+    restart: "no"
+
+  gateway:
+    <<: *runtime
+    environment:
+      <<: *runtime-environment
+      SHUETL_ROLE: gateway
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - shuetl
+      - serve
+      - --role
+      - gateway
+      - --factory
+      - "${SHUETL_FACTORY:?Set an installed trusted host factory}"
+    expose: ["8000"]
+
+  scheduler:
+    <<: *runtime
+    environment:
+      <<: *runtime-environment
+      SHUETL_ROLE: scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - shuetl
+      - serve
+      - --role
+      - scheduler
+      - --factory
+      - "${SHUETL_FACTORY:?Set an installed trusted host factory}"
+
+  worker:
+    <<: *runtime
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *runtime-environment
+      SHUETL_ROLE: worker
+      SHUETL_WORKER_KIND: runs
+    command:
+      - shuetl
+      - serve
+      - --role
+      - worker
+      - --factory
+      - "${SHUETL_FACTORY:?Set an installed trusted host factory}"
+      - --kind
+      - runs
+
+  action-worker:
+    <<: *runtime
+    profiles: [actions]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *runtime-environment
+      SHUETL_ROLE: worker
+      SHUETL_WORKER_KIND: actions
+    command:
+      - shuetl
+      - serve
+      - --role
+      - worker
+      - --factory
+      - "${SHUETL_FACTORY:?Set an installed trusted host factory}"
+      - --kind
+      - actions
+
+volumes:
+  postgres-data:
+  run-artifacts:

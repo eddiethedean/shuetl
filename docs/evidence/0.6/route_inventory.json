@@ -1,0 +1,1614 @@
+[
+  {
+    "authorizations": [
+      {
+        "action": "approval.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "approval:create"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_approval_create",
+    "path": "/v1/approvals",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "approval.decide",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "approval:{approval_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_approval_decide",
+    "path": "/v1/approvals/{approval_id}/decide",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "approval.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "approval:{approval_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_approval_revoke",
+    "path": "/v1/approvals/{approval_id}/revoke",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "attestation.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "attestation:put"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_attestation_put",
+    "path": "/v1/attestations",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "attestation.verify",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "attestation:schema"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_attestation_verify_schema_observation",
+    "path": "/v1/attestations/schema-observations/verify",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "attestation.verify",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "attestation:verify"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_attestation_verify_plan",
+    "path": "/v1/attestations/verify-plan",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "route-action",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "connector:*"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_submit_connector_action",
+    "path": "/v1/connector-actions/{action}",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "definition.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "PUT",
+    "operation_id": "cp_register_definition",
+    "path": "/v1/definitions/{definition_id}",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "definition.read",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_definition_context",
+    "path": "/v1/definitions/{definition_id}/context",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "definition.edit",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_edit_definition",
+    "path": "/v1/definitions/{definition_id}/edit",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "definition.plan",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_plan_definition",
+    "path": "/v1/definitions/{definition_id}/plan",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.submit",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_start_run_preparation",
+    "path": "/v1/definitions/{definition_id}/preparations",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.submit",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_submit_run",
+    "path": "/v1/definitions/{definition_id}/runs",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "schedule.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}:schedules"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_create_schedule",
+    "path": "/v1/definitions/{definition_id}/schedules",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "definition.validate",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "definition:{definition_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_validate_definition",
+    "path": "/v1/definitions/{definition_id}/validate",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.attempt.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:attempt:{attempt_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_finish_attempt",
+    "path": "/v1/durable/attempts/{attempt_id}/finish",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.checkpoint.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:checkpoint:{checkpoint_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_checkpoint_cas",
+    "path": "/v1/durable/checkpoints/{checkpoint_id}/cas",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.checkpoint.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:checkpoint:{checkpoint_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_diagnose_checkpoint",
+    "path": "/v1/durable/checkpoints/{checkpoint_id}/diagnose",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.effect.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:effect"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_record_effect",
+    "path": "/v1/durable/effects",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.outbox.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:outbox:{outbox_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_mark_published",
+    "path": "/v1/durable/outbox/{outbox_id}/published",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.preview.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:preview"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_create_preview",
+    "path": "/v1/durable/previews",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.shadow.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:shadow"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_authorize_shadow",
+    "path": "/v1/durable/shadow",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.attempt.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:submission:{submission_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_start_attempt",
+    "path": "/v1/durable/submissions/{submission_id}/attempts",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.cancel",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:submission:{submission_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_cancel",
+    "path": "/v1/durable/submissions/{submission_id}/cancel",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.lease.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:submission:{submission_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_acquire_lease",
+    "path": "/v1/durable/submissions/{submission_id}/leases",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.lease.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:submission:{submission_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_heartbeat",
+    "path": "/v1/durable/submissions/{submission_id}/leases/heartbeat",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.lease.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:submission:{submission_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_release_lease",
+    "path": "/v1/durable/submissions/{submission_id}/leases/release",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.repair",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:submission:{submission_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_plan_repair",
+    "path": "/v1/durable/submissions/{submission_id}/repair",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "durable.replay",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "durable:submission:{submission_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_durable_replay",
+    "path": "/v1/durable/submissions/{submission_id}/replay",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "erasure.execute",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "erasure:plan:{plan_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_erasure_execute",
+    "path": "/v1/erasure/plans/{plan_id}/execute",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "erasure.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "erasure:request"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_erasure_create",
+    "path": "/v1/erasure/requests",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "erasure.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "erasure:{request_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_erasure_plan",
+    "path": "/v1/erasure/requests/{request_id}/plan",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "input.upload",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "input-resource:*"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_stage_input_resource",
+    "path": "/v1/input-resources",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "input.cleanup",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "input-resource:*"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_cleanup_input_resources",
+    "path": "/v1/input-resources/cleanup",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "input.delete",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "input-resource:{upload_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "DELETE",
+    "operation_id": "cp_abort_input_resource",
+    "path": "/v1/input-resources/{upload_id}",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "input.finalize",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "input-resource:{upload_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_finalize_input_resource",
+    "path": "/v1/input-resources/{upload_id}/finalize",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "objective.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "objective:put"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_objective_put",
+    "path": "/v1/objectives",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "objective.evaluate",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "objective:{objective_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_objective_evaluate",
+    "path": "/v1/objectives/{objective_id}/evaluate",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "objective.notify",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "objective:{objective_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_objective_notify",
+    "path": "/v1/objectives/{objective_id}/notify",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "policy.decide",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "policy:decide"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_policy_decide",
+    "path": "/v1/policy/decide",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.cancel",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "preparation:{operation_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "DELETE",
+    "operation_id": "cp_cancel_run_preparation",
+    "path": "/v1/preparations/{operation_id}",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "definition.read",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "proposal:validate"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_proposal_validate",
+    "path": "/v1/proposals/validate",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "quota.admit",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "quota:admit"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_quota_admit",
+    "path": "/v1/quotas/admit",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "quota.admin",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "quota:contain"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_quota_contain",
+    "path": "/v1/quotas/contain",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "quota.release",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "quota:release"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_quota_release",
+    "path": "/v1/quotas/release",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "quota.admin",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "quota:suspend"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_quota_suspend",
+    "path": "/v1/quotas/suspend",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "registry.alias.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "registry:alias:{alias}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "PUT",
+    "operation_id": "cp_registry_put_alias",
+    "path": "/v1/registry/aliases/{alias}",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "registry.promote",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "registry:logical:phase06-security-probe"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_registry_promote",
+    "path": "/v1/registry/promotions",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "registry.tenant.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "registry:tenant:{tenant_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "PUT",
+    "operation_id": "cp_registry_put_tenant",
+    "path": "/v1/registry/tenants/{tenant_id}",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "registry.workspace.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "registry:workspace:{workspace_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "PUT",
+    "operation_id": "cp_registry_put_workspace",
+    "path": "/v1/registry/workspaces/{workspace_id}",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.backfill",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "run:{run_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_backfill_run",
+    "path": "/v1/runs/{run_id}/backfill",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.cancel",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "run:{run_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_cancel_run",
+    "path": "/v1/runs/{run_id}/cancel",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.repair",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "run:{run_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_repair_run",
+    "path": "/v1/runs/{run_id}/repair",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.replay",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "run:{run_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_replay_run",
+    "path": "/v1/runs/{run_id}/replay",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.rerun",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "run:{run_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_rerun_run",
+    "path": "/v1/runs/{run_id}/rerun",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.resume",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "run:{run_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_resume_run",
+    "path": "/v1/runs/{run_id}/resume",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "run.retry",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "run:{run_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_retry_run",
+    "path": "/v1/runs/{run_id}/retry",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "schedule.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "schedule:{schedule_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_amend_schedule",
+    "path": "/v1/schedules/{schedule_id}/amend",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "schedule.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "schedule:{schedule_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_pause_schedule",
+    "path": "/v1/schedules/{schedule_id}/pause",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "schedule.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "schedule:{schedule_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_resume_schedule",
+    "path": "/v1/schedules/{schedule_id}/resume",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "schedule.write",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "schedule:{schedule_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_trigger_schedule",
+    "path": "/v1/schedules/{schedule_id}/trigger",
+    "provider_calls": []
+  },
+  {
+    "authorizations": [
+      {
+        "action": "schema.observations.ack",
+        "context": {
+          "correlation_key": "phase06-correlation-probe",
+          "environment": "development",
+          "idempotency_key": "phase06-idempotency-probe",
+          "principal_issuer": null,
+          "principal_kind": "human",
+          "principal_subject": "alice",
+          "request_id": "phase06-request-probe",
+          "security_domain": "default",
+          "tenant_id": "tenant-a",
+          "workspace_id": "ws-1",
+          "workspace_tenant_id": "tenant-a"
+        },
+        "resource": "schema:observation:{observation_id}"
+      }
+    ],
+    "denial_status": 403,
+    "method": "POST",
+    "operation_id": "cp_ack_schema_observation",
+    "path": "/v1/schema/observations/{observation_id}/ack",
+    "provider_calls": []
+  }
+]

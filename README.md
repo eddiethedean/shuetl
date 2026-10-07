@@ -77,6 +77,15 @@ The current Phase 0.5 secure host integration contract is in
 [`docs/plans/PHASE_0_5_EXECUTION.md`](docs/plans/PHASE_0_5_EXECUTION.md), with
 host authentication guidance in [`docs/IDENTITY.md`](docs/IDENTITY.md).
 
+Phase 0.6 development targets ShuETL 0.6.0 and the published ETLantic 0.56.0
+train. It adds supervised gateway, scheduler, run-worker, and provider-action
+worker roles behind `shuetl serve`. Its production-preview status depends on
+the open acceptance ledger in [`docs/evidence/0.6/README.md`](docs/evidence/0.6/README.md);
+the package has not been released and the role topology is not yet qualified.
+The implementation contract and acceptance matrix are in
+[`docs/plans/PHASE_0_6_EXECUTION.md`](docs/plans/PHASE_0_6_EXECUTION.md) and
+[`docs/plans/PHASE_0_6_VERIFICATION.md`](docs/plans/PHASE_0_6_VERIFICATION.md).
+
 ShuETL 0.5.0 and ETLantic 0.55.0 are published. The 0.5.0 release adds a
 guarded `HostIdentityAdapter`, explicit local-only `development-static`
 identity, production composition checks, and security qualification for
@@ -258,38 +267,41 @@ remediation message. Exit `0` indicates a passing report, exit `1` indicates a
 failed required check, and exit `2` indicates command-line usage or unexpected internal
 errors. Text and JSON formats contain the same redacted facts.
 
-To run the local evidence gate:
+To run the implementation checks while Phase 0.6 qualification remains open:
 
 ```bash
-uv sync --locked --all-groups --extra test --extra sqlite
+uv sync --locked --all-groups --extra test --extra sqlite --extra postgresql --extra sql --extra foundry
 uv run python scripts/capture_openapi.py
-uv run python scripts/check_release.py
+uv run python scripts/check_release.py --allow-open
 ```
+
+The default `scripts/check_release.py` command requires every Phase 0.6
+acceptance result and release gate to pass. The `--allow-open` option runs the
+same implementation checks but does not authorize publishing.
 
 ## Beyond Phase 0.5
 
-The current source includes the FastAPI facade, local and PostgreSQL provider
-bundles, compatibility/doctor checks, and host identity composition. Later
-phases may qualify separate gateway, scheduler, and worker roles, expand
-operability and recovery, and add optional Hedron or AuthMate composition when
-their public contracts and support boundaries are ready. These are not part of
-the Phase 0.5 production claim.
+The Phase 0.6 implementation adds a standard role-separated runtime on the
+0.56.0 managed backend. Its release remains gated on real PostgreSQL 18.6
+process tests, provider execution, failure injection, and the full acceptance
+ledger. The released 0.5.0 profile remains the published baseline until those
+checks close.
 
 ## Deployment goal
 
 Local development may use one process and SQLite or in-memory providers.
 
-The production reference uses one installable application/image with separate
-supervised roles:
+The Phase 0.6 reference uses one application artifact with separate supervised
+roles:
 
 ```text
-FastAPI gateway
-+
-ETLantic scheduler/worker process or supported external execution host
-+
-PostgreSQL
+gateway × 2 ─┐
+scheduler × 2 ├── PostgreSQL 18.6
+run worker × 2 ┘
+provider-action workers are separate when enabled
 ```
 
-The baseline should not require Redis, RabbitMQ, Kafka, an object store, or an
-external scheduler. “No required broker” does not imply that long-running ETL
-work executes inside the FastAPI gateway process.
+The reference topology uses the managed stores without a required broker. The
+gateway accepts control-plane requests; workers execute ETLantic work outside
+the request process. See the [Phase 0.6 deployment guide](docs/deployment/phase-0.6-preview.md)
+for configuration and fresh-store transition steps.

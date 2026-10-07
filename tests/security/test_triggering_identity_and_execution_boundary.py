@@ -101,10 +101,10 @@ def test_durable_submission_persists_only_trigger_identity_and_no_credentials() 
                 "Cookie": f"session={COOKIE_SENTINEL}",
                 "Idempotency-Key": "identity-persistence-key",
             },
-            json={"payload": {"input_snapshot": "safe-reference"}},
+            json={"payload": {"safe_trigger_metadata": "safe-reference"}},
         )
 
-    assert response.status_code == 202
+    assert response.status_code == 202, response.text
     submission_id = response.json()["submission_id"]
     stored = durable.dump()
     rows = [
@@ -187,7 +187,7 @@ def test_validate_plan_and_submit_never_resolve_secrets_or_execute(
                 "Authorization": f"Bearer {BEARER_SENTINEL}",
                 "Cookie": f"session={COOKIE_SENTINEL}",
             },
-            json={"payload": {"input_snapshot": "safe-reference"}},
+            json={"payload": {}},
         )
         scheduled = client.post(
             "/v1/definitions/identity-definition/schedules",
@@ -202,7 +202,7 @@ def test_validate_plan_and_submit_never_resolve_secrets_or_execute(
         )
 
     assert validated.status_code == planned.status_code == 200
-    assert submitted.status_code == 202
+    assert submitted.status_code == 202, submitted.text
     assert scheduled.status_code == 201
     stored_schedules = json.dumps(
         [record.to_dict() for record in schedules.list_schedules(ctx)], sort_keys=True

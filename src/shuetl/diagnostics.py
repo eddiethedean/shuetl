@@ -177,7 +177,7 @@ class DoctorReport(BaseModel):
         except Exception:
             core_status = "fail"
             core_summary = "Core package versions are incompatible."
-            core_remediation = "Install the qualified ShuETL 0.5 package set."
+            core_remediation = "Install the qualified ShuETL 0.6 package set."
         checks.append(
             DiagnosticCheck(
                 id="compatibility.core",
@@ -187,7 +187,7 @@ class DoctorReport(BaseModel):
             )
         )
         train_ok = all(
-            value is None or value.split(".")[:2] == ["0", "55"]
+            value is None or value == "0.56.0"
             for name, value in versions.items()
             if name.startswith("etlantic-")
         )
@@ -196,14 +196,14 @@ class DoctorReport(BaseModel):
                 id="compatibility.etlantic_train",
                 status="pass" if train_ok else "fail",
                 summary=(
-                    "Installed ETLantic extensions share the 0.55 train."
+                    "Installed ETLantic extensions match 0.56.0."
                     if train_ok
-                    else "An ETLantic extension is outside the 0.55 train."
+                    else "An ETLantic extension is outside the 0.56.0 train."
                 ),
                 remediation=(
                     None
                     if train_ok
-                    else "Align every installed etlantic-* package to 0.55."
+                    else "Align every installed etlantic-* package to 0.56.0."
                 ),
             )
         )
@@ -222,6 +222,10 @@ class DoctorReport(BaseModel):
                     "control-plane.durable-work",
                     "control-plane.schedules",
                     "control-plane.firings",
+                    "control-plane.run-reports",
+                    "control-plane.input-resources",
+                    "control-plane.action-jobs",
+                    "control-plane.managed-execution",
                 ]
             )
         if provider == "memory":
@@ -249,9 +253,9 @@ class DoctorReport(BaseModel):
         provider_remediation = None
         if not provider_available:
             provider_remediation = (
-                "Install `shuetl[sqlite]==0.5.0`."
+                "Install `shuetl[sqlite]==0.6.0`."
                 if provider == "sqlite"
-                else "Install `shuetl[postgresql]==0.5.0`."
+                else "Install `shuetl[postgresql]==0.6.0`."
             )
         checks.append(
             DiagnosticCheck(
@@ -292,7 +296,7 @@ class DoctorReport(BaseModel):
             if not provider_available:
                 ready = "fail"
                 ready_summary = "SQLite provider dependencies are unavailable."
-                ready_remediation = "Install `shuetl[sqlite]==0.5.0`."
+                ready_remediation = "Install `shuetl[sqlite]==0.6.0`."
                 schema_status = "fail"
                 schema_summary = (
                     "SQLite schema cannot be inspected without the optional provider."
@@ -317,7 +321,7 @@ class DoctorReport(BaseModel):
                     "PostgreSQL provider dependencies are unavailable; "
                     f"TLS mode is {settings.postgresql_sslmode}."
                 )
-                ready_remediation = "Install `shuetl[postgresql]==0.5.0`."
+                ready_remediation = "Install `shuetl[postgresql]==0.6.0`."
                 schema_status = "fail"
                 schema_summary = (
                     "PostgreSQL schema cannot be inspected without the optional "
@@ -361,16 +365,18 @@ class DoctorReport(BaseModel):
                 _identity_check(settings.identity, bundle),
                 DiagnosticCheck(
                     id="role.supported",
-                    status="pass" if settings.role == "gateway" else "fail",
+                    status="pass"
+                    if settings.role in {"gateway", "scheduler", "worker"}
+                    else "fail",
                     summary=(
-                        "Gateway role is supported."
-                        if settings.role == "gateway"
+                        f"Configured {settings.role} role is recognized."
+                        if settings.role in {"gateway", "scheduler", "worker"}
                         else "Role is unsupported."
                     ),
                     remediation=(
                         None
-                        if settings.role == "gateway"
-                        else "Use SHUETL_ROLE=gateway."
+                        if settings.role in {"gateway", "scheduler", "worker"}
+                        else "Use a supported ShuETL role."
                     ),
                 ),
                 DiagnosticCheck(
@@ -391,7 +397,7 @@ class DoctorReport(BaseModel):
                     id="topology.development_only",
                     status="pass" if provider == "postgresql" else "warn",
                     summary=(
-                        "Controlled PostgreSQL pilot is not development-only."
+                        "PostgreSQL runtime is not development-only."
                         if provider == "postgresql"
                         else "Local providers are development-only."
                     ),

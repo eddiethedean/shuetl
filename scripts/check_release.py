@@ -1,4 +1,4 @@
-"""Run the complete local Phase 0.5 release gate."""
+"""Run the complete local Phase 0.6 release gate."""
 
 from __future__ import annotations
 
@@ -27,7 +27,12 @@ def run_step(label: str, command: list[str]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
+    parser.add_argument(
+        "--allow-open",
+        action="store_true",
+        help="run implementation checks while Phase 0.6 qualification remains open",
+    )
+    args = parser.parse_args(argv)
     uv = shutil.which("uv")
     if uv is None:
         print("uv is required for the release gate", file=sys.stderr)
@@ -47,6 +52,10 @@ def main(argv: list[str] | None = None) -> int:
             "sqlite",
             "--extra",
             "postgresql",
+            "--extra",
+            "sql",
+            "--extra",
+            "foundry",
         ],
     )
     run_step("format", [*uv_run, "ruff", "format", "--check", "."])
@@ -70,17 +79,18 @@ def main(argv: list[str] | None = None) -> int:
         [*uv_run, "python", "scripts/capture_openapi.py", "--check"],
     )
     run_step("clean-wheel", [*uv_run, "python", "scripts/check_clean_wheel.py"])
-    run_step(
-        "evidence",
-        [
-            *uv_run,
-            "python",
-            "scripts/check_evidence.py",
-            "--evidence",
-            f"docs/evidence/{RELEASE_SERIES}",
-        ],
-    )
-    print(f"Phase {RELEASE_SERIES} release gate passed")
+    evidence_command = [
+        *uv_run,
+        "python",
+        "scripts/check_evidence.py",
+        "--evidence",
+        f"docs/evidence/{RELEASE_SERIES}",
+    ]
+    if not args.allow_open:
+        evidence_command.append("--release")
+    run_step("evidence", evidence_command)
+    label = "verification gate" if args.allow_open else "release gate"
+    print(f"Phase {RELEASE_SERIES} {label} passed")
     return 0
 
 

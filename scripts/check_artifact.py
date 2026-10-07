@@ -1,4 +1,4 @@
-"""Check that built artifacts contain only the Phase 0.5 package surface."""
+"""Check that built artifacts contain only the Phase 0.6 package surface."""
 
 from __future__ import annotations
 
@@ -28,6 +28,8 @@ ALLOWED_WHEEL_FILES = {
     "shuetl/postgresql.py",
     "shuetl/diagnostics.py",
     "shuetl/cli.py",
+    "shuetl/runtime.py",
+    "shuetl/supervisor.py",
     "shuetl/py.typed",
 }
 
@@ -56,11 +58,13 @@ def check_wheel(path: Path) -> None:
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
         expected = {
-            "etlantic==0.55.0",
-            "etlantic-fastapi==0.55.0",
+            "etlantic==0.56.0",
+            "etlantic-fastapi[managed]==0.56.0",
             "fastapi==0.141.1",
             "pydantic==2.13.5",
             "pydantic-settings==2.15.0",
+            "sqlalchemy==2.0.52",
+            "uvicorn==0.54.0",
         }
         actual = {
             line.removeprefix("Requires-Dist: ").strip() for line in requires_dist
@@ -78,11 +82,24 @@ def check_wheel(path: Path) -> None:
             or 'extra == "postgresql"' in line
         }
         if not any(
-            line.startswith("etlantic-sqlmodel==0.55.0") for line in optional_train
+            line.startswith("etlantic-sqlmodel==0.56.0") for line in optional_train
         ):
             raise ValueError(
-                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.55.0"
+                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.56.0"
             )
+        for package, markers in (
+            ("etlantic-sql==0.56.0", ("extra == 'sql'", "extra == 'postgresql'")),
+            ("etlantic-foundry==0.56.0", ("extra == 'foundry'",)),
+        ):
+            if not any(
+                line.removeprefix("Requires-Dist: ").strip().startswith(package)
+                and any(
+                    marker in line or marker.replace("'", '"') in line
+                    for marker in markers
+                )
+                for line in requires_dist
+            ):
+                raise ValueError(f"optional ETLantic extra is not pinned: {package}")
         forbidden_auth_dependencies = {
             "authlib",
             "authmate",

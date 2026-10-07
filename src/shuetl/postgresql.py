@@ -15,18 +15,30 @@ from .compatibility import validate_postgresql
 from .errors import ProviderReadinessError
 from .settings import ShuETLSettings
 
-POSTGRESQL_HEAD = "005_cp1_reference"
+POSTGRESQL_HEAD = "014_cp1_complete_principal_idempotency_0_56"
 POSTGRESQL_MIGRATION_VERSIONS = (
     "001_registry_cp2",
     "002_durable_cp3",
     "003_cp4_governance",
     "004_schedules_0_47",
+    "005_cp1_reference",
+    "006_managed_definition_revisions_0_56",
+    "007_managed_run_reports_0_56",
+    "008_idempotent_run_events_0_56",
+    "009_event_retention_tombstones_0_56",
+    "010_immutable_input_resources_0_56",
+    "011_run_artifact_retention_0_56",
+    "012_bounded_event_tombstone_retention_0_56",
+    "013_durable_submission_scope_backfill_0_56",
     POSTGRESQL_HEAD,
 )
 
 POSTGRESQL_REQUIRED_TABLES = frozenset(
     {
         "etlantic_sqlmodel_schema_version",
+        "cp_event_idempotency",
+        "cp_input_resource_leases",
+        "cp_input_uploads",
         "cp_cp4_governance_snapshot",
         "cp_definitions",
         "cp_durable_outbox_entity",
@@ -43,6 +55,7 @@ POSTGRESQL_REQUIRED_TABLES = frozenset(
         "cp_registry_workspaces",
         "cp_schedule_snapshot",
         "cp_submissions",
+        "cp_run_reports",
     }
 )
 
@@ -151,7 +164,7 @@ def upgrade_postgresql(settings: ShuETLSettings) -> str:
 
     if settings.profile != "postgresql-pilot" or settings.provider != "postgresql":
         raise ProviderReadinessError(
-            "database upgrade requires the postgresql-pilot PostgreSQL profile"
+            "database upgrade requires the explicit postgresql-pilot profile"
         )
     try:
         validate_postgresql()

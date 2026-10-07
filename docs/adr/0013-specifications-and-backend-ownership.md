@@ -73,6 +73,16 @@ Explicit authorization, operator policy, state/effect preconditions and qualifie
 provider capabilities are the grounds for restricting a control. A narrow
 ShuETL convenience interface must not introduce an additional restriction.
 
+## Alternatives
+
+- Leave connectors, execution planning and ETL orchestration in each consuming
+  application; rejected because it preserves application ETL code as a second
+  execution authority.
+- Add a ShuETL-specific specification and run model; rejected because it would
+  duplicate ETLantic's canonical semantics and durable identities.
+- Qualify transfer-only behavior as the complete baseline; rejected because it
+  would not meet the approved transformation, quality, and control requirements.
+
 ## Validation
 
 HC-14 and HC-17–HC-23 in the
@@ -81,6 +91,10 @@ HC-14 and HC-17–HC-23 in the
 the [roadmap](../plans/ROADMAP.md) enforce this decision. Source/import review
 is paired with behavior; generic fixtures cannot substitute for live ETL
 qualification or downstream retirement evidence.
+
+Phase-specific contract evidence is indexed in
+[`docs/evidence/0.6/contracts.md`](../evidence/0.6/contracts.md) and
+[`docs/evidence/0.6/ownership.md`](../evidence/0.6/ownership.md).
 
 ## Revisit trigger
 

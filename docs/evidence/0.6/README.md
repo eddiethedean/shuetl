@@ -25,7 +25,7 @@ provider status, transition, and CI definition provide supporting context.
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
 | Gate C | Hosted artifact and installed-wheel qualification matrix, run 37668515171 | PASS |
 | SHA-256 wheel | `267d4d9e9c6c18a099ed9bb5f369af93ec2252e89f7de8278da8c18b1332cd85` |
-| SHA-256 sdist | `2df201f321dcd54be15ac735581561b6bbea266805d74ae1861990b4effe93b2` |
+| SHA-256 sdist | `1cf37c37bb23ca9fe894738a812c9959b88492cbb8580e729d29d213dda598f8` |
 
 ## Acceptance results
 

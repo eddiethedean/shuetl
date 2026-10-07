@@ -176,7 +176,7 @@
     "status": "OPEN"
   },
   "AC-023": {
-    "command": "GitHub Actions run 37661869120",
+    "command": "GitHub Actions run 37668515171",
     "artifact": "qualification.md#ac-023",
     "requirement": "The release gate and hosted Python 3.11\u20133.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",

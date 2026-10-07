@@ -35,6 +35,7 @@ Issues = "https://github.com/eddiethedean/shuetl/issues"
 [project.optional-dependencies]
 test = [
     "httpx2==2.12.0",
+    "pytest==8.4.2",
 ]
 sqlite = [
     "etlantic-sqlmodel==0.56.0",

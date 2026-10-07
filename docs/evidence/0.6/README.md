@@ -24,8 +24,8 @@ provider status, transition, and CI definition provide supporting context.
 | Gate A | Local CPython 3.13 format, lint, typing, boundary, and regression checks | PASS |
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
 | Gate C | Local wheel, artifact, isolated dependency/import checks | PASS |
-| SHA-256 wheel | `c843551c77116144d488de6d2f48318aca31b123b4570e5f44af7338fe58005b` |
-| SHA-256 sdist | `89f89509a3b98c58fc3e8f9f6c813f3eb2c6008509e9642214bf0736ebe28890` |
+| SHA-256 wheel | `fc35a0be53c5f57f034f67062006b53d48907d4a5ad5cc3e692e56f67042e37a` |
+| SHA-256 sdist | `a1cb5cb91f1593bae5fe227d7b1f86fd688d374525b146f85ad4240228140306` |
 
 ## Acceptance results
 

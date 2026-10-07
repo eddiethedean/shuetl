@@ -17,8 +17,9 @@ release gate runs the PostgreSQL role fixture from an isolated installed wheel.
 tests. The release gate clears the PostgreSQL profile environment for the
 general test suite, then retains it for the installed-wheel PostgreSQL check;
 the clean-wheel gate also clears those settings for core and SQLite examples
-while retaining them for PostgreSQL qualification. The dedicated integration
-job runs its PostgreSQL tests with that environment. PRs run the implementation
+while retaining them for PostgreSQL qualification. The installed `test` extra
+provides pytest for that isolated fixture. The dedicated integration job runs
+its PostgreSQL tests with the PostgreSQL environment. PRs run the implementation
 gate with open acceptance rows allowed; tag runs use strict evidence mode.
 
 | Gate | Workflow job | Current evidence |

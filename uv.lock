@@ -829,6 +829,7 @@ sqlite = [
 ]
 test = [
     { name = "httpx2" },
+    { name = "pytest" },
 ]
 
 [package.dev-dependencies]
@@ -852,6 +853,7 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgresql'", specifier = "==3.3.5" },
     { name = "pydantic", specifier = "==2.13.5" },
     { name = "pydantic-settings", specifier = "==2.15.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = "==8.4.2" },
     { name = "sqlalchemy", specifier = "==2.0.52" },
     { name = "sqlalchemy", marker = "extra == 'postgresql'", specifier = "==2.0.52" },
     { name = "sqlalchemy", marker = "extra == 'sqlite'", specifier = "==2.0.52" },

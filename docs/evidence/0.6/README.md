@@ -24,8 +24,8 @@ provider status, transition, and CI definition provide supporting context.
 | Gate A | Hosted quality and regression matrix on Python 3.11–3.13, run 37661869120 | PASS |
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
 | Gate C | Hosted artifact and installed-wheel qualification matrix, run 37661869120 | PASS |
-| SHA-256 wheel | `6185c76576c3c02c5dbdc3ce3dc54b307d55408f3891720e495cf3fd4641eb4a` |
-| SHA-256 sdist | `5c194608d5d7a6d645bbe2e98d284a3b5aecb4a8f23bb3c93fa9cc007fde9e6a` |
+| SHA-256 wheel | `267d4d9e9c6c18a099ed9bb5f369af93ec2252e89f7de8278da8c18b1332cd85` |
+| SHA-256 sdist | `2df201f321dcd54be15ac735581561b6bbea266805d74ae1861990b4effe93b2` |
 
 ## Acceptance results
 

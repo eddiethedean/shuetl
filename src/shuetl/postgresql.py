@@ -119,8 +119,7 @@ def inspect_postgresql_engine(
             # Bound each catalog/version query so a wedged server cannot keep
             # the supervisor's provider-monitor thread alive through shutdown.
             connection.exec_driver_sql(
-                "SET LOCAL statement_timeout = "
-                f"'{_INSPECTION_STATEMENT_TIMEOUT_MS}ms'"
+                f"SET LOCAL statement_timeout = '{_INSPECTION_STATEMENT_TIMEOUT_MS}ms'"
             )
             raw_server = str(connection.exec_driver_sql("SHOW server_version").scalar())
             server_version = raw_server.split(maxsplit=1)[0]

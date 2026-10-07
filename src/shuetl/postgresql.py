@@ -16,6 +16,7 @@ from .errors import ProviderReadinessError
 from .settings import ShuETLSettings
 
 POSTGRESQL_HEAD = "014_cp1_complete_principal_idempotency_0_56"
+_INSPECTION_STATEMENT_TIMEOUT_MS = 5_000
 POSTGRESQL_MIGRATION_VERSIONS = (
     "001_registry_cp2",
     "002_durable_cp3",
@@ -115,6 +116,12 @@ def inspect_postgresql_engine(
 
         with engine.connect() as connection:
             connection.exec_driver_sql("SET TRANSACTION READ ONLY")
+            # Bound each catalog/version query so a wedged server cannot keep
+            # the supervisor's provider-monitor thread alive through shutdown.
+            connection.exec_driver_sql(
+                "SET LOCAL statement_timeout = "
+                f"'{_INSPECTION_STATEMENT_TIMEOUT_MS}ms'"
+            )
             raw_server = str(connection.exec_driver_sql("SHOW server_version").scalar())
             server_version = raw_server.split(maxsplit=1)[0]
             if server_version != expected_server:

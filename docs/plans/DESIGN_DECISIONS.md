@@ -148,18 +148,25 @@ CI, and the tag-triggered release workflow published ShuETL 0.5.0.
 ### Required before Phase 0.6 implementation
 
 The [Phase 0.6 execution contract](PHASE_0_6_EXECUTION.md) records the
-installed 0.55.0 runtime gap and the acceptance boundary. Resolve an ADR for:
+selected published ETLantic `0.56.0` train and the acceptance boundary.
+The [proposed ADR-0014](../adr/0014-role-separated-managed-runtime.md) specifies:
 
-1. the published upstream PostgreSQL role service or the strictly generic
-   ShuETL process supervisor that invokes public ETLantic services;
-2. a trusted host factory, scoped scheduler/worker service identity and context,
-   and real worker runner with no no-op fallback;
-3. role-local readiness transport and drain behavior.
+1. the ShuETL process supervisor invoking the published managed backend,
+   public scheduler ticks and managed execution host;
+2. typed trusted host bindings, scoped scheduler/worker service identity and
+   context, and ShuETL-owned construction of the managed worker;
+3. role-local readiness transport and drain behavior, including a worker
+   probe that does not assume an upstream `ready()` method;
+4. the fresh 0.56 store transition and narrow non-mutating constructor DDL
+   exception, with read-only preflight and health inspection.
 
-The exact upstream package train and these choices must be qualified before
-`shuetl serve --role gateway|scheduler|worker` can make a production-preview
-claim. The existing `complete` route preset remains the baseline; add a
-different production preset only if route inventory demonstrates a need and
+Dependency selection is complete; these composition choices must be qualified
+before `shuetl serve --role gateway|scheduler|worker` can make a
+production-preview claim. Freeze the ADR's public signatures and qualify its
+installed-wheel Gate 0 fixture before accepting it. The
+[verification plan](PHASE_0_6_VERIFICATION.md) maps all 33 release criteria.
+The existing `complete` route preset remains the baseline; add a different
+production preset only if route inventory demonstrates a need and
 an ADR preserves upstream route ownership.
 
 These decisions belong to the named later release, not the 0.1 boundary proof:

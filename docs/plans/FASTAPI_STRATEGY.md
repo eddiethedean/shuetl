@@ -2,9 +2,10 @@
 
 ## Principle
 
-FastAPI is ShuETL's application integration substrate.
+FastAPI is one of ShuETL's application integration substrates.
 `etlantic-fastapi` remains the authoritative implementation of ETLantic HTTP
-semantics.
+semantics. Headless host composition is also supported and uses public
+ETLantic application services without requiring an HTTP listener.
 
 ## Composition, not route duplication
 
@@ -94,6 +95,31 @@ ShuETL preserves upstream:
 Tests compare the mounted schema with the supported
 `etlantic-fastapi` contract.
 
+## Headless host mode
+
+A non-HTTP host uses canonical specifications and commands through ShuETL's
+standard backend profile. It does not construct runtime providers, mount routes,
+create an HTTP client or call back into its own process. FastAPI dependency
+injection remains the mechanism for HTTP requests; headless commands receive
+the equivalent trusted principal/context through public upstream contracts.
+The backend owns construction of the configured service graph.
+
+This is a composition mode, not a second ETL application API. ShuETL must not
+copy ETLantic domain models or call private ETLantic modules to supply a missing
+service operation. Required service-level contracts are upstream work.
+
+Expose complete qualified caller-facing control through canonical contracts or
+documented public service access, including provider settings and run actions
+outside convenience presets. Headless services do not require matching HTTP
+routes; any upstream transport limitation is explicit. Apps may implement their
+own product endpoints and workflows over these services. See
+[DEVELOPER_CONTROL.md](DEVELOPER_CONTROL.md).
+
+The standard submission command delegates the complete preparation/admission
+workflow to the public backend service. The host's UI may request separate
+validation/explanation/preview, but cannot be responsible for sequencing those
+stages correctly to make submission safe.
+
 ## Streaming
 
 ShuETL exposes upstream SSE behavior and documents:
@@ -129,3 +155,8 @@ The FastAPI suite covers:
 - SSE resume behavior;
 - missing/incompatible provider readiness;
 - confirmation that no execution runs in request or background-task lifetimes.
+
+The host-integration suite also proves the standard specification and command
+surface works without a listening server, with identities and outcomes matching
+the mounted HTTP mode. Its reference app supplies neither a provider graph nor
+submission preparation logic; the backend owns both in either consumption mode.

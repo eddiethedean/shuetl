@@ -25,6 +25,13 @@ reports into a less expressive local model.
 The mounted `etlantic-fastapi` routes remain authoritative for report, event,
 and artifact metadata responses.
 
+An in-process host consumes the same public ETLantic service results without
+requiring those routes to be mounted. Host UIs can project run stages, progress,
+diagnostics, manifests, and event history, keyed by canonical submission, run,
+attempt, and event identities. A projection may be cached or indexed for
+display; ETLantic remains authoritative for lifecycle, cursor order,
+cancellation, and reconciliation state.
+
 ShuETL may:
 
 - choose which optional routes are enabled;
@@ -34,6 +41,14 @@ ShuETL may:
 - provide presentation adapters that consume the canonical responses.
 
 It may not silently omit fields that change ETLantic semantics.
+
+Convenience summaries must retain a public path to complete authorized
+canonical records, supported queries/filters, effective run specifications,
+lineage, allowed actions and artifact access. Apps may build custom monitoring,
+analytics, notifications and business workflows over those contracts. Data
+access through authorized artifact download/streaming is not limited to the
+default metadata-only presentation. Provider bounds and classification rules
+still apply. See [DEVELOPER_CONTROL.md](DEVELOPER_CONTROL.md).
 
 ## Bounded responses
 
@@ -46,6 +61,27 @@ and providers.
   behavior.
 - List and event endpoints use upstream pagination/cursor contracts.
 - Presentation summaries identify truncation and their source record.
+
+For data-moving hosts, qualification must also record which provider-confirmed
+row/byte counts, schemas, checksums, remote object IDs, and publication states
+are available. Missing evidence remains explicitly unavailable; a ShuETL or
+host projection must not infer successful publication or reconciliation from
+submission acceptance.
+
+Unknown or unavailable counts are not zero. A cancellation request is not a
+terminal cancellation result. A timeout after sink commit remains uncertain
+until the upstream reconciliation contract establishes the outcome. Host
+projections preserve these distinctions and the age/source of cached facts.
+
+On a retained-event cursor gap, the host uses upstream resynchronization and
+rebuilds its view from canonical records; it must not silently present a partial
+history as complete. Long-lived streams retain upstream reauthorization and
+owner-scope rules. Polling hosts use the same canonical ordering and bounds.
+
+Plan preview returns metadata by default. Explicitly authorized sample data
+uses the upstream classification/redaction policy and cannot enter logs,
+events or general control-plane records. Preview success is not evidence of
+whole-dataset validation or destination publication.
 
 ## Artifact data
 

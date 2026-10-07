@@ -1,7 +1,8 @@
 # Architecture Decision Records
 
-These ADRs record accepted implementation constraints. They are not open design
-questions.
+These ADRs record implementation constraints. Accepted decisions govern
+implementation; proposed decisions identify concrete designs awaiting their
+stated acceptance evidence.
 
 | ADR | Decision | Status |
 |---|---|---|
@@ -16,6 +17,9 @@ questions.
 | [0009](0009-doctor-report-contract.md) | Doctor report contract | Accepted |
 | [0010](0010-postgresql-pilot-and-migration-boundary.md) | PostgreSQL pilot and migration boundary | Accepted |
 | [0011](0011-host-identity-composition-and-production-guards.md) | Host identity composition and production guards | Accepted and implemented for 0.5; published 0.55.0 prerequisites qualified |
+| [0012](0012-one-way-host-integration.md) | One-way host integration and headless composition | Accepted |
+| [0013](0013-specifications-and-backend-ownership.md) | Application specifications and complete backend ownership | Accepted |
+| [0014](0014-role-separated-managed-runtime.md) | 0.6 managed role wiring, trusted bindings, probes, drain and fresh-store boundary | Proposed; Gate 0 qualification pending |
 
 Any change to an accepted decision requires updating its governing execution
 contract and acceptance/verification mapping.

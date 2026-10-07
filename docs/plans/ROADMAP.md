@@ -385,10 +385,14 @@ Qualify authenticated, authorized single-tenant FastAPI deployments.
 ## 0.6 — Role-Separated Production Preview
 
 The [Phase 0.6 execution contract](PHASE_0_6_EXECUTION.md) defines the exact
-reference topology, upstream prerequisite, process boundary, acceptance
-criteria, fault matrix, and release gate. The installed ETLantic 0.55.0 CLI
-uses file-backed scheduler and worker stores, and its worker default runner
-does no pipeline work. Those paths do not qualify the PostgreSQL preview.
+reference topology, selected ETLantic `0.56.0` baseline, process boundary,
+acceptance criteria, fault matrix, and release gate. Use the published managed
+backend, scheduler service and managed execution adapter. ShuETL supplies
+service-context wiring, process supervision and role readiness. The upstream
+file-backed CLI is not the PostgreSQL preview entry point.
+The [verification plan](PHASE_0_6_VERIFICATION.md) supplies the 33-criterion
+mapping and installed-artifact fixtures; [ADR-0014](../adr/0014-role-separated-managed-runtime.md)
+specifies the proposed role construction and supervision contract.
 
 ### Outcome
 
@@ -397,6 +401,12 @@ supervised roles using one ShuETL installation.
 
 ### Deliverables
 
+- Pin ETLantic core/FastAPI/SQLModel to `0.56.0`, with SQL/Foundry on the same
+  train when enabled; qualify the composed roles on PostgreSQL `18.6`.
+- Provision a fresh 0.56 store at migration 014 and document re-enrollment,
+  unfinished-work reconciliation and rollback to the separate 0.5 store.
+  Preserve read-only health probes and qualify the exact non-mutating
+  constructor statement allowed by the execution contract.
 - Add process entry points such as:
 
   ```text
@@ -407,6 +417,11 @@ supervised roles using one ShuETL installation.
 
   These commands configure and invoke upstream ETLantic roles.
 - Ensure the production gateway never starts a local execution loop.
+- Supply the standard managed graph in ShuETL; host bindings provide identity
+  and resource integration without a provider graph or execution callback.
+- Qualify immutable CSV/PostgreSQL-to-PostgreSQL ETL with bounded transforms,
+  quality, effective run settings, canonical actions and independently packaged
+  extensions. Publish a per-provider pairing/write-mode support matrix.
 - Add role-specific configuration validation, health, readiness, and shutdown
   behavior.
 - Provide container and ordinary process-supervisor examples using one
@@ -447,6 +462,8 @@ supervised roles using one ShuETL installation.
 - [ ] Every failure-injection result is mapped to a documented upstream state or
       diagnostic.
 - [ ] The supported preview topology is reproducible from the deployment guide.
+- [ ] All 33 execution-contract criteria pass, including standard-consumer,
+      live capability, resource, lifecycle and fresh-store transition evidence.
 
 ---
 

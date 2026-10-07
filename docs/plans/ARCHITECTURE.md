@@ -3,9 +3,43 @@
 ## Architectural statement
 
 ShuETL is an application integration layer over ETLantic's public control-plane
-and FastAPI packages.
+and runtime packages. FastAPI is a supported host surface, and ShuETL also
+supports headless in-process composition by host applications.
+
+ShuETL provides the complete supported backend experience: applications control
+canonical specifications while ETLantic/providers implement every ETL operation.
+The standard path requires no application-built provider graph, connector code
+or preparation coordinator. See [SPECIFICATION_CONTRACT.md](SPECIFICATION_CONTRACT.md).
+
+The [developer-control contract](DEVELOPER_CONTROL.md) requires complete public
+specification/run control, permitted overrides and optional expert service
+access. Apps may compose business workflows and developers may author backend
+extensions. The configured runtime owns their ETL execution and durable state.
 
 It must not become a second semantic layer between FastAPI and ETLantic.
+
+## Dependency direction
+
+```text
+Data Mover or another host application
+  business specifications, UI, accounts, product policy, credentials, and host data
+          │ installs and depends on ShuETL
+          ▼
+ShuETL
+  generic host composition, provider wiring, compatibility, and role setup
+          │ depends on public contracts
+          ▼
+ETLantic + provider packages
+  canonical definitions, execution, durable state, and provider semantics
+```
+
+The arrow describes package dependency. Data Mover is a downstream adopter and
+reference workload, not a ShuETL component. ShuETL contains no Data Mover import,
+extra, schema, connector, or product-specific branch. Its own CI uses generic
+host fixtures; the consuming application's CI installs the released ShuETL
+artifact and proves that its product flows work through the published contract.
+The boundary and qualification criteria are detailed in
+[HOST_INTEGRATION.md](HOST_INTEGRATION.md).
 
 ```text
 Host FastAPI application
@@ -48,33 +82,42 @@ prevented.
 
 ### ShuETL facade
 
-The public ShuETL object should make composition concise while keeping providers
-explicit:
+The current public ShuETL object keeps provider construction and ownership
+explicit for advanced composition:
 
 ```python
 from fastapi import FastAPI
-from shuetl import ShuETL, ShuETLSettings
+from shuetl import ShuETL
 
-integration = ShuETL.from_settings(
-    ShuETLSettings.from_env(),
-    principal_dependency=current_principal,
-)
+integration = ShuETL(api=prebuilt_etlantic_api)
 
 app = FastAPI(lifespan=integration.lifespan)
 integration.mount(app)
 ```
 
-The exact constructor remains an ADR. Regardless of syntax, the facade owns:
+The 0.5 headless constructor and lifecycle are frozen after public service
+qualification in [PHASE_0_5_EXECUTION.md](PHASE_0_5_EXECUTION.md). Existing facade
+and bundle ownership remain compatible. The standard profile also constructs
+the graph from deployment configuration and exposes canonical specification/
+command access without app runtime factories. The target composition layer owns:
 
 - validated ShuETL integration settings;
 - construction or acceptance of ETLantic provider instances;
 - mounting the authoritative `etlantic-fastapi` router;
+- exposing the same configured ETLantic application services to a headless host
+  without requiring an HTTP server or loopback request;
 - composition with a host lifespan without silently replacing it;
 - readiness and capability reporting;
 - deployment-role selection;
 - compatibility diagnostics.
 
 It does not own ETLantic records or execution semantics.
+
+The headless path composes public ETLantic services and returns canonical
+upstream records. ShuETL does not add host-oriented run methods that execute
+synchronously, substitute credentials, or translate ETLantic status models.
+If a required service operation is not public upstream, that contract must be
+added to ETLantic before ShuETL supports it.
 
 ### `etlantic-fastapi`
 
@@ -128,10 +171,20 @@ The host owns:
 - application-wide lifespan composition;
 - deployment supervision and process scaling;
 - selection of identity, secrets, logging, and observability integrations;
-- business-specific pipeline definitions and runtime profiles.
+- business-specific pipeline definitions and runtime profiles;
+- host account-to-principal/scope mapping and credential storage or credential
+  provider adapters;
+- host-owned migration from any prior definition/run schema to canonical
+  ETLantic identities;
+- host-specific UI projections of ETLantic results and events.
 
 ShuETL supplies adapters and documented integration points without taking over
 the host.
+
+Deployment configuration selects independent backend connector/provider
+packages implementing public ETLantic contracts. ShuETL supplies and qualifies
+their composition. The host specifies supported connection references,
+locators and policies; it does not implement connector or execution behavior.
 
 ## Core flows
 
@@ -158,12 +211,23 @@ ETLantic authorization context
   ↓
 etlantic-fastapi submit route
   ↓
+ETLantic submission command (binding, planning, preflight, admission)
+  ↓
 ETLantic durable acceptance transaction
   ↓
 202 with canonical ETLantic submission/run record
   ↓
 ETLantic worker or external execution host
 ```
+
+An embedding application invokes one logical public backend submission command
+in-process instead of calling its own HTTP routes. That command owns planning,
+fingerprinting, preflight and acceptance; the app never coordinates the stages.
+The durable submission, authorization and result identities remain the same in
+either consumption mode. Authoring validation remains side-effect-free. Live
+preflight is a separately authorized provider action outside the gateway before a new
+pipeline submission; an already accepted idempotency key is resolved first.
+The worker rechecks time-sensitive policy and resource access before effects.
 
 Returning `202 Accepted` requires the upstream durable store to have accepted
 the work. ShuETL does not return a synthetic success while work is only in
@@ -238,6 +302,23 @@ supported external runtime or orchestrator
 ```
 
 Public ETLantic submission and report semantics remain unchanged.
+
+## Host backend integration
+
+ShuETL is a backend composition dependency, not the host's UI, identity product,
+credential vault, or connector implementation. For embedded consumers, ShuETL
+configures a host-neutral ETLantic graph and makes its public service boundary
+available without requiring HTTP exposure. The host maps trusted users and
+opaque, versioned secret references into ETLantic context. Claimed pipeline
+workers and separately authorized isolated provider actions resolve only the
+resources needed for their operation. Neither exposes credentials to the
+gateway or host presentation layer.
+
+The host reads canonical submission, run, attempt, event, report, schedule, and
+artifact records. It may persist a read-only projection keyed by ETLantic IDs,
+but ETLantic remains the sole authority for lifecycle and event ordering.
+Ambiguous external effects remain reconciliation outcomes. Product-specific
+definition migration stays in the host application's migration process.
 
 ## Identity integration
 

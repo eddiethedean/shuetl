@@ -90,6 +90,32 @@ Secret values must not enter:
 Resolution occurs inside the authorized ETLantic execution boundary through an
 upstream secret/resource provider.
 
+For a pipeline, that boundary is the worker after its authorized claim. For
+catalog browsing, connection tests and preflight, it is a separately authorized
+isolated provider-action executor; no pipeline submission is required. Pure
+validation/planning never resolves secrets. Provider actions have their own
+scope, purpose, deadline, bounded output and audit evidence. The gateway and
+headless host receive safe results, not decrypted credentials.
+
+Recheck reference ownership, provider/purpose binding, revocation and the
+declared version policy at use. A successful earlier preflight cannot grant
+permanent access or authorize a now-disabled writer. No fallback to a global
+credential is permitted. Qualification begins with fake providers in 0.5 and
+requires actual executor isolation for live-provider support in 0.6.
+
+## Headless and preview boundaries
+
+Public application services must authorize each headless call before sensitive
+lookup, matching the HTTP path. Direct store access is not a substitute.
+Per-call context must remain isolated across concurrent callers and cleanup.
+
+Sample preview is execution and must use the isolated worker/action boundary.
+It cannot mutate a destination or run under the web request lifetime. Sample
+values require explicit data-read authorization and classification policy;
+they never enter logs, events or general control-plane records. Metadata-only
+output is the default. Bound runtime, memory, rows, bytes, concurrency and
+temporary storage, including cleanup on cancellation.
+
 ## Denial-of-service controls
 
 ShuETL configures and tests upstream bounds for:
@@ -128,4 +154,7 @@ The integration suite must cover:
 - redaction across errors, logs, OpenAPI examples, events, and readiness output;
 - malicious definitions, parameters, URIs, and plugin identifiers;
 - gateway/worker role separation;
+- provider-action authorization and executor isolation;
+- concurrent headless context isolation and matching HTTP/service checks;
+- credential rotation/revocation and stale-preflight checks before effects;
 - incompatible package and database schema rejection.

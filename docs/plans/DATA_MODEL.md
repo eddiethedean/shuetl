@@ -26,6 +26,29 @@ integration configuration and diagnostics that are genuinely ShuETL-specific.
 ShuETL must not copy these models merely to rename fields or use a different base
 class.
 
+## Authored specifications and derived records
+
+Canonical model ownership does not remove the application's control of
+business intent. Apps author the supported sources, parameters, logical graphs,
+rules, write policies, schedules and execution budgets. The upstream schema
+defines those choices and their constraints; the backend computes physical
+plans, normalized fingerprints, resolved bindings and runtime records.
+
+The [specification contract](SPECIFICATION_CONTRACT.md) requires discoverable
+typed schemas, canonical export/import and versioned updates. The standard
+consumer supplies serializable specifications or saved revision references;
+it never needs executable Python definitions, provider objects or per-row
+callbacks. Backend-derived hashes and preflight outcomes cannot be overridden
+by a caller to bypass preparation.
+
+Applications may author definitions programmatically and supply permitted
+per-run overrides, engine/version pins, planning hints and qualified code
+artifact references. Preserve complete upstream extension fields. Record
+effective values and their provenance without rewriting a saved definition.
+Supported queued/live amendments create canonical audited control records
+instead of silently editing accepted history. See
+[DEVELOPER_CONTROL.md](DEVELOPER_CONTROL.md) for precedence and lifecycle rules.
+
 ## Definition and revision rules
 
 Registration accepts an ETLantic-supported canonical definition such as
@@ -129,6 +152,12 @@ does not implement their transactions or queries.
 - AuthMate owns migrations for AuthMate tables when used.
 - ShuETL owns migrations only if it later introduces explicitly approved
   ShuETL-specific tables.
+
+Consuming hosts own migration of their existing pipeline definitions,
+credential references, account/scope mappings, and UI projections to canonical
+ETLantic identities. ShuETL must not inspect or migrate a host application's
+schema. A supported host adoption records a mapping and rollback plan while
+keeping ETLantic the sole authority for new execution state.
 
 ShuETL may expose commands that call documented provider status/upgrade
 operations. It must not autogenerate migrations from arbitrary application model

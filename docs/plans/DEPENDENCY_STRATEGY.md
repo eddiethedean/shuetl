@@ -9,9 +9,13 @@ ETLantic packages and public contracts.
 > **Depend on ETLantic contracts; do not reach through them to implementation
 > libraries.**
 
-## Initial direct dependencies
+Host applications depend on ShuETL. ShuETL has no build, runtime, test, or
+optional-extra dependency on any consuming product. Data Mover is a reference
+consumer of released ShuETL artifacts, not a package imported by ShuETL.
 
-The first implementation is expected to depend directly on:
+## Direct dependencies
+
+The current package depends directly on:
 
 ```text
 fastapi
@@ -21,9 +25,19 @@ etlantic
 etlantic-fastapi
 ```
 
-The exact version bounds are fixed in the Phase 0.1 compatibility ADR. The initial
-target is a lockstep ETLantic 0.51.x package train rather than unbounded 0.x
-compatibility.
+The released 0.5 package and lock pin ETLantic core/FastAPI/SQLModel to 0.55.0.
+Phase 0.6 selects exact `0.56.0` pins for those packages and for SQL/Foundry
+providers when enabled. Implementation updates the lock, compatibility checks,
+and provider metadata together. Use the published artifacts as supplied;
+upstream documentation cleanup or a newer release is not a prerequisite.
+
+The [0.56 dependency map](ETLANTIC_0_56_DEPENDENCIES.md) and
+[wheel audit](ETLANTIC_0_56_WHEEL_AUDIT.md) record the artifact evidence and
+published API boundaries. The [0.6 execution contract](PHASE_0_6_EXECUTION.md)
+requires ShuETL service, OpenAPI, PostgreSQL process and installed-artifact
+qualification before release. It selects a fresh 0.56 store at migration 014
+and documents the narrow non-mutating constructor DDL exception; the 0.55
+store remains with the retained 0.5 application for rollback.
 
 A package used in ShuETL imports should be declared directly even if it is also
 transitive.
@@ -61,6 +75,24 @@ Each extra must:
 - fail with a clear capability diagnostic when requested but unavailable;
 - have an integration test against the supported release train.
 
+Connector and ETL execution extensions ship as independent backend provider
+packages using public ETLantic contracts. Standard profiles name their qualified
+package set; the operator installs/selects it, and the app supplies logical
+specifications. New proprietary ETL implementations must also be packaged
+independently of an adopter. The app may bridge its identity/credential store
+without supplying extraction, transformation or loading code.
+
+Developers may author private ETL extensions, including in the app's repository,
+provided the backend package/artifact installs without the host application.
+Public ETLantic extension contracts avoid any need for a ShuETL core change or
+public package publication. Profile conformance, ownership and compatibility
+evidence determine deployment support.
+
+Explicit provider injection remains an advanced platform integration surface.
+It does not satisfy the standard-consumer gate if an app must implement runtime
+factories or coordinate ETL services. ShuETL must not require any adopter in its
+distribution, core CI, hard-coded imports or clean-install examples.
+
 ## Dependencies ShuETL should not own directly
 
 Unless an ADR approves a narrow ShuETL-specific use, do not add direct
@@ -77,8 +109,10 @@ Those dependencies belong to ETLantic and its selected providers.
 
 ## FastAPI boundary
 
-FastAPI is foundational to ShuETL, but `etlantic-fastapi` remains authoritative
-for ETLantic route and schema behavior.
+FastAPI remains an installed composition dependency; `etlantic-fastapi` remains
+authoritative for HTTP behavior. The headless promise concerns operation
+without a server or synthetic request, not a FastAPI-free distribution. Moving
+HTTP support into an optional extra would require a separate packaging decision.
 
 ShuETL uses FastAPI directly only for:
 

@@ -733,11 +733,27 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         assert manual_receipt is not None and manual_receipt.run_id is not None
         assert worker.service is not None and worker.context is not None
         worker_errors: list[str] = []
+        worker_outcomes: list[str] = []
         original_runner = worker.service.runner
 
         def observe_runner(ctx: Any, **kwargs: Any) -> Any:
             try:
-                return original_runner(ctx, **kwargs)
+                outcome = original_runner(ctx, **kwargs)
+                status = getattr(outcome, "status", None)
+                diagnostics = getattr(outcome, "diagnostics", ())
+                diagnostic_details = [
+                    (
+                        f"{getattr(item, 'code', 'unknown')}: "
+                        f"{getattr(item, 'message', '')}".replace(
+                            runtime_database_url, "[redacted]"
+                        )
+                    )
+                    for item in diagnostics
+                ]
+                worker_outcomes.append(
+                    f"status={status}; diagnostics={diagnostic_details!r}"
+                )
+                return outcome
             except Exception as exc:
                 message = str(exc).replace(runtime_database_url, "[redacted]")
                 causes: list[str] = []
@@ -770,7 +786,7 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
             "Worker did not publish a durable run result; "
             f"submission_status={submission_after_tick.status}; "
             f"attempts={attempts_after_tick!r}; "
-            f"runner_errors={worker_errors!r}"
+            f"runner_errors={worker_errors!r}; outcomes={worker_outcomes!r}"
         )
         manual_report = service.get_run_report(service_ctx, manual_receipt.run_id)
         assert manual_report["status"] == "succeeded", manual_report

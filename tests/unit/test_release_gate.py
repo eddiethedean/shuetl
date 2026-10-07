@@ -31,7 +31,5 @@ def test_release_gate_bootstraps_locked_test_environment(monkeypatch) -> None:
             "postgresql",
             "--extra",
             "sql",
-            "--extra",
-            "foundry",
         ],
     )

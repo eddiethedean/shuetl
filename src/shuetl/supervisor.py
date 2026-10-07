@@ -171,9 +171,7 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
         if threading.current_thread() is threading.main_thread():
             # Uvicorn re-raises captured SIGTERM after graceful shutdown. Keep
             # that re-raise inside this function until its cleanup has run.
-            previous_sigterm_handler = signal.signal(
-                signal.SIGTERM, server.handle_exit
-            )
+            previous_sigterm_handler = signal.signal(signal.SIGTERM, server.handle_exit)
         probe = _make_probe_server(settings.probe_port, state)
         probe_thread = threading.Thread(
             target=probe.serve_forever,

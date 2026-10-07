@@ -4,6 +4,7 @@ x-application-image: &application-image "${SHUETL_IMAGE:?Set SHUETL_IMAGE to the
 x-runtime: &runtime
   image: *application-image
   restart: unless-stopped
+  stop_grace_period: 1h1m
   environment: &runtime-environment
     SHUETL_PROFILE: postgresql-preview
     SHUETL_PROVIDER: postgresql

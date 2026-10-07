@@ -8,10 +8,10 @@ Type=simple
 EnvironmentFile=/etc/shuetl/phase-0.6.env
 ExecStartPre=/usr/local/libexec/shuetl-preview-container --check
 ExecStart=/usr/local/libexec/shuetl-preview-container %i
-ExecStop=-/usr/bin/podman stop --time=30 shuetl-phase06-%i
+ExecStop=-/usr/bin/podman stop --time=3610 shuetl-phase06-%i
 Restart=on-failure
 RestartSec=5
-TimeoutStopSec=40
+TimeoutStopSec=1h2m
 KillMode=process
 
 [Install]

@@ -63,9 +63,14 @@ class _ProbeState:
         with self._lock:
             self._provider_ok = healthy
             self._provider_checked = now
-            self._supervisor_checked = now
             if self._lifecycle == "running":
                 self._reason = "ready" if healthy else reason
+
+    def supervisor_heartbeat(self) -> None:
+        """Record supervisor progress independently of provider inspection."""
+
+        with self._lock:
+            self._supervisor_checked = time.monotonic()
 
     def is_ready(self) -> bool:
         """Return whether a recent provider inspection permits new work."""
@@ -130,8 +135,19 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
     )
     probe_started = False
     monitor_started = False
+    heartbeat_started = False
     result = 0
     previous_sigterm_handler: Any | None = None
+    heartbeat = threading.Thread(
+        target=_heartbeat_supervisor,
+        args=(
+            state,
+            stop,
+            min(settings.probe_refresh_seconds, settings.probe_stale_after_seconds / 3),
+        ),
+        name="shuetl-heartbeat-gateway",
+        daemon=False,
+    )
     try:
         import uvicorn
         from fastapi.responses import JSONResponse
@@ -180,6 +196,8 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
         )
         probe_thread.start()
         probe_started = True
+        heartbeat.start()
+        heartbeat_started = True
         monitor.start()
         monitor_started = True
         server.run()
@@ -194,6 +212,8 @@ def serve_gateway(runtime: ManagedRuntime) -> int:
         stop.set()
         if monitor_started:
             monitor.join()
+        if heartbeat_started:
+            heartbeat.join()
         if probe is not None:
             if probe_started:
                 probe.shutdown()
@@ -237,10 +257,21 @@ def serve_runtime_role(runtime: ManagedRuntime) -> int:
     )
     previous_handlers: dict[int, Any] = {}
     monitor_started = False
+    heartbeat_started = False
     tick_started = False
     probe_started = False
     drain_called = False
     result = 0
+    heartbeat = threading.Thread(
+        target=_heartbeat_supervisor,
+        args=(
+            state,
+            stop,
+            min(settings.probe_refresh_seconds, settings.probe_stale_after_seconds / 3),
+        ),
+        name=f"shuetl-heartbeat-{settings.role}",
+        daemon=False,
+    )
 
     def request_shutdown(_signum: int, _frame: Any) -> None:
         state.mark_draining()
@@ -258,6 +289,8 @@ def serve_runtime_role(runtime: ManagedRuntime) -> int:
         )
         probe_thread.start()
         probe_started = True
+        heartbeat.start()
+        heartbeat_started = True
         monitor.start()
         monitor_started = True
         state.mark_running()
@@ -294,6 +327,8 @@ def serve_runtime_role(runtime: ManagedRuntime) -> int:
             tick_thread.join()
         if monitor_started:
             monitor.join()
+        if heartbeat_started:
+            heartbeat.join()
         if probe is not None:
             if probe_started:
                 probe.shutdown()
@@ -352,6 +387,18 @@ def _monitor_provider(
             state.provider_result(healthy, reason)
         except Exception:
             state.provider_result(False, "database_unavailable")
+        stop.wait(interval)
+
+
+def _heartbeat_supervisor(
+    state: _ProbeState,
+    stop: threading.Event,
+    interval: float,
+) -> None:
+    """Refresh process liveness without depending on database response time."""
+
+    while not stop.is_set():
+        state.supervisor_heartbeat()
         stop.wait(interval)
 
 
@@ -414,10 +461,43 @@ def _close_runtime(runtime: ManagedRuntime) -> bool:
 
 
 def _is_database_error(error: Exception) -> bool:
-    return any(
-        cls.__module__.startswith(("sqlalchemy.", "psycopg"))
-        for cls in type(error).__mro__
-    )
+    """Return true only for errors that indicate the connection is unavailable."""
+
+    pending: list[BaseException] = [error]
+    seen: set[int] = set()
+    connection_error_types = {
+        ("sqlalchemy.exc", "DisconnectionError"),
+        ("sqlalchemy.exc", "OperationalError"),
+        ("psycopg", "OperationalError"),
+        ("psycopg", "InterfaceError"),
+    }
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if getattr(current, "connection_invalidated", False):
+            return True
+        sqlstate = getattr(current, "sqlstate", None) or getattr(
+            current, "pgcode", None
+        )
+        if isinstance(sqlstate, str) and (
+            sqlstate.startswith("08") or sqlstate in {"57P01", "57P02", "57P03"}
+        ):
+            return True
+        if any(
+            (cls.__module__, cls.__name__) in connection_error_types
+            for cls in type(current).__mro__
+        ):
+            return True
+        for nested in (
+            getattr(current, "orig", None),
+            current.__cause__,
+            current.__context__,
+        ):
+            if isinstance(nested, BaseException):
+                pending.append(nested)
+    return False
 
 
 __all__ = ["serve_gateway", "serve_runtime_role"]

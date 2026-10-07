@@ -24,9 +24,9 @@ gate with open acceptance rows allowed; tag runs use strict evidence mode.
 
 | Gate | Workflow job | Current evidence |
 | --- | --- | --- |
-| A — static and regression | `quality` | Configured; hosted results not yet captured for this source revision. |
-| B — PostgreSQL | `postgresql-integration` | PostgreSQL 18.6 matrix, separate runtime role, and runtime fixture configured; the no-`CREATE` grant remains unqualified. |
-| C — clean artifact | `release-gate` | Wheel build, metadata checks, isolated extras, installed-wheel PostgreSQL role fixture, OpenAPI, boundary, and full check script configured; hosted results not yet captured. |
+| A — static and regression | `quality` | [Run 37661869120](https://github.com/eddiethedean/shuetl/actions/runs/37661869120) passed on Python 3.11–3.13. |
+| B — PostgreSQL | `postgresql-integration` | Run 37661869120 passed on PostgreSQL 18.6 and Python 3.11–3.13; the no-`CREATE` grant remains unqualified. |
+| C — clean artifact | `release-gate` | Run 37661869120 passed the build, metadata, isolated extras, installed-wheel PostgreSQL fixture, OpenAPI, boundary, and full check script on Python 3.11–3.13. PR mode used `--allow-open`. |
 
 `scripts/check_release.py --allow-open` runs lock, sync, Ruff, Pyright,
 boundary, test, build, artifact, OpenAPI, clean-wheel, and evidence consistency
@@ -35,5 +35,6 @@ checks without authorizing release. The default command adds
 tag cannot publish until all AC rows and Gate A–C are PASS and the evidence
 outcome is `proceed-to-0.6-preview`.
 
-This document records the committed workflow definition. No GitHub Actions run
-for the implementation branch is included here yet.
+Run 37661869120 validated implementation source commit
+`a3018159e4243fd53a8f6ac3bde9a31e2adb91c8`. The PR gate used `--allow-open`;
+it does not authorize preview while acceptance rows remain open.

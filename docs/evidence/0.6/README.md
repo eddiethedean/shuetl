@@ -10,9 +10,9 @@ provider status, transition, and CI definition provide supporting context.
 
 | Field | Value |
 | --- | --- |
-| Source commit | 6fac91c842811f419251d81bb6035a94776117ce (implementation source; this evidence update follows it) |
+| Source commit | a3018159e4243fd53a8f6ac3bde9a31e2adb91c8 (implementation source; hosted run 37661869120) |
 | OS and architecture | macOS 26.6.2 arm64 local |
-| Python version | CPython 3.13.9 local; Python 3.11–3.13 matrix configured but not run for this revision |
+| Python version | CPython 3.13.9 local; hosted Python 3.11–3.13 matrix passed in run 37661869120 |
 | uv version | 0.11.3 |
 | ETLantic source revision | Published etlantic, etlantic-fastapi, and etlantic-sqlmodel 0.56.0 wheels; optional SQL/Foundry pins are 0.56.0 |
 | ShuETL import origin | Editable local source at src/shuetl; isolated wheel uses site-packages |
@@ -21,11 +21,11 @@ provider status, transition, and CI definition provide supporting context.
 | FastAPI import origin | FastAPI 0.141.1 installed dependency; isolated wheel check uses site-packages |
 | Pydantic import origin | Pydantic 2.13.5 installed dependency; isolated wheel check uses site-packages |
 | HTTPX import origin | httpx2 2.12.0 test extra in isolated site-packages; clean-wheel output records its import origin |
-| Gate A | Local CPython 3.13 format, lint, typing, boundary, and regression checks | PASS |
+| Gate A | Hosted quality and regression matrix on Python 3.11–3.13, run 37661869120 | PASS |
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
-| Gate C | Local wheel, artifact, isolated dependency/import checks | PASS |
+| Gate C | Hosted artifact and installed-wheel qualification matrix, run 37661869120 | PASS |
 | SHA-256 wheel | `fc35a0be53c5f57f034f67062006b53d48907d4a5ad5cc3e692e56f67042e37a` |
-| SHA-256 sdist | `a1cb5cb91f1593bae5fe227d7b1f86fd688d374525b146f85ad4240228140306` |
+| SHA-256 sdist | `664847fee4f12da9cad0ee053d52b0c864d5f563ffb03abc0c8b37ae72e80bda` |
 
 ## Acceptance results
 
@@ -36,8 +36,8 @@ evidence, or a configured workflow alone.
 
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| AC-001 | package pins and artifacts | uv lock --check && uv run python scripts/check_artifact.py | qualification.md#ac-001 | OPEN | Source and artifact metadata are implemented, but the hosted Python 3.11–3.13 matrix has not run for this source revision. | implementation run | 2026-10-07 |
-| AC-002 | installed artifact Gate 0 | uv run python scripts/check_clean_wheel.py | qualification.md#ac-002 | OPEN | The local environment has no PostgreSQL connection configured; the installed-wheel PostgreSQL fixture has not run. | implementation run | 2026-10-07 |
+| AC-001 | package pins and artifacts | uv lock --check && uv run python scripts/check_artifact.py | qualification.md#ac-001 | PASS | Hosted metadata checks passed; the remaining runtime acceptance criteria are separate and remain open. | implementation run | 2026-10-07 |
+| AC-002 | installed artifact Gate 0 | uv run python scripts/check_clean_wheel.py | qualification.md#ac-002 | PASS | The runtime role has schema `CREATE` for the fixture, so this does not satisfy the no-schema-`CREATE` boundary in AC-008. | implementation run | 2026-10-07 |
 | AC-003 | role startup validation | uv run pytest tests/unit/test_phase_0_6_runtime.py tests/unit/test_package.py -q | qualification.md#ac-003 | OPEN | No installed-artifact starts or full negative matrix for missing runner and incompatible packages has been captured. | implementation run | 2026-10-07 |
 | AC-004 | 0.56 regression compatibility | uv run pytest -q | qualification.md#ac-004 | OPEN | Local PostgreSQL integration cases are skipped without a database; clean-store HTTP/SSE and doctor qualification on the hosted matrix remains open. | implementation run | 2026-10-07 |
 | AC-005 | gateway execution boundary | uv run pytest tests/unit/test_phase_0_6_runtime.py -k gateway -q && uv run python -c 'import sys; import etlantic_fastapi; print([n for n in sys.modules if n.startswith("etlantic.runtime.") and ("execution_host" in n or n.endswith(".execute"))])' | qualification.md#ac-005 | OPEN | The public etlantic_fastapi import itself loads etlantic.runtime.execute and etlantic.runtime.action_execution_host. ShuETL request gating is unit-tested, but the gateway cannot satisfy runner-import isolation until ETLantic provides an import boundary or equivalent upstream fix. | implementation run | 2026-10-07 |
@@ -58,7 +58,7 @@ evidence, or a configured workflow alone.
 | AC-020 | observable ETL sink effect | uv run python scripts/check_clean_wheel.py | qualification.md#ac-020 | OPEN | The installed-wheel fixture is configured for PostgreSQL CI but has not run locally or in hosted CI for this revision. | implementation run | 2026-10-07 |
 | AC-021 | credential and secret redaction | uv run python scripts/check_clean_wheel.py | qualification.md#ac-021 | OPEN | The CLI mismatch smoke checks URL redaction; durable payload, report, event, log, and worker-secret boundaries are not comprehensively tested. | implementation run | 2026-10-07 |
 | AC-022 | deployment recipes | NOT RUN (Compose and systemd services have not been rehearsed) | qualification.md#ac-022 | OPEN | Compose and systemd examples are present; digest identity, ordinary supervisor startup, and shutdown have not been rehearsed. | implementation run | 2026-10-07 |
-| AC-023 | hosted release matrix | NOT RUN (no GitHub Actions run exists for the implementation revision) | qualification.md#ac-023 | OPEN | Workflow jobs are configured, but Python 3.11–3.13 and PostgreSQL 18.6 results have not been captured. | implementation run | 2026-10-07 |
+| AC-023 | hosted release matrix | GitHub Actions run 37661869120 | qualification.md#ac-023 | PASS | The PR run used `--allow-open`; it does not establish all acceptance criteria or authorize the preview release. | implementation run | 2026-10-07 |
 | AC-024 | criterion evidence ledger | uv run python scripts/check_evidence.py --evidence docs/evidence/0.6 | qualification.md#ac-024 | PASS | This check validates ledger structure and references only; it does not establish the underlying runtime acceptance results. | implementation run | 2026-10-07 |
 | AC-025 | fresh-store cutover and rollback | NOT RUN (no migration or rollback rehearsal exists) | qualification.md#ac-025 | OPEN | The handoff sequence is documented; live re-enrollment, reconciliation, sole-authority rollback, and no-replay behavior remain untested. | implementation run | 2026-10-07 |
 | AC-026 | trusted factory and typed bindings | uv run pytest tests/unit/test_phase_0_6_runtime.py -q | qualification.md#ac-026 | OPEN | Core binding and scope checks are unit-tested; full malformed-factory, redaction, and installed-role matrix is open. | implementation run | 2026-10-07 |
@@ -72,12 +72,14 @@ evidence, or a configured workflow alone.
 
 ## Gap register
 
-Gate B, hosted CI, multiprocess failure injection, provider and transformation
-coverage, and transition rehearsal remain open. The integration burden stays
-in ShuETL's composition layer; public composition hooks remain injected; no
-copied route or ETL state machine has been introduced. The boundary outcome
-is qualification-open until the hosted runtime and process evidence is
-recorded.
+The no-`CREATE` database-startup boundary, multiprocess failure injection,
+provider and transformation coverage, and transition rehearsal remain open.
+The integration burden stays in ShuETL's composition layer; public composition hooks
+remain injected; no copied route or ETL state machine has been introduced. The
+boundary outcome is qualification-open until the remaining acceptance criteria
+and Gate B are satisfied.
 
-Gate A and Gate C PASS values above describe only local CPython 3.13 checks.
-Gate B and the preview decision require hosted PostgreSQL 18.6 evidence.
+Hosted run 37661869120 passed Gate A, Gate C, and the PostgreSQL integration
+matrix. Gate B remains open because its runtime role has schema `CREATE`; the
+run used `--allow-open`, so remaining acceptance criteria and the preview
+decision remain open.

@@ -25,21 +25,21 @@ Requirement: Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.
 
 Command: uv lock --check && uv run python scripts/check_artifact.py
 
-Result: OPEN
+Result: PASS
 
-Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
+Observed result: Hosted PR run 37661869120 passed `uv lock --check` and artifact checks on Python 3.11–3.13.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: a3018159e4243fd53a8f6ac3bde9a31e2adb91c8.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: GitHub Actions ubuntu-24.04, Python 3.11–3.13, uv 0.11.3; hosted PR run 37661869120.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: package pins and artifacts.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: Source and artifact metadata are implemented, but the hosted Python 3.11–3.13 matrix has not run for this source revision.
+Limitation: Hosted metadata checks passed; the remaining runtime acceptance criteria are separate and remain open.
 
 ## AC-002
 
@@ -47,21 +47,21 @@ Requirement: An installed-artifact Gate 0 probe executes one real scheduled and 
 
 Command: uv run python scripts/check_clean_wheel.py
 
-Result: OPEN
+Result: PASS
 
-Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
+Observed result: Hosted PR run 37661869120 passed the installed-wheel manual and scheduled submission fixture on Python 3.11–3.13; both reports succeeded and the PostgreSQL sink/effect rows were observed.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: a3018159e4243fd53a8f6ac3bde9a31e2adb91c8.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; installed wheel and separate runtime role; hosted PR run 37661869120.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: installed artifact Gate 0.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: The local environment has no PostgreSQL connection configured; the installed-wheel PostgreSQL fixture has not run.
+Limitation: The runtime role has schema `CREATE` for the fixture, so this does not satisfy the no-schema-`CREATE` boundary in AC-008.
 
 ## AC-003
 
@@ -507,23 +507,23 @@ Limitation: Compose and systemd examples are present; digest identity, ordinary 
 
 Requirement: The release gate and hosted Python 3.11–3.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases.
 
-Command: NOT RUN (no GitHub Actions run exists for the implementation revision)
+Command: GitHub Actions run 37661869120
 
-Result: OPEN
+Result: PASS
 
-Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
+Observed result: Hosted PR run 37661869120 passed quality, PostgreSQL integration, and all qualification-gate jobs on Python 3.11–3.13; required PostgreSQL tests were not skipped.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: a3018159e4243fd53a8f6ac3bde9a31e2adb91c8.
 
 Upstream: published ETLantic 0.56.0 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; hosted PR run 37661869120.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: hosted release matrix.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: Workflow jobs are configured, but Python 3.11–3.13 and PostgreSQL 18.6 results have not been captured.
+Limitation: The PR run used `--allow-open`; it does not establish all acceptance criteria or authorize the preview release.
 
 ## AC-024
 

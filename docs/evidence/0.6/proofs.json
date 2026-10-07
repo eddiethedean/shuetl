@@ -4,16 +4,16 @@
     "artifact": "qualification.md#ac-001",
     "requirement": "Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.0`, Python 3.11\u20133.13, exact ETLantic core/FastAPI/SQLModel `0.56.0` pins (and SQL/Foundry `0.56.0` when enabled), the PostgreSQL extra, and migration head `014_cp1_complete_principal_idempotency_0_56`.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "Source and artifact metadata are implemented, but the hosted Python 3.11\u20133.13 matrix has not run for this source revision.",
-    "status": "OPEN"
+    "limitation": "Hosted metadata checks passed; the remaining runtime acceptance criteria are separate and remain open.",
+    "status": "PASS"
   },
   "AC-002": {
     "command": "uv run python scripts/check_clean_wheel.py",
     "artifact": "qualification.md#ac-002",
     "requirement": "An installed-artifact Gate 0 probe executes one real scheduled and one manual submission through the selected PostgreSQL-backed upstream roles; the worker produces an observable ETLantic report rather than no-op completion.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The local environment has no PostgreSQL connection configured; the installed-wheel PostgreSQL fixture has not run.",
-    "status": "OPEN"
+    "limitation": "The runtime role has schema `CREATE` for the fixture, so this does not satisfy the no-schema-`CREATE` boundary in AC-008.",
+    "status": "PASS"
   },
   "AC-003": {
     "command": "uv run pytest tests/unit/test_phase_0_6_runtime.py tests/unit/test_package.py -q",
@@ -176,12 +176,12 @@
     "status": "OPEN"
   },
   "AC-023": {
-    "command": "NOT RUN (no GitHub Actions run exists for the implementation revision)",
+    "command": "GitHub Actions run 37661869120",
     "artifact": "qualification.md#ac-023",
     "requirement": "The release gate and hosted Python 3.11\u20133.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "Workflow jobs are configured, but Python 3.11\u20133.13 and PostgreSQL 18.6 results have not been captured.",
-    "status": "OPEN"
+    "limitation": "The PR run used `--allow-open`; it does not establish all acceptance criteria or authorize the preview release.",
+    "status": "PASS"
   },
   "AC-024": {
     "command": "uv run python scripts/check_evidence.py --evidence docs/evidence/0.6",

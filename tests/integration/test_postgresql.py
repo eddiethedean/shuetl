@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from time import sleep
 from typing import Any, cast
 
 import pytest
@@ -485,6 +486,8 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
     source_table = f"phase06_source_{suffix}"
     target_table = f"phase06_target_{suffix}"
     effect_table = f"phase06_effect_{suffix}"
+    delay_function = f"phase06_delay_{suffix}"
+    delay_trigger = f"phase06_delay_trigger_{suffix}"
     test_engine = create_postgresql_engine(settings)
     try:
         with test_engine.begin() as connection:
@@ -513,6 +516,16 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                     "publication_id text NOT NULL UNIQUE, row_count bigint NOT NULL, "
                     "committed_at timestamptz NOT NULL DEFAULT now())"
                 )
+            )
+            connection.exec_driver_sql(
+                f'CREATE FUNCTION public."{delay_function}"() RETURNS trigger '
+                "LANGUAGE plpgsql AS $function$ BEGIN "
+                "PERFORM pg_sleep(1.0); RETURN NEW; END $function$"
+            )
+            connection.exec_driver_sql(
+                f'CREATE TRIGGER "{delay_trigger}" BEFORE INSERT '
+                f'ON public."{target_table}" FOR EACH ROW '
+                f'EXECUTE FUNCTION public."{delay_function}"()'
             )
     finally:
         test_engine.dispose()
@@ -645,6 +658,7 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         )
 
     gateway = None
+    second_gateway = None
     scheduler = None
     worker = None
     try:
@@ -692,6 +706,7 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
             admin_engine.dispose()
 
         gateway = build_managed_runtime(role_settings("gateway", 19000))
+        second_gateway = build_managed_runtime(role_settings("gateway", 19008))
         scheduler = build_managed_runtime(role_settings("scheduler", 19002))
         worker = build_managed_runtime(role_settings("worker", 19004))
         admin_engine = create_postgresql_engine(settings)
@@ -707,6 +722,7 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         assert version_after_construction == version_at_start
 
         assert gateway.app is not None
+        assert second_gateway.app is not None
         service = gateway.backend.api.managed_service
         assert service is not None
         definition_id = f"phase06-pipe-{suffix}"
@@ -719,19 +735,33 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
             service_ctx, definition_id
         )
 
-        with TestClient(gateway.app) as client:
+        with (
+            TestClient(gateway.app) as client,
+            TestClient(second_gateway.app) as second_client,
+        ):
             manual_response = client.post(
                 f"/etl/v1/definitions/{definition_id}/runs",
                 headers={"Idempotency-Key": f"manual-{suffix}"},
                 json={"payload": {}},
             )
-        assert manual_response.status_code == 202, manual_response.text
-        manual_receipt = gateway.backend.api.durable_work.get_submission(
-            gateway_ctx, manual_response.json()["submission_id"]
-        )
-        assert manual_receipt is not None and manual_receipt.run_id is not None
-        assert worker.service is not None and worker.context is not None
-        assert worker.service.tick(worker.context, limit=1) == 1
+            assert manual_response.status_code == 202, manual_response.text
+            manual_receipt = gateway.backend.api.durable_work.get_submission(
+                gateway_ctx, manual_response.json()["submission_id"]
+            )
+            assert manual_receipt is not None and manual_receipt.run_id is not None
+            assert worker.service is not None and worker.context is not None
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                execution = executor.submit(
+                    worker.service.tick, worker.context, limit=1
+                )
+                responsive_during_execution = False
+                while not execution.done():
+                    assert client.get("/health").status_code == 200
+                    assert second_client.get("/health").status_code == 200
+                    responsive_during_execution = True
+                    sleep(0.01)
+                assert execution.result() == 1
+            assert responsive_during_execution
         manual_report = service.get_run_report(service_ctx, manual_receipt.run_id)
         assert manual_report["status"] == "succeeded", manual_report
 
@@ -783,6 +813,8 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
             scheduler.close()
         if gateway is not None:
             gateway.close()
+        if second_gateway is not None:
+            second_gateway.close()
         cleanup_engine = create_postgresql_engine(settings)
         try:
             with cleanup_engine.begin() as connection:
@@ -794,6 +826,9 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                 )
                 connection.execute(
                     text(f'DROP TABLE IF EXISTS public."{effect_table}"')
+                )
+                connection.exec_driver_sql(
+                    f'DROP FUNCTION IF EXISTS public."{delay_function}"()'
                 )
         finally:
             cleanup_engine.dispose()

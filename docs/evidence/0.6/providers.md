@@ -15,9 +15,13 @@ and effect-ledger tables. Its intended profile pins `etlantic-sql==0.56.0` and
 selects the SQL engine; it uses upsert with an explicit key. The test source
 contains no ShuETL connector or transform callback. It verifies both a manual
 and a scheduled accepted run have successful ETLantic reports and visible sink
-effects when run against the configured CI database. The profile URL and the
-control-plane runtimes use a restricted CI database role, while test setup and
-observation use the disposable service administrator.
+effects when run against the configured CI database. The control-plane
+runtimes use a separate CI database role. ETLantic 0.56.0's managed-backend
+constructor requires that role to have `CREATE` on the public schema because
+its current-version helper executes `CREATE TABLE IF NOT EXISTS` unconditionally.
+Test setup and observation use the disposable service administrator. This
+broader runtime grant means the fixture does not satisfy the planned
+least-privilege acceptance; AC-008 remains open.
 
 That fixture is code only until the hosted PostgreSQL 18.6 result is captured.
 No support claim is made for CSV-to-PostgreSQL, Foundry, append/replace modes,

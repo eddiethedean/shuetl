@@ -95,7 +95,7 @@ jobs:
       - name: Require configured PostgreSQL service
         run: test -n "$SHUETL_DATABASE_URL"
 
-      - name: Provision restricted runtime role
+      - name: Provision runtime role for ETLantic 0.56.0
         run: |
           uv run python - <<'PY'
           import psycopg
@@ -168,7 +168,7 @@ jobs:
           uv sync --locked --all-groups --extra test --extra sqlite
           --extra postgresql --extra sql --extra foundry
 
-      - name: Provision restricted runtime role
+      - name: Provision runtime role for ETLantic 0.56.0
         run: |
           uv run python - <<'PY'
           import psycopg

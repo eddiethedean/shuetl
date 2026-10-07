@@ -97,7 +97,13 @@ inspection gates new ticks. The gateway retains its upstream `/health`
 handler; requests are held at 503 until the local provider check is ready.
 
 Readiness and doctor call ShuETL's read-only inspector. Backend construction
-uses the ETLantic constructor, which may issue the documented
-`CREATE TABLE IF NOT EXISTS` for the already provisioned version table. The
-statement's effect under the intended runtime grants has not yet been
-qualified by the Phase 0.6 process fixture.
+uses the ETLantic constructor. ETLantic 0.56.0's `migrations.current_version`
+unconditionally issues `CREATE TABLE IF NOT EXISTS
+etlantic_sqlmodel_schema_version`, even after its caller verifies that the
+table exists. PostgreSQL still requires schema `CREATE` for that statement, so
+backend construction fails for the intended runtime role without schema
+`CREATE`. The hosted fixture now grants schema `CREATE` to exercise the rest of
+the runtime graph and compares schema snapshots before and after construction;
+this does not satisfy AC-008's least-privilege requirement. AC-008 remains
+open pending an upstream read-only version check or an accepted change to the
+runtime grant contract.

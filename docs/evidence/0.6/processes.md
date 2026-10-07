@@ -12,10 +12,14 @@ probe state, gateway request gating, and once-only close behavior. A live
 PostgreSQL integration fixture now submits one manual run through the gateway,
 one scheduled occurrence through the scheduler, executes both in a real
 ETLantic worker, and checks a PostgreSQL sink and effect ledger. Hosted jobs
-provision a separate runtime database role with no schema `CREATE`, then
-compare public schema objects and migration version before and after the three
-managed backends are constructed. The repository contains this check; no
-hosted PostgreSQL 18.6 result is captured yet.
+provision a separate runtime database role with data access and schema
+`CREATE`, then compare public schema objects and migration version before and
+after the three managed backends are constructed. The `CREATE` grant is needed
+because ETLantic 0.56.0's current-version check issues `CREATE TABLE IF NOT
+EXISTS`; PostgreSQL requires schema `CREATE` even when that table already
+exists. This fixture does not qualify the planned no-schema-`CREATE` boundary,
+so AC-008 remains open. No separate-process failure or recovery results are
+claimed in this ledger.
 
 No run of that integration fixture on PostgreSQL 18.6 is captured yet. There
 are no ShuETL separate-process barrier tests for commit boundaries, duplicate

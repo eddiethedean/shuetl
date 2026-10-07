@@ -151,6 +151,12 @@ def settings() -> ShuETLSettings:
                 connection.execute(
                     text("GRANT USAGE ON SCHEMA public TO shuetl_runtime")
                 )
+                # ETLantic 0.56.0 migrations.current_version unconditionally
+                # executes CREATE TABLE IF NOT EXISTS, which requires CREATE
+                # on the schema in PostgreSQL even when the table already exists.
+                connection.execute(
+                    text("GRANT CREATE ON SCHEMA public TO shuetl_runtime")
+                )
                 connection.execute(
                     text(
                         "GRANT SELECT, INSERT, UPDATE, DELETE "
@@ -243,7 +249,7 @@ def test_restart_idempotency_events_schedules_and_firings(
     first_firing, created = bundle.schedules.claim_firing(
         ctx,
         schedule_id=schedule.schedule_id,
-        revision_id="revision-1",
+        revision_id=schedule.revision_id,
         nominal_fire_time="2026-09-13T00:00:00Z",
         owner_id="owner-1",
         fencing_token=1,
@@ -253,7 +259,7 @@ def test_restart_idempotency_events_schedules_and_firings(
     duplicate_firing, duplicate = bundle.schedules.claim_firing(
         ctx,
         schedule_id=schedule.schedule_id,
-        revision_id="revision-1",
+        revision_id=schedule.revision_id,
         nominal_fire_time="2026-09-13T00:00:00Z",
         owner_id="owner-1",
         fencing_token=1,
@@ -302,9 +308,37 @@ def test_triggering_identity_is_persisted_without_host_credentials(
     settings: ShuETLSettings,
     bundle: PostgreSQLProviderBundle,
 ) -> None:
+    from etlantic import Data, Extract, Load, Pipeline
+    from etlantic.authoring import definition_from_pipeline
+    from etlantic.authoring.serialize import pipeline_to_dict
+
+    class IdentityRow(Data):
+        value: str
+
+    class IdentityPipeline(Pipeline):
+        source: Extract[IdentityRow] = Extract(asset="source")
+        result: Load[IdentityRow] = Load(input=source, asset="result")
+
     ctx = _context()
-    cast(MemoryAuthorizer, bundle.authorizer).grant(ctx, "run.submit")
-    bundle.definitions.put(ctx, "identity-definition", {"fingerprint": "safe-fp"})
+    authorizer = cast(MemoryAuthorizer, bundle.authorizer)
+    for action in (
+        "definition.write",
+        "definition.read",
+        "run.submit",
+        "run.read",
+        "run.report",
+        "run.artifacts",
+        "run.artifact.content",
+        "input.read",
+    ):
+        authorizer.grant(ctx, action)
+    service = bundle.api.managed_service
+    assert service is not None
+    service.register_definition(
+        ctx,
+        "identity-definition",
+        pipeline_to_dict(definition_from_pipeline(IdentityPipeline)),
+    )
     app = ShuETL(api=bundle.api).create_app(prefix="/etl")
     bearer = "bearer-credential-sentinel"
     cookie = "session-cookie-sentinel"
@@ -319,7 +353,7 @@ def test_triggering_identity_is_persisted_without_host_credentials(
             },
             json={"payload": {"input_snapshot": "safe-input-reference"}},
         )
-    assert response.status_code == 202
+    assert response.status_code == 202, response.text
     submission_id = response.json()["submission_id"]
     query = text(
         "SELECT payload_json FROM cp_durable_submission_entity "
@@ -362,7 +396,9 @@ def test_workspace_firing_and_durable_identity_survive_restart(
     )
 
     def claim(
-        provider: PostgreSQLProviderBundle, ctx: ControlPlaneContext
+        provider: PostgreSQLProviderBundle,
+        ctx: ControlPlaneContext,
+        revision_id: str,
     ) -> tuple[FiringRecord, bool]:
         lease = provider.schedules.acquire_leader_lease(
             ctx, owner_id="scope-scheduler", ttl_seconds=60
@@ -370,7 +406,7 @@ def test_workspace_firing_and_durable_identity_survive_restart(
         return provider.schedules.claim_firing(
             ctx,
             schedule_id="workspace-shared-schedule",
-            revision_id="workspace-shared-revision",
+            revision_id=revision_id,
             nominal_fire_time="2026-09-13T00:00:00Z",
             owner_id="scope-scheduler",
             fencing_token=lease.fencing_token,
@@ -380,14 +416,14 @@ def test_workspace_firing_and_durable_identity_survive_restart(
 
     firings = []
     for ctx in contexts:
-        bundle.schedules.create(
+        schedule = bundle.schedules.create(
             ctx,
             definition_id="workspace-shared-definition",
             profile_name="production",
             spec=ScheduleSpec(kind="interval", interval_seconds=60),
             schedule_id="workspace-shared-schedule",
         )
-        firing, created = claim(bundle, ctx)
+        firing, created = claim(bundle, ctx, schedule.revision_id)
         assert created
         assert firing.workspace_id == ctx.workspace.workspace_id
         assert len(bundle.durable_work.pending_outbox(ctx)) == 1
@@ -404,7 +440,7 @@ def test_workspace_firing_and_durable_identity_survive_restart(
     )
     try:
         for ctx, original in zip(contexts, firings, strict=True):
-            replay, created = claim(reopened, ctx)
+            replay, created = claim(reopened, ctx, original.revision_id)
             assert not created
             assert replay == original
             assert reopened.schedules.list_firings(
@@ -429,6 +465,7 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
     from etlantic.registry import BindingDescriptor, PlanningContext
     from etlantic.secrets import SecretRef
     from etlantic.secrets.provider import SecretResolutionContext
+    from sqlalchemy.exc import ProgrammingError
 
     class TransferRow(Data):
         id: str
@@ -605,6 +642,25 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
     scheduler = None
     worker = None
     try:
+        admin_engine = create_postgresql_engine(settings)
+        try:
+            with admin_engine.begin() as connection:
+                connection.execute(
+                    text("REVOKE CREATE ON SCHEMA public FROM shuetl_runtime")
+                )
+        finally:
+            admin_engine.dispose()
+        with pytest.raises(ProgrammingError, match="permission denied for schema"):
+            build_managed_runtime(role_settings("worker", 19006))
+        admin_engine = create_postgresql_engine(settings)
+        try:
+            with admin_engine.begin() as connection:
+                connection.execute(
+                    text("GRANT CREATE ON SCHEMA public TO shuetl_runtime")
+                )
+        finally:
+            admin_engine.dispose()
+
         runtime_settings = role_settings("worker", 19004)
         inspection_engine = create_postgresql_engine(runtime_settings)
         try:
@@ -613,12 +669,9 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                     connection.exec_driver_sql("SELECT current_user").scalar_one()
                     == "shuetl_runtime"
                 )
-                assert (
-                    connection.exec_driver_sql(
-                        "SELECT has_schema_privilege(current_user, 'public', 'CREATE')"
-                    ).scalar_one()
-                    is False
-                )
+                assert connection.exec_driver_sql(
+                    "SELECT has_schema_privilege(current_user, 'public', 'CREATE')"
+                ).scalar_one()
         finally:
             inspection_engine.dispose()
 

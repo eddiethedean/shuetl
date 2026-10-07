@@ -48,8 +48,13 @@ return a runner, store, scheduler, request credential, or ETL implementation.
 
 Provision a new database for ETLantic 0.56.0. Keep the 0.5 application and its
 database separate for rollback. Use a migration credential for the explicit
-upgrade command, then use a separate runtime credential that cannot create
-schemas or own ETLantic tables.
+upgrade command and a separate runtime credential. ETLantic 0.56.0 currently
+requires the runtime credential to have `CREATE` on its schema during managed
+backend construction, because its migration-version helper runs
+`CREATE TABLE IF NOT EXISTS` even when the version table already exists. This
+does not meet the planned least-privilege boundary; treat the deployment as a
+qualification fixture and do not claim production-preview support until this
+upstream behavior or the accepted grant contract changes.
 
 Configure the migration command with `SHUETL_PROFILE=postgresql-pilot`,
 `SHUETL_ROLE=gateway`, `SHUETL_PROVIDER=postgresql`,

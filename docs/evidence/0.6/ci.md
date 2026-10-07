@@ -1,8 +1,12 @@
 # Phase 0.6 CI and release gate
 
 The workflow defines Python 3.11, 3.12, and 3.13 jobs, installs all qualified
-extras, provisions a runtime PostgreSQL role without schema `CREATE`, uses a
-PostgreSQL 18.6 service, and builds/checks wheel and source artifacts. The
+extras, provisions a separate runtime PostgreSQL role, uses a PostgreSQL 18.6
+service, and builds/checks wheel and source artifacts. The fixture grants the
+runtime role schema `CREATE`: ETLantic 0.56.0's `current_version` helper runs
+`CREATE TABLE IF NOT EXISTS` unconditionally, and PostgreSQL requires schema
+`CREATE` even when the table exists. This exercises the rest of the managed
+role graph but leaves AC-008's planned no-`CREATE` startup boundary open. The
 release gate runs the PostgreSQL role fixture from an isolated installed wheel.
 `check_pytest_no_skips.py` rejects skips in required PostgreSQL integration
 tests. PRs run the implementation gate with open acceptance rows allowed; tag
@@ -11,7 +15,7 @@ runs use strict evidence mode.
 | Gate | Workflow job | Current evidence |
 | --- | --- | --- |
 | A — static and regression | `quality` | Configured; hosted results not yet captured for this source revision. |
-| B — PostgreSQL | `postgresql-integration` | PostgreSQL 18.6 matrix, restricted role, and runtime fixture configured; hosted results not yet captured. |
+| B — PostgreSQL | `postgresql-integration` | PostgreSQL 18.6 matrix, separate runtime role, and runtime fixture configured; the no-`CREATE` grant remains unqualified. |
 | C — clean artifact | `release-gate` | Wheel build, metadata checks, isolated extras, installed-wheel PostgreSQL role fixture, OpenAPI, boundary, and full check script configured; hosted results not yet captured. |
 
 `scripts/check_release.py --allow-open` runs lock, sync, Ruff, Pyright,

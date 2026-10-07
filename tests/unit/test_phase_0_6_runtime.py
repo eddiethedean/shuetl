@@ -30,7 +30,7 @@ from pydantic import ValidationError
 
 from shuetl import HostIdentityAdapter, ShuETLSettings, supervisor
 from shuetl import runtime as runtime_module
-from shuetl.errors import ProviderReadinessError
+from shuetl.errors import CompatibilityError, ProviderReadinessError
 from shuetl.postgresql import POSTGRESQL_HEAD, PostgreSQLSchemaStatus
 from shuetl.runtime import (
     HostRuntimeBindings,
@@ -38,6 +38,7 @@ from shuetl.runtime import (
     _matches_configured_scope,
     _scoped_identity_adapter,
     _validate_bindings,
+    _validate_execution_profile,
     build_managed_runtime,
 )
 
@@ -116,6 +117,34 @@ def test_preview_settings_are_role_scoped_and_keep_secrets_out_of_repr() -> None
 
     with pytest.raises(ValidationError, match="factory"):
         _settings(factory="not-a-callable")
+
+
+def test_execution_profile_checks_distribution_specifiers_and_builtin_plugins(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        runtime_module,
+        "installed_versions",
+        lambda: {"etlantic-sql": "0.56.0", "etlantic-local": None},
+    )
+    profile = Profile(
+        name="phase06-production",
+        security_mode="production",
+        plugin_allowlist={
+            "etlantic-sql": ">=0.50.0,<0.57.0",
+            "etlantic-local": "==0.50.0",
+        },
+    )
+
+    _validate_execution_profile(profile)
+
+    monkeypatch.setattr(
+        runtime_module,
+        "installed_versions",
+        lambda: {"etlantic-sql": "0.57.0", "etlantic-local": None},
+    )
+    with pytest.raises(CompatibilityError, match="package pin does not match"):
+        _validate_execution_profile(profile)
 
 
 def test_preview_context_is_service_scoped_and_rejects_gateway_bindings() -> None:

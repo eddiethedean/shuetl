@@ -22,6 +22,8 @@ from etlantic.registry import PlanningContext
 from etlantic.secrets.provider import SecretAliasAuthorizer
 from etlantic_fastapi import ContextFactory
 from fastapi import FastAPI
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import InvalidVersion, Version
 
 from .compatibility import installed_versions, validate_postgresql
 from .errors import CapabilityError, CompatibilityError, ProviderReadinessError
@@ -36,6 +38,9 @@ from .settings import ShuETLSettings
 
 if TYPE_CHECKING:
     from etlantic.runtime import ActionHandler
+
+
+_UPSTREAM_BUILTIN_PLUGIN_IDENTITIES = frozenset({"etlantic-local"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,6 +217,10 @@ def _validate_execution_profile(profile: Profile) -> None:
             continue
         installed = versions.get(str(package))
         if installed is None:
+            if package in _UPSTREAM_BUILTIN_PLUGIN_IDENTITIES:
+                # ETLantic exposes this built-in plugin identity from its core
+                # distribution; plugin trust validates its own reported version.
+                continue
             raise CompatibilityError(
                 f"execution profile requires missing package {package}"
             )
@@ -220,10 +229,19 @@ def _validate_execution_profile(profile: Profile) -> None:
             raise ProviderReadinessError(
                 f"production execution profile must pin package {package}"
             )
-        if expected is not None and installed != expected:
-            raise CompatibilityError(
-                f"execution profile package pin does not match {package}={installed}"
-            )
+        if expected is not None:
+            specifier = expected
+            if not specifier.startswith(("<", ">", "=", "!", "~")):
+                specifier = f"=={specifier}"
+            try:
+                matches = Version(installed) in SpecifierSet(specifier)
+            except (InvalidSpecifier, InvalidVersion):
+                matches = False
+            if not matches:
+                raise CompatibilityError(
+                    "execution profile package pin does not match "
+                    f"{package}={installed}"
+                )
 
 
 def _load_bindings(settings: ShuETLSettings) -> HostRuntimeBindings:

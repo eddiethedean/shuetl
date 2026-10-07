@@ -11,8 +11,15 @@
 | Other providers and write modes | Not enabled by the reference deployment. | Unsupported until listed and qualified here. |
 
 The first role integration test provisions distinct PostgreSQL source, target,
-and effect-ledger tables. Its intended profile pins `etlantic-sql==0.56.0` and
-selects the SQL engine; it uses upsert with an explicit key. The test source
+and effect-ledger tables. Its production profile selects the SQL engine and
+allows `etlantic-sql` with `>=0.50.0,<0.57.0` and `etlantic-local` with
+`==0.50.0`. ETLantic SQL 0.56.0 exposes its SQL plugin at 0.56.0 and its SQL
+transform compiler at 0.50.0 under the same plugin identity; ETLantic core's
+`etlantic-local` compiler is also 0.50.0 and is not a separate distribution.
+ShuETL validates the `etlantic-sql` specifier against the installed 0.56.0
+distribution, and ETLantic validates the discovered plugin versions. The
+project compatibility gate continues to pin every package in the selected
+train exactly. The test uses upsert with an explicit key. The test source
 contains no ShuETL connector or transform callback. It verifies both a manual
 and a scheduled accepted run have successful ETLantic reports and visible sink
 effects when run against the configured CI database. The control-plane

@@ -25,6 +25,19 @@ in [`ETLANTIC_0_56_WHEEL_AUDIT.md`](../../plans/ETLANTIC_0_56_WHEEL_AUDIT.md).
 Upstream's 44/44 acceptance result is not counted as a ShuETL process-role
 result.
 
+## Production plugin allowlist
+
+ETLantic SQL 0.56.0 exposes a SQL plugin reporting version `0.56.0` and a
+transform compiler reporting version `0.50.0` under the same
+`etlantic-sql` plugin identity. ETLantic core also exposes the built-in
+`etlantic-local` compiler as version `0.50.0`; it has no separate distribution.
+The integration profile therefore allows `etlantic-sql` with
+`>=0.50.0,<0.57.0` and `etlantic-local` with `==0.50.0`. ShuETL checks the
+specifier against an installed package distribution when one exists, while
+ETLantic checks each discovered plugin's own identity and version. ShuETL's
+package compatibility gate still requires the installed ETLantic SQL
+distribution to be exactly `0.56.0`.
+
 ## ShuETL bindings
 
 `shuetl.runtime.HostRuntimeBindings` contains the host's public ETLantic

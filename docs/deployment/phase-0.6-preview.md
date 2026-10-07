@@ -99,6 +99,23 @@ manager; do not place credentials in Compose source control.
 | `SHUETL_ARTIFACT_ROOT` | Same shared path on every role when reports/artifacts use files |
 | `SHUETL_POSTGRESQL_SSLMODE` | `verify-full` for verified deployments; `disable` only for an isolated test database |
 
+For a production execution profile on the ETLantic 0.56.0 train, the plugin
+allowlist needs to account for the two plugin versions exposed by the SQL
+distribution:
+
+```json
+{
+  "plugin_allowlist": {
+    "etlantic-sql": ">=0.50.0,<0.57.0",
+    "etlantic-local": "==0.50.0"
+  }
+}
+```
+
+The runtime package gate still requires `etlantic-sql` 0.56.0 exactly. ShuETL
+uses the profile specifier to verify the installed distribution, and ETLantic
+checks the version of each discovered plugin identity.
+
 The supervisor assigns a new unique owner ID each time a scheduler or worker
 starts. Set a `runs` worker's lease TTL longer than three times its poll
 interval. `/live` and `/ready` on the runtime probe report only bounded role,

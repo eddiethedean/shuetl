@@ -308,7 +308,7 @@ def test_triggering_identity_is_persisted_without_host_credentials(
     settings: ShuETLSettings,
     bundle: PostgreSQLProviderBundle,
 ) -> None:
-    from etlantic import Data, Extract, Load, Pipeline
+    from etlantic import Data, Extract, Load, Pipeline, Profile
     from etlantic.authoring import definition_from_pipeline
     from etlantic.authoring.serialize import pipeline_to_dict
 
@@ -332,6 +332,7 @@ def test_triggering_identity_is_persisted_without_host_credentials(
         "input.read",
     ):
         authorizer.grant(ctx, action)
+    bundle.api.profile = Profile(name="phase06-identity-test", security_mode="test")
     bundle.api.enable_managed_execution()
     service = bundle.api.managed_service
     assert service is not None
@@ -520,7 +521,10 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
         name=f"phase06-{suffix}",
         security_mode="production",
         sql_engine="sql",
-        plugin_allowlist={"etlantic-sql": "0.56.0"},
+        plugin_allowlist={
+            "etlantic-sql": ">=0.50.0,<0.57.0",
+            "etlantic-local": "==0.50.0",
+        },
     )
     profile_path = tmp_path / f"{profile.name}.json"
     profile_path.write_text(json.dumps(profile.to_dict()), encoding="utf-8")

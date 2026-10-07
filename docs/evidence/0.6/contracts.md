@@ -62,6 +62,13 @@ The scheduler receives the bound
 `backend.api.managed_service.submit_scheduled_run` method so ETLantic discovers
 its occurrence preparation and recovery methods.
 
+ETLantic 0.56.0's `create_managed_backend` constructs the durable-work store but
+leaves `api.schedule_store` unset. ShuETL supplies the public
+`etlantic_sqlmodel.control_plane.SQLModelScheduleStore` on the backend's same
+engine and configured store ID before building the scheduler. This makes the
+scheduler use the same persisted control-plane database; the integration is
+covered by the scheduler role unit proof and PostgreSQL CI.
+
 The run worker invokes `tick(context, limit=1)` on an ETLantic execution host.
 The action worker invokes the action host's public tick. ShuETL owns role
 startup, loopback probes, provider readiness checks, signal handling, and

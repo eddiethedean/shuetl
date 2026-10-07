@@ -332,6 +332,7 @@ def test_triggering_identity_is_persisted_without_host_credentials(
         "input.read",
     ):
         authorizer.grant(ctx, action)
+    bundle.api.enable_managed_execution()
     service = bundle.api.managed_service
     assert service is not None
     service.register_definition(

@@ -259,7 +259,7 @@ def test_role_builder_uses_shared_headless_backend_and_bound_scheduler_callback(
     service = _FakeManagedService()
     api = types.SimpleNamespace(
         managed_service=service,
-        schedule_store=object(),
+        schedule_store=None,
         durable_work=object(),
     )
     bindings = HostRuntimeBindings(
@@ -269,6 +269,18 @@ def test_role_builder_uses_shared_headless_backend_and_bound_scheduler_callback(
     api.bindings = bindings
     backend = _FakeBackend(api, "phase06-test")
     config_seen = _patch_backend(monkeypatch, api, backend=backend)
+    import importlib
+
+    schedule_store_calls: dict[str, Any] = {}
+
+    class ScheduleStoreProbe:
+        def __init__(self, engine: Any, *, store_id: str) -> None:
+            schedule_store_calls.update(engine=engine, store_id=store_id)
+
+    sqlmodel_control_plane = importlib.import_module("etlantic_sqlmodel.control_plane")
+    monkeypatch.setattr(
+        sqlmodel_control_plane, "SQLModelScheduleStore", ScheduleStoreProbe
+    )
     from etlantic.runtime import scheduler_service as scheduler_module
 
     monkeypatch.setattr(scheduler_module, "SchedulerService", SchedulerServiceProbe)
@@ -279,6 +291,11 @@ def test_role_builder_uses_shared_headless_backend_and_bound_scheduler_callback(
         assert callback == service.submit_scheduled_run
         assert getattr(callback, "__self__", None) is service
         assert scheduler_service_calls["schedule_store"] is api.schedule_store
+        assert isinstance(api.schedule_store, ScheduleStoreProbe)
+        assert schedule_store_calls == {
+            "engine": backend.engine,
+            "store_id": "shared-control-store",
+        }
         assert scheduler_service_calls["durable"] is api.durable_work
         assert scheduler_service_calls["profile"] == "phase06-test"
         config = config_seen["config"]

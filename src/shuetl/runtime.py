@@ -169,6 +169,12 @@ def build_managed_runtime(settings: ShuETLSettings) -> ManagedRuntime:
             planning_context_factory=bindings.planning_context_factory,
         )
         try:
+            if backend.api.schedule_store is None:
+                from etlantic_sqlmodel.control_plane import SQLModelScheduleStore
+
+                backend.api.schedule_store = SQLModelScheduleStore(
+                    backend.engine, store_id=config.store_id
+                )
             if backend.api.managed_service is None:
                 raise ProviderReadinessError(
                     "ETLantic managed submission service is unavailable"

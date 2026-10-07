@@ -1,9 +1,14 @@
 # Phase 0.6 CI and release gate
 
-The workflow defines Python 3.11, 3.12, and 3.13 jobs, installs all qualified
-extras, provisions a separate runtime PostgreSQL role, uses a PostgreSQL 18.6
-service, and builds/checks wheel and source artifacts. The fixture grants the
-runtime role schema `CREATE`: ETLantic 0.56.0's `current_version` helper runs
+The workflow defines Python 3.11, 3.12, and 3.13 jobs. The quality matrix
+installs all extras without a PostgreSQL service. PostgreSQL qualification and
+the release-gate test environment install only the extras used by the SQL
+preview profile; the clean-wheel gate separately verifies each optional extra
+in its own environment. This keeps the Foundry plugin outside the SQL profile's
+allowlist while still checking its packaged pin. CI provisions a separate
+runtime PostgreSQL role, uses a PostgreSQL 18.6 service, and builds/checks wheel
+and source artifacts. The fixture grants the runtime role schema `CREATE`:
+ETLantic 0.56.0's `current_version` helper runs
 `CREATE TABLE IF NOT EXISTS` unconditionally, and PostgreSQL requires schema
 `CREATE` even when the table exists. This exercises the rest of the managed
 role graph but leaves AC-008's planned no-`CREATE` startup boundary open. The

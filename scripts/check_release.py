@@ -54,8 +54,6 @@ def main(argv: list[str] | None = None) -> int:
             "postgresql",
             "--extra",
             "sql",
-            "--extra",
-            "foundry",
         ],
     )
     run_step("format", [*uv_run, "ruff", "format", "--check", "."])

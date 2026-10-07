@@ -25,7 +25,7 @@ provider status, transition, and CI definition provide supporting context.
 | Gate B | PostgreSQL 18.6 runtime integration | OPEN |
 | Gate C | Local wheel, artifact, isolated dependency/import checks | PASS |
 | SHA-256 wheel | `c843551c77116144d488de6d2f48318aca31b123b4570e5f44af7338fe58005b` |
-| SHA-256 sdist | `9f201e5e68d601f62e6dc8f03645048b91b099d3dbebd2f832d67f0931173e91` |
+| SHA-256 sdist | `e73282edbfff3a38390d402e088ba587477e40b4f21704e958be1ed2a52ebfd2` |
 
 ## Acceptance results
 

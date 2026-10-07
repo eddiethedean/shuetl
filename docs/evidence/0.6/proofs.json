@@ -52,7 +52,7 @@
     "artifact": "qualification.md#ac-007",
     "requirement": "All roles use the same provider schema/store identity. Scheduler passes the bound `submit_scheduled_run` method; crash/retry proofs cover occurrence preparation, firing claim, managed acceptance and linking on same-engine stores without assuming one atomic commit.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The bound callback is unit-checked; crash and retry behavior across firing, acceptance, and linking commits has not been tested.",
+    "limitation": "The bound callback and same-engine schedule-store wiring are unit-checked; crash and retry behavior across firing, acceptance, and linking commits has not been tested.",
     "status": "OPEN"
   },
   "AC-008": {

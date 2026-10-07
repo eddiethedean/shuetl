@@ -352,7 +352,7 @@ def test_triggering_identity_is_persisted_without_host_credentials(
                 "Cookie": f"session={cookie}",
                 "Idempotency-Key": "phase-0-5-trigger-identity",
             },
-            json={"payload": {"input_snapshot": "safe-input-reference"}},
+            json={},
         )
     assert response.status_code == 202, response.text
     submission_id = response.json()["submission_id"]
@@ -612,7 +612,9 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
             authorizer=authorizer,
             service_context=service_ctx,
             planning_context_factory=planning_context_factory,
-            secret_alias_authorizer=secret_authorizer,
+            secret_alias_authorizer=(
+                secret_authorizer if preview_settings.role == "worker" else None
+            ),
         )
 
     factory_module = types.ModuleType("phase_0_6_test_host")

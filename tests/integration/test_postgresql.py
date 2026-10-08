@@ -1,9 +1,11 @@
-"""Executable PostgreSQL pilot qualification for the Phase 0.4 provider."""
+"""Executable PostgreSQL qualification for the Phase 0.6 managed runtime."""
 
 from __future__ import annotations
 
 import json
 import os
+import socket
+import subprocess
 import sys
 import types
 import uuid
@@ -12,8 +14,10 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from time import sleep
+from time import monotonic, sleep
 from typing import Any, cast
+from urllib.error import HTTPError
+from urllib.request import urlopen
 
 import pytest
 from etlantic.control_plane import (
@@ -815,3 +819,153 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                 )
         finally:
             cleanup_engine.dispose()
+
+
+def test_installed_runtime_roles_start_as_processes_and_report_ready(
+    settings: ShuETLSettings,
+    tmp_path: Path,
+) -> None:
+    """Start all three installed roles against the restricted runtime role."""
+    runtime_database_url = os.environ.get("SHUETL_RUNTIME_DATABASE_URL")
+    if not runtime_database_url:
+        pytest.fail("SHUETL_RUNTIME_DATABASE_URL is required for the role process test")
+    from etlantic.profile import Profile
+
+    profile_path = tmp_path / "process-profile.json"
+    profile_path.write_text(
+        json.dumps(Profile(name="phase06-process", security_mode="test").to_dict()),
+        encoding="utf-8",
+    )
+    host_module = tmp_path / "phase06_process_host.py"
+    host_module.write_text(
+        """from dataclasses import replace
+
+from etlantic.control_plane import (
+    ControlPlaneContext,
+    EnvironmentRef,
+    Principal,
+    SecurityDomain,
+    TenantRef,
+    WorkspaceRef,
+)
+from etlantic.control_plane.memory import MemoryAuthorizer
+from shuetl import HostIdentityAdapter, HostRuntimeBindings
+
+
+def build(settings):
+    service_context = ControlPlaneContext(
+        principal=Principal("phase06-process", kind="service"),
+        tenant=TenantRef(settings.tenant_id),
+        workspace=WorkspaceRef(settings.tenant_id, settings.workspace_id),
+        environment=EnvironmentRef("test"),
+        security_domain=SecurityDomain("phase06-process"),
+    )
+    if settings.role == "gateway":
+        def context_factory(principal, _request):
+            return replace(service_context, principal=principal)
+
+        identity = HostIdentityAdapter.create(
+            principal_dependency=lambda: Principal("phase06-user", kind="human"),
+            context_factory=context_factory,
+        )
+        return HostRuntimeBindings(
+            authorizer=MemoryAuthorizer(), identity_adapter=identity
+        )
+    return HostRuntimeBindings(
+        authorizer=MemoryAuthorizer(), service_context=service_context
+    )
+""",
+        encoding="utf-8",
+    )
+
+    def free_port() -> int:
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            return int(listener.getsockname()[1])
+
+    children: list[subprocess.Popen[str]] = []
+    store_id = f"phase06-process-{uuid.uuid4().hex[:10]}"
+    python_path = os.pathsep.join(
+        part for part in (str(tmp_path), os.environ.get("PYTHONPATH", "")) if part
+    )
+    try:
+        for role in ("gateway", "scheduler", "worker"):
+            probe_port = free_port()
+            gateway_port = free_port()
+            env = {
+                **os.environ,
+                "PYTHONPATH": python_path,
+                "SHUETL_PROFILE": "postgresql-preview",
+                "SHUETL_ROLE": role,
+                "SHUETL_PROVIDER": "postgresql",
+                "SHUETL_IDENTITY": "host",
+                "SHUETL_DATABASE_URL": runtime_database_url,
+                "SHUETL_POSTGRESQL_SSLMODE": settings.postgresql_sslmode,
+                "SHUETL_FACTORY": "phase06_process_host:build",
+                "SHUETL_STORE_ID": store_id,
+                "SHUETL_TENANT_ID": "phase06-process",
+                "SHUETL_WORKSPACE_ID": "qualification",
+                "SHUETL_EXECUTION_PROFILE": str(profile_path),
+                "SHUETL_PROBE_PORT": str(probe_port),
+                "SHUETL_GATEWAY_PORT": str(gateway_port),
+                "SHUETL_PROBE_REFRESH_SECONDS": "0.2",
+                "SHUETL_PROBE_STALE_AFTER_SECONDS": "1.0",
+                "SHUETL_RUNTIME_POLL_INTERVAL_SECONDS": "0.2",
+                "SHUETL_SHUTDOWN_GRACE_SECONDS": "2",
+            }
+            if role == "worker":
+                env["SHUETL_WORKER_KIND"] = "runs"
+            command = [
+                sys.executable,
+                "-m",
+                "shuetl.cli",
+                "serve",
+                "--role",
+                role,
+                "--factory",
+                "phase06_process_host:build",
+            ]
+            if role == "worker":
+                command.extend(("--kind", "runs"))
+            child = subprocess.Popen(
+                command,
+                cwd=tmp_path,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            children.append(child)
+            deadline = monotonic() + 20.0
+            ready = False
+            while monotonic() < deadline:
+                if child.poll() is not None:
+                    stdout, stderr = child.communicate()
+                    safe_output = (stdout + stderr).replace(
+                        runtime_database_url, "<redacted-database-url>"
+                    )
+                    pytest.fail(
+                        f"installed {role} process exited {child.returncode}: "
+                        f"{safe_output}"
+                    )
+                try:
+                    with urlopen(
+                        f"http://127.0.0.1:{probe_port}/ready", timeout=0.2
+                    ) as response:
+                        state = json.loads(response.read())
+                        if response.status == 200 and state["ready"] is True:
+                            ready = True
+                            break
+                except (HTTPError, OSError, TimeoutError, ValueError):
+                    pass
+                sleep(0.05)
+            assert ready, f"installed {role} process did not become ready"
+    finally:
+        for child in reversed(children):
+            if child.poll() is None:
+                child.terminate()
+            try:
+                child.communicate(timeout=5.0)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.communicate(timeout=5.0)

@@ -1,13 +1,23 @@
-"""Executable PostgreSQL pilot qualification for the Phase 0.4 provider."""
+"""Executable PostgreSQL qualification for the Phase 0.6 managed runtime."""
 
 from __future__ import annotations
 
 import json
 import os
+import socket
+import subprocess
+import sys
+import types
+import uuid
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-from typing import cast
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from time import monotonic, sleep
+from typing import Any, cast
+from urllib.error import HTTPError
+from urllib.request import urlopen
 
 import pytest
 from etlantic.control_plane import (
@@ -28,6 +38,7 @@ from sqlalchemy import text
 
 from shuetl import (
     HostIdentityAdapter,
+    HostRuntimeBindings,
     PostgreSQLProviderBundle,
     ShuETL,
     ShuETLSettings,
@@ -39,6 +50,7 @@ from shuetl.postgresql import (
     create_postgresql_engine,
     inspect_postgresql,
 )
+from shuetl.runtime import build_managed_runtime
 
 
 def _settings() -> ShuETLSettings:
@@ -65,6 +77,58 @@ def _context(principal: Principal | None = None) -> ControlPlaneContext:
     )
 
 
+def _public_schema_snapshot(connection: Any) -> tuple[tuple[tuple[Any, ...], ...], ...]:
+    """Capture public schema objects without relying on a migration helper."""
+
+    queries = (
+        """
+        SELECT table_name, table_type
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        ORDER BY table_name, table_type
+        """,
+        """
+        SELECT table_name, column_name, ordinal_position, data_type, udt_name,
+               is_nullable, column_default
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        ORDER BY table_name, ordinal_position
+        """,
+        """
+        SELECT relation.relname, constraint_row.conname, constraint_row.contype,
+               pg_get_constraintdef(constraint_row.oid)
+        FROM pg_constraint AS constraint_row
+        JOIN pg_class AS relation ON relation.oid = constraint_row.conrelid
+        JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
+        WHERE namespace.nspname = 'public'
+        ORDER BY relation.relname, constraint_row.conname
+        """,
+        """
+        SELECT indexname, indexdef
+        FROM pg_indexes
+        WHERE schemaname = 'public'
+        ORDER BY indexname
+        """,
+        """
+        SELECT sequence_name, data_type, numeric_precision, numeric_scale
+        FROM information_schema.sequences
+        WHERE sequence_schema = 'public'
+        ORDER BY sequence_name
+        """,
+        """
+        SELECT event_object_table, trigger_name, event_manipulation,
+               action_timing, action_statement
+        FROM information_schema.triggers
+        WHERE trigger_schema = 'public'
+        ORDER BY event_object_table, trigger_name, event_manipulation
+        """,
+    )
+    return tuple(
+        tuple(tuple(row) for row in connection.execute(text(query)).all())
+        for query in queries
+    )
+
+
 def _identity_adapter() -> HostIdentityAdapter:
     def principal_dependency(_request: Request) -> Principal:
         return Principal("phase-0-4", issuer="https://test.example")
@@ -87,6 +151,23 @@ def settings() -> ShuETLSettings:
             connection.execute(text("DROP SCHEMA public CASCADE"))
             connection.execute(text("CREATE SCHEMA public"))
         assert upgrade(engine) == POSTGRESQL_HEAD
+        if os.environ.get("SHUETL_RUNTIME_DATABASE_URL"):
+            with engine.begin() as connection:
+                connection.execute(
+                    text("GRANT USAGE ON SCHEMA public TO shuetl_runtime")
+                )
+                connection.execute(
+                    text(
+                        "GRANT SELECT, INSERT, UPDATE, DELETE "
+                        "ON ALL TABLES IN SCHEMA public TO shuetl_runtime"
+                    )
+                )
+                connection.execute(
+                    text(
+                        "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public "
+                        "TO shuetl_runtime"
+                    )
+                )
     finally:
         engine.dispose()
     return configured
@@ -167,7 +248,7 @@ def test_restart_idempotency_events_schedules_and_firings(
     first_firing, created = bundle.schedules.claim_firing(
         ctx,
         schedule_id=schedule.schedule_id,
-        revision_id="revision-1",
+        revision_id=schedule.revision_id,
         nominal_fire_time="2026-09-13T00:00:00Z",
         owner_id="owner-1",
         fencing_token=1,
@@ -177,7 +258,7 @@ def test_restart_idempotency_events_schedules_and_firings(
     duplicate_firing, duplicate = bundle.schedules.claim_firing(
         ctx,
         schedule_id=schedule.schedule_id,
-        revision_id="revision-1",
+        revision_id=schedule.revision_id,
         nominal_fire_time="2026-09-13T00:00:00Z",
         owner_id="owner-1",
         fencing_token=1,
@@ -226,9 +307,39 @@ def test_triggering_identity_is_persisted_without_host_credentials(
     settings: ShuETLSettings,
     bundle: PostgreSQLProviderBundle,
 ) -> None:
+    from etlantic import Data, Extract, Load, Pipeline, Profile
+    from etlantic.authoring import definition_from_pipeline
+    from etlantic.authoring.serialize import pipeline_to_dict
+
+    class IdentityRow(Data):
+        value: str
+
+    class IdentityPipeline(Pipeline):
+        source: Extract[IdentityRow] = Extract(asset="source")
+        result: Load[IdentityRow] = Load(input=source, asset="result")
+
     ctx = _context()
-    cast(MemoryAuthorizer, bundle.authorizer).grant(ctx, "run.submit")
-    bundle.definitions.put(ctx, "identity-definition", {"fingerprint": "safe-fp"})
+    authorizer = cast(MemoryAuthorizer, bundle.authorizer)
+    for action in (
+        "definition.write",
+        "definition.read",
+        "run.submit",
+        "run.read",
+        "run.report",
+        "run.artifacts",
+        "run.artifact.content",
+        "input.read",
+    ):
+        authorizer.grant(ctx, action)
+    bundle.api.profile = Profile(name="phase06-identity-test", security_mode="test")
+    bundle.api.enable_managed_execution()
+    service = bundle.api.managed_service
+    assert service is not None
+    service.register_definition(
+        ctx,
+        "identity-definition",
+        pipeline_to_dict(definition_from_pipeline(IdentityPipeline)),
+    )
     app = ShuETL(api=bundle.api).create_app(prefix="/etl")
     bearer = "bearer-credential-sentinel"
     cookie = "session-cookie-sentinel"
@@ -241,9 +352,9 @@ def test_triggering_identity_is_persisted_without_host_credentials(
                 "Cookie": f"session={cookie}",
                 "Idempotency-Key": "phase-0-5-trigger-identity",
             },
-            json={"payload": {"input_snapshot": "safe-input-reference"}},
+            json={},
         )
-    assert response.status_code == 202
+    assert response.status_code == 202, response.text
     submission_id = response.json()["submission_id"]
     query = text(
         "SELECT payload_json FROM cp_durable_submission_entity "
@@ -286,7 +397,9 @@ def test_workspace_firing_and_durable_identity_survive_restart(
     )
 
     def claim(
-        provider: PostgreSQLProviderBundle, ctx: ControlPlaneContext
+        provider: PostgreSQLProviderBundle,
+        ctx: ControlPlaneContext,
+        revision_id: str,
     ) -> tuple[FiringRecord, bool]:
         lease = provider.schedules.acquire_leader_lease(
             ctx, owner_id="scope-scheduler", ttl_seconds=60
@@ -294,7 +407,7 @@ def test_workspace_firing_and_durable_identity_survive_restart(
         return provider.schedules.claim_firing(
             ctx,
             schedule_id="workspace-shared-schedule",
-            revision_id="workspace-shared-revision",
+            revision_id=revision_id,
             nominal_fire_time="2026-09-13T00:00:00Z",
             owner_id="scope-scheduler",
             fencing_token=lease.fencing_token,
@@ -304,14 +417,14 @@ def test_workspace_firing_and_durable_identity_survive_restart(
 
     firings = []
     for ctx in contexts:
-        bundle.schedules.create(
+        schedule = bundle.schedules.create(
             ctx,
             definition_id="workspace-shared-definition",
             profile_name="production",
             spec=ScheduleSpec(kind="interval", interval_seconds=60),
             schedule_id="workspace-shared-schedule",
         )
-        firing, created = claim(bundle, ctx)
+        firing, created = claim(bundle, ctx, schedule.revision_id)
         assert created
         assert firing.workspace_id == ctx.workspace.workspace_id
         assert len(bundle.durable_work.pending_outbox(ctx)) == 1
@@ -328,7 +441,7 @@ def test_workspace_firing_and_durable_identity_survive_restart(
     )
     try:
         for ctx, original in zip(contexts, firings, strict=True):
-            replay, created = claim(reopened, ctx)
+            replay, created = claim(reopened, ctx, original.revision_id)
             assert not created
             assert replay == original
             assert reopened.schedules.list_firings(
@@ -337,3 +450,522 @@ def test_workspace_firing_and_durable_identity_survive_restart(
             assert len(reopened.durable_work.pending_outbox(ctx)) == 1
     finally:
         reopened.close()
+
+
+def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
+    settings: ShuETLSettings,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exercise the standard gateway, scheduler, worker and SQL connector."""
+    pytest.importorskip("etlantic_sql")
+
+    from etlantic import Data, Extract, Load, Pipeline, Profile
+    from etlantic.authoring import definition_from_pipeline
+    from etlantic.authoring.serialize import pipeline_to_dict
+    from etlantic.registry import BindingDescriptor, PlanningContext
+    from etlantic.secrets import SecretRef
+    from etlantic.secrets.provider import SecretResolutionContext
+
+    class TransferRow(Data):
+        id: str
+        payload: str
+
+    class TransferPipeline(Pipeline):
+        source: Extract[TransferRow] = Extract(asset="source")
+        result: Load[TransferRow] = Load(input=source, asset="result")
+
+    assert settings.database_url is not None
+    runtime_database_url = os.environ.get("SHUETL_RUNTIME_DATABASE_URL")
+    if not runtime_database_url:
+        pytest.fail("SHUETL_RUNTIME_DATABASE_URL is required for the preview fixture")
+    suffix = uuid.uuid4().hex[:12]
+    source_table = f"phase06_source_{suffix}"
+    target_table = f"phase06_target_{suffix}"
+    effect_table = f"phase06_effect_{suffix}"
+    delay_function = f"phase06_delay_{suffix}"
+    delay_trigger = f"phase06_delay_trigger_{suffix}"
+    test_engine = create_postgresql_engine(settings)
+    try:
+        with test_engine.begin() as connection:
+            connection.execute(
+                text(
+                    f'CREATE TABLE public."{source_table}" '
+                    "(id text PRIMARY KEY, payload text NOT NULL)"
+                )
+            )
+            connection.execute(
+                text(
+                    f'INSERT INTO public."{source_table}" VALUES '
+                    "('one', 'manual-and-scheduled')"
+                )
+            )
+            connection.execute(
+                text(
+                    f'CREATE TABLE public."{target_table}" '
+                    "(id text PRIMARY KEY, payload text NOT NULL)"
+                )
+            )
+            connection.execute(
+                text(
+                    f'CREATE TABLE public."{effect_table}" ('
+                    "effect_id text PRIMARY KEY, intent_fingerprint text NOT NULL, "
+                    "publication_id text NOT NULL UNIQUE, row_count bigint NOT NULL, "
+                    "committed_at timestamptz NOT NULL DEFAULT now())"
+                )
+            )
+            connection.exec_driver_sql(
+                f'CREATE FUNCTION public."{delay_function}"() RETURNS trigger '
+                "LANGUAGE plpgsql AS $function$ BEGIN "
+                "PERFORM pg_sleep(1.0); RETURN NEW; END $function$"
+            )
+            connection.exec_driver_sql(
+                f'CREATE TRIGGER "{delay_trigger}" BEFORE INSERT '
+                f'ON public."{target_table}" FOR EACH ROW '
+                f'EXECUTE FUNCTION public."{delay_function}"()'
+            )
+    finally:
+        test_engine.dispose()
+
+    profile = Profile(
+        name=f"phase06-{suffix}",
+        security_mode="production",
+        plugin_allowlist={
+            "etlantic-sql": ">=0.50.0,<0.57.0",
+            "etlantic-local": "==0.50.0",
+        },
+    )
+    profile_path = tmp_path / f"{profile.name}.json"
+    profile_path.write_text(json.dumps(profile.to_dict()), encoding="utf-8")
+    service_ctx = ControlPlaneContext(
+        principal=Principal("phase06-runtime", kind="service"),
+        tenant=TenantRef("phase06-runtime"),
+        workspace=WorkspaceRef("phase06-runtime", "qualification"),
+        environment=EnvironmentRef("test"),
+        security_domain=SecurityDomain("phase06-runtime"),
+    )
+    human = Principal("phase06-user", issuer="https://identity.example")
+    gateway_ctx = replace(service_ctx, principal=human)
+    authorizer = MemoryAuthorizer()
+    for ctx in (service_ctx, gateway_ctx):
+        for action in (
+            "definition.write",
+            "definition.read",
+            "run.submit",
+            "run.read",
+            "run.report",
+            "run.artifacts",
+            "run.artifact.content",
+            "run.retry",
+            "run.rerun",
+            "input.read",
+        ):
+            authorizer.grant(ctx, action)
+
+    def context_factory(principal: Principal, _request: Request) -> ControlPlaneContext:
+        return replace(gateway_ctx, principal=principal)
+
+    class AllowTestSecret:
+        async def authorize_late_binding(
+            self, reference: SecretRef, context: SecretResolutionContext
+        ) -> bool:
+            return (
+                reference.name == "SHUETL_PHASE06_SQL_URL"
+                and context.trusted_scope is not None
+            )
+
+    secret_authorizer = AllowTestSecret()
+
+    def planning_context_factory(
+        _ctx: ControlPlaneContext, effective_profile: Profile
+    ) -> PlanningContext:
+        planning = PlanningContext.create(profile=effective_profile)
+        for binding, kind, table, config in (
+            ("source", "source", source_table, {"schema": "public"}),
+            (
+                "result",
+                "sink",
+                target_table,
+                {
+                    "schema": "public",
+                    "mode": "upsert",
+                    "key_columns": ["id"],
+                    "effect_table": f"public.{effect_table}",
+                },
+            ),
+        ):
+            planning.registry.register_binding(
+                BindingDescriptor(
+                    binding=binding,
+                    provider="postgresql",
+                    kind=kind,
+                    location=table,
+                    secret_ref=SecretRef(
+                        provider="env",
+                        name="SHUETL_PHASE06_SQL_URL",
+                        key="value",
+                    ),
+                    config=config,
+                )
+            )
+        return planning
+
+    def factory(preview_settings: ShuETLSettings) -> HostRuntimeBindings:
+        if preview_settings.role == "gateway":
+            identity = HostIdentityAdapter.create(
+                principal_dependency=lambda: human,
+                context_factory=context_factory,
+            )
+            return HostRuntimeBindings(
+                authorizer=authorizer,
+                identity_adapter=identity,
+                planning_context_factory=planning_context_factory,
+            )
+        return HostRuntimeBindings(
+            authorizer=authorizer,
+            service_context=service_ctx,
+            planning_context_factory=planning_context_factory,
+            secret_alias_authorizer=(
+                secret_authorizer if preview_settings.role == "worker" else None
+            ),
+        )
+
+    factory_module = types.ModuleType("phase_0_6_test_host")
+    factory_module.__dict__["build"] = factory
+    monkeypatch.setitem(sys.modules, factory_module.__name__, factory_module)
+    monkeypatch.setenv("SHUETL_PHASE06_SQL_URL", runtime_database_url)
+
+    def role_settings(role: str, probe_port: int) -> ShuETLSettings:
+        return ShuETLSettings(
+            profile="postgresql-preview",
+            role=role,
+            provider="postgresql",
+            identity="host",
+            database_url=runtime_database_url,
+            postgresql_sslmode=settings.postgresql_sslmode,
+            factory="phase_0_6_test_host:build",
+            store_id=f"phase06-{suffix}",
+            tenant_id=service_ctx.tenant.tenant_id,
+            workspace_id=service_ctx.workspace.workspace_id,
+            execution_profile=str(profile_path),
+            worker_kind="runs" if role == "worker" else None,
+            probe_port=probe_port,
+            gateway_port=probe_port + 1,
+            artifact_root=str(tmp_path / "artifacts"),
+        )
+
+    gateway = None
+    second_gateway = None
+    scheduler = None
+    worker = None
+    try:
+        admin_engine = create_postgresql_engine(settings)
+        try:
+            with admin_engine.begin() as connection:
+                connection.execute(
+                    text("REVOKE CREATE ON SCHEMA public FROM shuetl_runtime")
+                )
+        finally:
+            admin_engine.dispose()
+        runtime_settings = role_settings("worker", 19004)
+        inspection_engine = create_postgresql_engine(runtime_settings)
+        try:
+            with inspection_engine.connect() as connection:
+                assert (
+                    connection.exec_driver_sql("SELECT current_user").scalar_one()
+                    == "shuetl_runtime"
+                )
+                assert not connection.exec_driver_sql(
+                    "SELECT has_schema_privilege(current_user, 'public', 'CREATE')"
+                ).scalar_one()
+        finally:
+            inspection_engine.dispose()
+
+        admin_engine = create_postgresql_engine(settings)
+        try:
+            with admin_engine.connect() as connection:
+                schema_at_start = _public_schema_snapshot(connection)
+                version_at_start = connection.exec_driver_sql(
+                    "SELECT version FROM etlantic_sqlmodel_schema_version WHERE id = 1"
+                ).scalar_one()
+        finally:
+            admin_engine.dispose()
+
+        gateway = build_managed_runtime(role_settings("gateway", 19000))
+        second_gateway = build_managed_runtime(role_settings("gateway", 19008))
+        scheduler = build_managed_runtime(role_settings("scheduler", 19002))
+        worker = build_managed_runtime(role_settings("worker", 19004))
+        admin_engine = create_postgresql_engine(settings)
+        try:
+            with admin_engine.connect() as connection:
+                schema_after_construction = _public_schema_snapshot(connection)
+                version_after_construction = connection.exec_driver_sql(
+                    "SELECT version FROM etlantic_sqlmodel_schema_version WHERE id = 1"
+                ).scalar_one()
+        finally:
+            admin_engine.dispose()
+        assert schema_after_construction == schema_at_start
+        assert version_after_construction == version_at_start
+
+        assert gateway.app is not None
+        assert second_gateway.app is not None
+        service = gateway.backend.api.managed_service
+        assert service is not None
+        definition_id = f"phase06-pipe-{suffix}"
+        service.register_definition(
+            service_ctx,
+            definition_id,
+            pipeline_to_dict(definition_from_pipeline(TransferPipeline)),
+        )
+        definition_revision, profile_name = service.pin_schedule_definition_revision(
+            service_ctx, definition_id
+        )
+
+        with (
+            TestClient(gateway.app) as client,
+            TestClient(second_gateway.app) as second_client,
+        ):
+            manual_response = client.post(
+                f"/etl/v1/definitions/{definition_id}/runs",
+                headers={"Idempotency-Key": f"manual-{suffix}"},
+                json={"payload": {}},
+            )
+            assert manual_response.status_code == 202, manual_response.text
+            manual_receipt = gateway.backend.api.durable_work.get_submission(
+                gateway_ctx, manual_response.json()["submission_id"]
+            )
+            assert manual_receipt is not None and manual_receipt.run_id is not None
+            assert worker.service is not None and worker.context is not None
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                execution = executor.submit(
+                    worker.service.tick, worker.context, limit=1
+                )
+                responsive_during_execution = False
+                while not execution.done():
+                    health_path = f"{settings.api_prefix.rstrip('/')}/health"
+                    assert client.get(health_path).status_code == 200
+                    assert second_client.get(health_path).status_code == 200
+                    responsive_during_execution = True
+                    sleep(0.01)
+                assert execution.result() == 1
+            assert responsive_during_execution
+        manual_report = service.get_run_report(service_ctx, manual_receipt.run_id)
+        assert manual_report["status"] == "succeeded", manual_report
+
+        assert scheduler.context is not None and scheduler.service is not None
+        scheduler.backend.api.schedule_store.create(
+            scheduler.context,
+            definition_id=definition_id,
+            definition_revision_id=definition_revision,
+            profile_name=profile_name,
+            spec=ScheduleSpec(kind="interval", interval_seconds=60),
+            schedule_id=f"schedule-{suffix}",
+            next_fire_at=(datetime.now(UTC) - timedelta(seconds=120))
+            .isoformat()
+            .replace("+00:00", "Z"),
+        )
+        assert scheduler.service.tick(scheduler.context) == 1
+        assert worker.service.tick(worker.context, limit=1) == 1
+        firings = scheduler.backend.api.schedule_store.list_firings(
+            scheduler.context, f"schedule-{suffix}"
+        )
+        assert len(firings) == 1 and firings[0].submission_id is not None
+        scheduled_submission = scheduler.backend.api.durable_work.get_submission(
+            service_ctx, firings[0].submission_id
+        )
+        assert scheduled_submission is not None
+        assert scheduled_submission.run_id is not None
+        scheduled_report = service.get_run_report(
+            service_ctx, scheduled_submission.run_id
+        )
+        assert scheduled_report["status"] == "succeeded", scheduled_report
+
+        check_engine = create_postgresql_engine(settings)
+        try:
+            with check_engine.connect() as connection:
+                rows = connection.execute(
+                    text(f'SELECT id, payload FROM public."{target_table}"')
+                ).all()
+                effects = connection.execute(
+                    text(f'SELECT effect_id FROM public."{effect_table}"')
+                ).all()
+            assert rows == [("one", "manual-and-scheduled")]
+            assert len(effects) == 2
+        finally:
+            check_engine.dispose()
+    finally:
+        if worker is not None:
+            worker.close()
+        if scheduler is not None:
+            scheduler.close()
+        if gateway is not None:
+            gateway.close()
+        if second_gateway is not None:
+            second_gateway.close()
+        cleanup_engine = create_postgresql_engine(settings)
+        try:
+            with cleanup_engine.begin() as connection:
+                connection.execute(
+                    text(f'DROP TABLE IF EXISTS public."{source_table}"')
+                )
+                connection.execute(
+                    text(f'DROP TABLE IF EXISTS public."{target_table}"')
+                )
+                connection.execute(
+                    text(f'DROP TABLE IF EXISTS public."{effect_table}"')
+                )
+                connection.exec_driver_sql(
+                    f'DROP FUNCTION IF EXISTS public."{delay_function}"()'
+                )
+        finally:
+            cleanup_engine.dispose()
+
+
+def test_installed_runtime_roles_start_as_processes_and_report_ready(
+    settings: ShuETLSettings,
+    tmp_path: Path,
+) -> None:
+    """Start all three installed roles against the restricted runtime role."""
+    runtime_database_url = os.environ.get("SHUETL_RUNTIME_DATABASE_URL")
+    if not runtime_database_url:
+        pytest.fail("SHUETL_RUNTIME_DATABASE_URL is required for the role process test")
+    from etlantic.profile import Profile
+
+    profile_path = tmp_path / "process-profile.json"
+    profile_path.write_text(
+        json.dumps(Profile(name="phase06-process", security_mode="test").to_dict()),
+        encoding="utf-8",
+    )
+    host_module = tmp_path / "phase06_process_host.py"
+    host_module.write_text(
+        """from dataclasses import replace
+
+from etlantic.control_plane import (
+    ControlPlaneContext,
+    EnvironmentRef,
+    Principal,
+    SecurityDomain,
+    TenantRef,
+    WorkspaceRef,
+)
+from etlantic.control_plane.memory import MemoryAuthorizer
+from shuetl import HostIdentityAdapter, HostRuntimeBindings
+
+
+def build(settings):
+    service_context = ControlPlaneContext(
+        principal=Principal("phase06-process", kind="service"),
+        tenant=TenantRef(settings.tenant_id),
+        workspace=WorkspaceRef(settings.tenant_id, settings.workspace_id),
+        environment=EnvironmentRef("test"),
+        security_domain=SecurityDomain("phase06-process"),
+    )
+    if settings.role == "gateway":
+        def context_factory(principal, _request):
+            return replace(service_context, principal=principal)
+
+        identity = HostIdentityAdapter.create(
+            principal_dependency=lambda: Principal("phase06-user", kind="human"),
+            context_factory=context_factory,
+        )
+        return HostRuntimeBindings(
+            authorizer=MemoryAuthorizer(), identity_adapter=identity
+        )
+    return HostRuntimeBindings(
+        authorizer=MemoryAuthorizer(), service_context=service_context
+    )
+""",
+        encoding="utf-8",
+    )
+
+    def free_port() -> int:
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            return int(listener.getsockname()[1])
+
+    children: list[subprocess.Popen[str]] = []
+    store_id = f"phase06-process-{uuid.uuid4().hex[:10]}"
+    python_path = os.pathsep.join(
+        part for part in (str(tmp_path), os.environ.get("PYTHONPATH", "")) if part
+    )
+    try:
+        for role in ("gateway", "scheduler", "worker"):
+            probe_port = free_port()
+            gateway_port = free_port()
+            env = {
+                **os.environ,
+                "PYTHONPATH": python_path,
+                "SHUETL_PROFILE": "postgresql-preview",
+                "SHUETL_ROLE": role,
+                "SHUETL_PROVIDER": "postgresql",
+                "SHUETL_IDENTITY": "host",
+                "SHUETL_DATABASE_URL": runtime_database_url,
+                "SHUETL_POSTGRESQL_SSLMODE": settings.postgresql_sslmode,
+                "SHUETL_FACTORY": "phase06_process_host:build",
+                "SHUETL_STORE_ID": store_id,
+                "SHUETL_TENANT_ID": "phase06-process",
+                "SHUETL_WORKSPACE_ID": "qualification",
+                "SHUETL_EXECUTION_PROFILE": str(profile_path),
+                "SHUETL_PROBE_PORT": str(probe_port),
+                "SHUETL_GATEWAY_PORT": str(gateway_port),
+                "SHUETL_PROBE_REFRESH_SECONDS": "0.2",
+                "SHUETL_PROBE_STALE_AFTER_SECONDS": "1.0",
+                "SHUETL_RUNTIME_POLL_INTERVAL_SECONDS": "0.2",
+                "SHUETL_SHUTDOWN_GRACE_SECONDS": "2",
+            }
+            if role == "worker":
+                env["SHUETL_WORKER_KIND"] = "runs"
+            command = [
+                sys.executable,
+                "-m",
+                "shuetl.cli",
+                "serve",
+                "--role",
+                role,
+                "--factory",
+                "phase06_process_host:build",
+            ]
+            if role == "worker":
+                command.extend(("--kind", "runs"))
+            child = subprocess.Popen(
+                command,
+                cwd=tmp_path,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            children.append(child)
+            deadline = monotonic() + 20.0
+            ready = False
+            while monotonic() < deadline:
+                if child.poll() is not None:
+                    stdout, stderr = child.communicate()
+                    safe_output = (stdout + stderr).replace(
+                        runtime_database_url, "<redacted-database-url>"
+                    )
+                    pytest.fail(
+                        f"installed {role} process exited {child.returncode}: "
+                        f"{safe_output}"
+                    )
+                try:
+                    with urlopen(
+                        f"http://127.0.0.1:{probe_port}/ready", timeout=0.2
+                    ) as response:
+                        state = json.loads(response.read())
+                        if response.status == 200 and state["ready"] is True:
+                            ready = True
+                            break
+                except (HTTPError, OSError, TimeoutError, ValueError):
+                    pass
+                sleep(0.05)
+            assert ready, f"installed {role} process did not become ready"
+    finally:
+        for child in reversed(children):
+            if child.poll() is None:
+                child.terminate()
+            try:
+                child.communicate(timeout=5.0)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.communicate(timeout=5.0)

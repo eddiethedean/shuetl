@@ -1,4 +1,4 @@
-"""Run the complete local Phase 0.5 release gate."""
+"""Run the complete local Phase 0.6 release gate."""
 
 from __future__ import annotations
 
@@ -15,19 +15,32 @@ PROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 RELEASE_SERIES = ".".join(str(PROJECT["project"]["version"]).split(".")[:2])
 
 
-def run_step(label: str, command: list[str]) -> None:
+def run_step(
+    label: str,
+    command: list[str],
+    *,
+    unset_env: tuple[str, ...] = (),
+) -> None:
     print(f"== {label} ==")
+    step_env = {**os.environ, "SOURCE_DATE_EPOCH": "1580601600"}
+    for name in unset_env:
+        step_env.pop(name, None)
     subprocess.run(
         command,
         cwd=ROOT,
         check=True,
-        env={**os.environ, "SOURCE_DATE_EPOCH": "1580601600"},
+        env=step_env,
     )
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
+    parser.add_argument(
+        "--allow-open",
+        action="store_true",
+        help="run implementation checks while Phase 0.6 qualification remains open",
+    )
+    args = parser.parse_args(argv)
     uv = shutil.which("uv")
     if uv is None:
         print("uv is required for the release gate", file=sys.stderr)
@@ -47,6 +60,8 @@ def main(argv: list[str] | None = None) -> int:
             "sqlite",
             "--extra",
             "postgresql",
+            "--extra",
+            "sql",
         ],
     )
     run_step("format", [*uv_run, "ruff", "format", "--check", "."])
@@ -62,7 +77,19 @@ def main(argv: list[str] | None = None) -> int:
             f"docs/evidence/{RELEASE_SERIES}/openapi.normalized.json",
         ],
     )
-    run_step("tests", [*uv_run, "pytest", "-q"])
+    run_step(
+        "tests",
+        [*uv_run, "pytest", "-q"],
+        unset_env=(
+            "SHUETL_PROFILE",
+            "SHUETL_ROLE",
+            "SHUETL_PROVIDER",
+            "SHUETL_IDENTITY",
+            "SHUETL_DATABASE_URL",
+            "SHUETL_RUNTIME_DATABASE_URL",
+            "SHUETL_POSTGRESQL_SSLMODE",
+        ),
+    )
     run_step("build", [uv, "build"])
     run_step("artifact", [*uv_run, "python", "scripts/check_artifact.py"])
     run_step(
@@ -70,17 +97,18 @@ def main(argv: list[str] | None = None) -> int:
         [*uv_run, "python", "scripts/capture_openapi.py", "--check"],
     )
     run_step("clean-wheel", [*uv_run, "python", "scripts/check_clean_wheel.py"])
-    run_step(
-        "evidence",
-        [
-            *uv_run,
-            "python",
-            "scripts/check_evidence.py",
-            "--evidence",
-            f"docs/evidence/{RELEASE_SERIES}",
-        ],
-    )
-    print(f"Phase {RELEASE_SERIES} release gate passed")
+    evidence_command = [
+        *uv_run,
+        "python",
+        "scripts/check_evidence.py",
+        "--evidence",
+        f"docs/evidence/{RELEASE_SERIES}",
+    ]
+    if not args.allow_open:
+        evidence_command.append("--release")
+    run_step("evidence", evidence_command)
+    label = "verification gate" if args.allow_open else "release gate"
+    print(f"Phase {RELEASE_SERIES} {label} passed")
     return 0
 
 

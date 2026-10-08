@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased — Phase 0.6 development
+
+- Target ShuETL 0.6.0 at the published ETLantic, `etlantic-fastapi`, and
+  `etlantic-sqlmodel` 0.56.0 train; pin optional SQL and Foundry provider
+  packages to 0.56.0.
+- Add a `postgresql-preview` settings profile and `shuetl serve` entry point
+  for separately supervised gateway, scheduler, run-worker, and provider-action
+  worker processes.
+- Construct ETLantic's managed backend after read-only PostgreSQL 18.6/schema
+  preflight; use its scheduler, durable stores, execution host, and action
+  execution host without adding ShuETL-owned execution semantics.
+- Add loopback runtime probes, provider-gated dispatch, signal handling, and
+  drain-before-cleanup supervision.
+- Add the Phase 0.6 evidence ledger, installed-wheel metadata checks, and
+  Python/PostgreSQL qualification workflow. Production-preview qualification
+  remains open; see `docs/evidence/0.6/README.md`.
+
 ## 0.5.0 — Secure host integration (2026-09-30)
 
 - Published to [PyPI](https://pypi.org/project/shuetl/0.5.0/) through Trusted

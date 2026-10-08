@@ -25,7 +25,18 @@ def test_settings_constructor_overrides_environment(monkeypatch) -> None:
         api_prefix="/from-init",
     )
     assert settings.api_prefix == "/from-init"
-    assert settings.model_dump() == {
+    assert settings.model_dump(
+        include={
+            "profile",
+            "role",
+            "provider",
+            "identity",
+            "api_prefix",
+            "route_preset",
+            "provider_connect_timeout_seconds",
+            "postgresql_sslmode",
+        }
+    ) == {
         "profile": "local",
         "role": "gateway",
         "provider": "memory",
@@ -86,6 +97,6 @@ def test_doctor_json_is_stable_and_redacted() -> None:
 
 def test_cli_version_and_json(capsys) -> None:
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.strip() == "shuetl 0.5.0"
+    assert capsys.readouterr().out.strip() == "shuetl 0.6.0"
     assert main(["doctor", "--format", "json"]) == 1
     assert json.loads(capsys.readouterr().out)["schema"] == "shuetl.doctor/1"

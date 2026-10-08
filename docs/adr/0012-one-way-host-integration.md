@@ -79,6 +79,9 @@ advanced surface. One backend command owns preparation and submission.
 
 ## Validation
 
+The Phase 0.5 contract evidence is recorded in
+[`docs/evidence/0.5/contracts.md`](../evidence/0.5/contracts.md).
+
 See [HOST_INTEGRATION.md](../plans/HOST_INTEGRATION.md) and the 0.5–0.9 host
 integration gates in [ROADMAP.md](../plans/ROADMAP.md). ShuETL's generic
 conformance suite proves the public boundary without an adopter installed.

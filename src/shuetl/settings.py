@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Literal, cast
 from urllib.parse import unquote, urlsplit
 
@@ -58,10 +59,12 @@ class ShuETLSettings(BaseSettings):
         secrets_dir=None,
     )
 
-    profile: Literal["local", "postgresql-pilot"] = Field(
+    profile: Literal["local", "postgresql-pilot", "postgresql-preview"] = Field(
         validation_alias="SHUETL_PROFILE"
     )
-    role: Literal["gateway"] = Field(validation_alias="SHUETL_ROLE")
+    role: Literal["gateway", "scheduler", "worker"] = Field(
+        validation_alias="SHUETL_ROLE"
+    )
     provider: Literal["memory", "sqlite", "postgresql"] = Field(
         validation_alias="SHUETL_PROVIDER"
     )
@@ -84,14 +87,117 @@ class ShuETLSettings(BaseSettings):
     postgresql_sslmode: Literal["verify-full", "verify-ca", "require", "disable"] = (
         Field("verify-full", validation_alias="SHUETL_POSTGRESQL_SSLMODE")
     )
+    factory: str | None = Field(None, validation_alias="SHUETL_FACTORY", repr=False)
+    store_id: str | None = Field(None, validation_alias="SHUETL_STORE_ID")
+    tenant_id: str | None = Field(None, validation_alias="SHUETL_TENANT_ID")
+    workspace_id: str | None = Field(None, validation_alias="SHUETL_WORKSPACE_ID")
+    execution_profile: str | None = Field(
+        None, validation_alias="SHUETL_EXECUTION_PROFILE"
+    )
+    worker_kind: Literal["runs", "actions"] | None = Field(
+        None, validation_alias="SHUETL_WORKER_KIND"
+    )
+    owner_id: str | None = Field(None, validation_alias="SHUETL_OWNER_ID")
+    probe_port: int | None = Field(
+        None, ge=1, le=65535, validation_alias="SHUETL_PROBE_PORT"
+    )
+    runtime_poll_interval_seconds: float = Field(
+        1.0,
+        ge=0.1,
+        le=30.0,
+        validation_alias="SHUETL_RUNTIME_POLL_INTERVAL_SECONDS",
+    )
+    lease_ttl_seconds: int = Field(
+        30, ge=3, le=3600, validation_alias="SHUETL_LEASE_TTL_SECONDS"
+    )
+    probe_refresh_seconds: float = Field(
+        1.0, ge=0.1, le=30.0, validation_alias="SHUETL_PROBE_REFRESH_SECONDS"
+    )
+    probe_stale_after_seconds: float = Field(
+        5.0, ge=0.5, le=300.0, validation_alias="SHUETL_PROBE_STALE_AFTER_SECONDS"
+    )
+    shutdown_grace_seconds: float = Field(
+        30.0,
+        ge=0.1,
+        le=3600.0,
+        validation_alias="SHUETL_SHUTDOWN_GRACE_SECONDS",
+    )
+    gateway_host: str = Field("0.0.0.0", validation_alias="SHUETL_GATEWAY_HOST")
+    gateway_port: int = Field(
+        8000, ge=1, le=65535, validation_alias="SHUETL_GATEWAY_PORT"
+    )
+    artifact_root: str | None = Field(
+        None, validation_alias="SHUETL_ARTIFACT_ROOT", repr=False
+    )
 
     @field_validator("api_prefix")
     @classmethod
     def validate_api_prefix(cls, value: str) -> str:
         return _validate_prefix(value)
 
+    @field_validator("factory")
+    @classmethod
+    def validate_factory_reference(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not re.fullmatch(
+            r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*:[A-Za-z_]\w*",
+            value,
+        ):
+            raise ValueError("factory must be a package.module:callable reference")
+        return value
+
+    @field_validator("store_id", "tenant_id", "workspace_id", "owner_id")
+    @classmethod
+    def validate_optional_identifier(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("configured identifiers must be non-blank")
+        return value
+
+    @field_validator("execution_profile")
+    @classmethod
+    def validate_execution_profile(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("execution_profile must be non-blank")
+        return value
+
     @model_validator(mode="after")
     def validate_provider_url(self) -> ShuETLSettings:
+        if self.profile == "postgresql-pilot" and self.role != "gateway":
+            raise ValueError("postgresql-pilot is gateway-only")
+        if self.role != "gateway" and self.profile != "postgresql-preview":
+            raise ValueError("scheduler and worker roles require postgresql-preview")
+        if self.profile == "postgresql-preview":
+            if self.provider != "postgresql":
+                raise ValueError("postgresql-preview requires the PostgreSQL provider")
+            if self.identity != "host":
+                raise ValueError("postgresql-preview requires host identity")
+            required = {
+                "factory": self.factory,
+                "store_id": self.store_id,
+                "tenant_id": self.tenant_id,
+                "workspace_id": self.workspace_id,
+                "execution_profile": self.execution_profile,
+            }
+            missing = sorted(name for name, value in required.items() if value is None)
+            if missing:
+                raise ValueError("postgresql-preview requires " + ", ".join(missing))
+            if self.probe_port is None:
+                raise ValueError("all postgresql-preview roles require probe_port")
+            if self.probe_port == self.gateway_port:
+                raise ValueError("probe_port and gateway_port must differ")
+            if self.role == "worker" and self.worker_kind is None:
+                object.__setattr__(self, "worker_kind", "runs")
+            elif self.role != "worker" and self.worker_kind is not None:
+                raise ValueError("worker_kind is only valid for the worker role")
+            if self.lease_ttl_seconds <= 3 * self.runtime_poll_interval_seconds:
+                raise ValueError(
+                    "lease_ttl_seconds must exceed three runtime poll intervals"
+                )
+            if self.probe_stale_after_seconds <= self.probe_refresh_seconds:
+                raise ValueError(
+                    "probe_stale_after_seconds must exceed probe_refresh_seconds"
+                )
         if self.identity == "development-static" and self.profile != "local":
             raise ValueError("development-static identity requires the local profile")
         if self.provider == "memory" and self.database_url is not None:
@@ -107,10 +213,8 @@ class ShuETLSettings(BaseSettings):
             if self.postgresql_sslmode != "verify-full":
                 raise ValueError("postgresql_sslmode is only valid for postgresql")
         elif self.provider == "postgresql":
-            if self.profile != "postgresql-pilot":
-                raise ValueError(
-                    "postgresql provider requires the postgresql-pilot profile"
-                )
+            if self.profile not in {"postgresql-pilot", "postgresql-preview"}:
+                raise ValueError("postgresql provider requires a PostgreSQL profile")
             if self.database_url is None:
                 raise ValueError("postgresql provider requires database_url")
             raw_url = _database_url_value(self.database_url)

@@ -4,7 +4,7 @@ Status: planned and unexecuted. This document refines the
 [execution contract](PHASE_0_6_EXECUTION.md) and
 [proposed role ADR](../adr/0014-role-separated-managed-runtime.md).
 Paths and commands below are implementation targets, not existing test claims.
-Use published ETLantic 0.56.0 wheels, PostgreSQL 18.6 and Python 3.11–3.13.
+Use published ETLantic 0.56.2 wheels, PostgreSQL 18.6 and Python 3.11–3.13.
 
 ## Reproducible fixtures
 
@@ -50,7 +50,7 @@ commands can be entered as passing evidence.
 | AC-005, AC-006, AC-021 | `tests/security/test_runtime_roles.py`; F01/F04 | Import/call tracing, worker-only execution/secret resolution, cross-scope denials and sentinel scans. |
 | AC-007, AC-013, AC-014 | `tests/integration/test_runtime_scheduling.py`; F02 | Claim/submit/link boundaries, prepared/recovered occurrence identity, immutable revision/input snapshot, one canonical accepted run. |
 | AC-008 | `tests/integration/test_runtime_schema.py`; F01 | Runtime grants, read-only preflight/health statement trace, exact allowed constructor statement and unchanged schema snapshots; missing/behind/unknown/corrupt negatives. |
-| AC-009, AC-010, AC-032 | `tests/integration/test_runtime_lifecycle.py`; F05 | Probe status/state/reason, freshness and active-tick response, drain dispatch boundary, cleanup count and timeout/restart behavior. |
+| AC-009, AC-010, AC-032 | `tests/unit/test_phase_0_6_runtime.py` plus `tests/integration/test_runtime_lifecycle.py`; F05 | Probe status/state/reason, freshness and active-tick response, drain dispatch boundary, cleanup count and timeout/restart behavior. |
 | AC-011, AC-012 | `tests/integration/test_runtime_gateway.py`; F02 | Concurrent/retried same-key receipts, changed-intent conflict and before/after-commit client ambiguity. |
 | AC-015, AC-016, AC-017 | `tests/integration/test_runtime_workers.py`; F02 | Lease owner/token, attempt/result publication, stale-write rejection and independent effect marker. |
 | AC-018 | `tests/integration/test_runtime_actions.py`; F02/F03 | Accepted/leased/running cancellation, actual sink effect and upstream interruption/uncertainty outcome. |

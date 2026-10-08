@@ -1,0 +1,18 @@
+[Unit]
+Description=ShuETL Phase 0.6 %i role
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/shuetl/phase-0.6.env
+ExecStartPre=/usr/local/libexec/shuetl-preview-container --check
+ExecStart=/usr/local/libexec/shuetl-preview-container %i
+ExecStop=-/usr/bin/podman stop --time=3610 shuetl-phase06-%i
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=1h2m
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

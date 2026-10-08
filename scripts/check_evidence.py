@@ -21,8 +21,15 @@ PLAN_BY_SERIES = {
     "0.3": ROOT / "docs/plans/PHASE_0_3_EXECUTION.md",
     "0.4": ROOT / "docs/plans/PHASE_0_4_EXECUTION.md",
     "0.5": ROOT / "docs/plans/PHASE_0_5_EXECUTION.md",
+    "0.6": ROOT / "docs/plans/PHASE_0_6_EXECUTION.md",
 }
-CRITERION_COUNTS = {"0.2": 36, "0.3": 42, "0.4": 38, "0.5": 34}
+CRITERION_COUNTS = {
+    "0.2": 36,
+    "0.3": 42,
+    "0.4": 38,
+    "0.5": 34,
+    "0.6": 33,
+}
 REDACTION_PATTERNS = (
     r"/Users/",
     r"/Volumes/",
@@ -42,6 +49,12 @@ PHASE_0_5_MUTATION_CONTEXT = {
     "correlation_key": "phase05-correlation-probe",
     "idempotency_key": "phase05-idempotency-probe",
     "request_id": "phase05-request-probe",
+}
+PHASE_0_6_MUTATION_CONTEXT = {
+    **PHASE_0_5_MUTATION_CONTEXT,
+    "correlation_key": "phase06-correlation-probe",
+    "idempotency_key": "phase06-idempotency-probe",
+    "request_id": "phase06-request-probe",
 }
 PHASE_0_3_PROOF_TERMS = {
     "AC-001": ("metadata", "packag"),
@@ -116,12 +129,19 @@ def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str,
     )[0]
     for criterion, proof in data.items():
         fields = ("command", "artifact", "requirement", "provenance", "limitation")
-        if not isinstance(proof, dict) or not all(
-            isinstance(proof.get(field), str) and proof[field] for field in fields
+        if (
+            not isinstance(proof, dict)
+            or not all(
+                isinstance(proof.get(field), str) and proof[field] for field in fields
+            )
+            or (evidence_dir.name == "0.6" and not isinstance(proof.get("status"), str))
         ):
             errors.append(f"malformed current proof binding: {criterion}")
             continue
         result[criterion] = proof
+        proof_status = proof.get("status", "PASS")
+        if evidence_dir.name == "0.6" and proof_status not in {"OPEN", "PASS"}:
+            errors.append(f"invalid qualification status for {criterion}")
         # The verification matrix repeats IDs: bind to the observable AC table,
         # not the matrix's preferred verification type.
         required_row = next(
@@ -154,6 +174,7 @@ def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str,
             if field == "artifact":
                 section = contents.split(f"## {criterion}\n", 1)
                 record = section[1].split("\n## ", 1)[0] if len(section) == 2 else ""
+                expected_result = f"Result: {proof_status}"
                 if not all(
                     value in record
                     for value in (
@@ -161,14 +182,14 @@ def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str,
                         proof["requirement"],
                         proof["provenance"],
                         proof["limitation"],
-                        "Result: PASS",
+                        expected_result,
                     )
                 ):
                     errors.append(f"incomplete qualification record for {criterion}")
     return result
 
 
-def check(evidence: Path | None = None) -> list[str]:
+def check(evidence: Path | None = None, *, require_pass: bool = False) -> list[str]:
     errors: list[str] = []
     evidence_dir = evidence or EVIDENCE
     index = evidence_dir / "README.md"
@@ -182,7 +203,7 @@ def check(evidence: Path | None = None) -> list[str]:
     text = index.read_text(encoding="utf-8")
     registry = (
         proof_registry(evidence_dir, errors)
-        if evidence_dir.name in {"0.4", "0.5"}
+        if evidence_dir.name in {"0.4", "0.5", "0.6"}
         else {}
     )
     required_fields = (
@@ -243,9 +264,11 @@ def check(evidence: Path | None = None) -> list[str]:
                 errors.append(f"duplicate acceptance result: {criterion}")
             seen[criterion] = status
             proofs[criterion] = " ".join(cells[1:4]).lower()
-            if status != "PASS":
+            if status != "PASS" and not (
+                evidence_dir.name == "0.6" and status == "OPEN" and not require_pass
+            ):
                 errors.append(f"acceptance criterion is not PASS: {criterion}")
-            if evidence_dir.name in {"0.4", "0.5"}:
+            if evidence_dir.name in {"0.4", "0.5", "0.6"}:
                 command, artifact = cells[2], cells[3]
                 if not command:
                     errors.append(
@@ -272,6 +295,7 @@ def check(evidence: Path | None = None) -> list[str]:
                     or artifact.strip("`") != binding["artifact"]
                     or len(cells) < 6
                     or cells[5] != binding["limitation"]
+                    or (evidence_dir.name == "0.6" and status != binding.get("status"))
                 ):
                     errors.append(
                         f"acceptance evidence does not match audited proof: {criterion}"
@@ -279,7 +303,7 @@ def check(evidence: Path | None = None) -> list[str]:
         missing = sorted(expected - seen.keys())
         if missing:
             errors.append(f"acceptance evidence omits criteria: {missing}")
-        if evidence_dir.name in {"0.4", "0.5"} and registry.keys() != expected:
+        if evidence_dir.name in {"0.4", "0.5", "0.6"} and registry.keys() != expected:
             errors.append(
                 "current proof registry must cover exactly "
                 f"AC-001–AC-{CRITERION_COUNTS[evidence_dir.name]:03d}"
@@ -300,7 +324,11 @@ def check(evidence: Path | None = None) -> list[str]:
         ]
         if not gate_rows:
             errors.append(f"evidence index does not record {gate}")
-        elif gate_rows[0].strip("|").split("|")[-1].strip() != "PASS":
+        elif gate_rows[0].strip("|").split("|")[-1].strip() != "PASS" and not (
+            evidence_dir.name == "0.6"
+            and not require_pass
+            and gate_rows[0].strip("|").split("|")[-1].strip() == "OPEN"
+        ):
             errors.append(f"{gate} is not PASS")
     if evidence_dir.name == "0.3" and not re.search(
         r"\| uv version \| \d+\.\d+\.\d+", text
@@ -332,14 +360,28 @@ def check(evidence: Path | None = None) -> list[str]:
         "0.4": "proceed-to-0.4",
         "0.5": "proceed-to-0.5",
     }.get(evidence_dir.name)
-    outcomes = (
-        (outcome, "blocked-on-upstream", "merge-into-etlantic-fastapi")
-        if outcome
-        else ("blocked-on-upstream", "merge-into-etlantic-fastapi")
-    )
+    if evidence_dir.name == "0.6":
+        outcomes = (
+            "qualification-open",
+            "proceed-to-0.6-preview",
+            "blocked-on-upstream",
+            "merge-into-etlantic-fastapi",
+        )
+    else:
+        outcomes = (
+            (outcome, "blocked-on-upstream", "merge-into-etlantic-fastapi")
+            if outcome
+            else ("blocked-on-upstream", "merge-into-etlantic-fastapi")
+        )
     if sum(text.count(outcome) for outcome in outcomes) != 1:
         errors.append("evidence index must record exactly one boundary outcome")
-    if "| PASS |" not in text:
+    if (
+        require_pass
+        and evidence_dir.name == "0.6"
+        and "proceed-to-0.6-preview" not in text
+    ):
+        errors.append("Phase 0.6 release evidence does not authorize preview")
+    if require_pass and "| PASS |" not in text:
         errors.append("evidence index must contain PASS results before release")
     boundary_answers = (
         "integration burden",
@@ -348,7 +390,7 @@ def check(evidence: Path | None = None) -> list[str]:
         "materially easier",
         "contributed to `etlantic-fastapi`",
     )
-    if evidence_dir.name in {"0.4", "0.5"}:
+    if evidence_dir.name in {"0.4", "0.5", "0.6"}:
         boundary_answers = (
             "integration burden",
             "public composition hooks",
@@ -365,7 +407,12 @@ def check(evidence: Path | None = None) -> list[str]:
     for answer in boundary_answers:
         if answer not in text:
             errors.append(f"boundary review omits answer: {answer}")
-    if evidence_dir.name == "0.5":
+    if evidence_dir.name in {"0.5", "0.6"}:
+        context = (
+            PHASE_0_6_MUTATION_CONTEXT
+            if evidence_dir.name == "0.6"
+            else PHASE_0_5_MUTATION_CONTEXT
+        )
         inventory = evidence_dir / "route_inventory.json"
         try:
             routes = json.loads(inventory.read_text(encoding="utf-8"))
@@ -409,7 +456,7 @@ def check(evidence: Path | None = None) -> list[str]:
                         or not item["action"]
                         or not isinstance(item.get("resource"), str)
                         or not item["resource"]
-                        or item.get("context") != PHASE_0_5_MUTATION_CONTEXT
+                        or item.get("context") != context
                         for item in authorizations
                     )
                     or route.get("denial_status") != 403
@@ -419,18 +466,21 @@ def check(evidence: Path | None = None) -> list[str]:
                         "mutation route inventory must record authorization, "
                         f"403 denial, and zero provider calls: {key}"
                     )
-    if evidence_dir.name == "0.5":
-        for name in (
+    if evidence_dir.name in {"0.5", "0.6"}:
+        required_evidence = [
             "proofs.json",
             "qualification.md",
             "ci.md",
             "route_inventory.json",
-        ):
+        ]
+        if evidence_dir.name == "0.6":
+            required_evidence.extend(("processes.md", "providers.md", "transition.md"))
+        for name in required_evidence:
             path = evidence_dir / name
             if not path.is_file():
                 errors.append(f"missing Phase 0.5 evidence artifact: {name}")
     redaction_files = [index, contracts, ownership]
-    if evidence_dir.name in {"0.4", "0.5"}:
+    if evidence_dir.name in {"0.4", "0.5", "0.6"}:
         redaction_files.extend(
             path
             for path in (
@@ -454,8 +504,13 @@ def check(evidence: Path | None = None) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", type=Path)
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="require every acceptance criterion and release gate to pass",
+    )
     args = parser.parse_args()
-    errors = check(args.evidence)
+    errors = check(args.evidence, require_pass=args.release)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

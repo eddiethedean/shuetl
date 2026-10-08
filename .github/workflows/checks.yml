@@ -29,7 +29,9 @@ jobs:
           enable-cache: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
       - name: Sync dependencies
-        run: uv sync --locked --all-groups --extra test --extra sqlite --extra postgresql
+        run: >-
+          uv sync --locked --all-groups --extra test --extra sqlite
+          --extra postgresql --extra sql --extra foundry
 
       - name: Ruff format
         run: uv run ruff format --check .
@@ -73,6 +75,7 @@ jobs:
       SHUETL_PROVIDER: postgresql
       SHUETL_IDENTITY: host
       SHUETL_DATABASE_URL: postgresql+psycopg://shuetl:shuetl@localhost:5432/shuetl
+      SHUETL_RUNTIME_DATABASE_URL: postgresql+psycopg://shuetl_runtime:runtime-only@localhost:5432/shuetl
       SHUETL_POSTGRESQL_SSLMODE: disable
     steps:
       - uses: actions/checkout@v7
@@ -85,10 +88,34 @@ jobs:
           enable-cache: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
       - name: Sync dependencies
-        run: uv sync --locked --all-groups --extra test --extra sqlite --extra postgresql
+        run: >-
+          uv sync --locked --all-groups --extra test --extra sqlite
+          --extra postgresql --extra sql
 
       - name: Require configured PostgreSQL service
         run: test -n "$SHUETL_DATABASE_URL"
+
+      - name: Provision runtime role for ETLantic 0.56.2
+        run: |
+          uv run python - <<'PY'
+          import psycopg
+
+          with psycopg.connect("postgresql://shuetl:shuetl@localhost:5432/shuetl", autocommit=True) as connection:
+              connection.execute(
+                  "CREATE ROLE shuetl_runtime LOGIN PASSWORD 'runtime-only'"
+              )
+              connection.execute(
+                  "GRANT CONNECT ON DATABASE shuetl TO shuetl_runtime"
+              )
+              connection.execute(
+                  "ALTER DEFAULT PRIVILEGES FOR ROLE shuetl "
+                  "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO shuetl_runtime"
+              )
+              connection.execute(
+                  "ALTER DEFAULT PRIVILEGES FOR ROLE shuetl "
+                  "GRANT USAGE, SELECT ON SEQUENCES TO shuetl_runtime"
+              )
+          PY
 
       - name: Run PostgreSQL integration tests
         run: uv run pytest tests/integration/test_postgresql.py -q --junitxml="$RUNNER_TEMP/postgresql-tests.xml"
@@ -97,13 +124,35 @@ jobs:
         run: uv run python scripts/check_pytest_no_skips.py "$RUNNER_TEMP/postgresql-tests.xml"
 
   release-gate:
-    name: Phase 0.5 release gate (Python ${{ matrix.python-version }})
+    name: Phase 0.6 qualification gate (Python ${{ matrix.python-version }})
     runs-on: ubuntu-24.04
     needs: [quality, postgresql-integration]
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
+    services:
+      postgres:
+        image: postgres:18.6-bookworm
+        env:
+          POSTGRES_USER: shuetl
+          POSTGRES_PASSWORD: shuetl
+          POSTGRES_DB: shuetl
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shuetl -d shuetl"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      SHUETL_PROFILE: postgresql-pilot
+      SHUETL_ROLE: gateway
+      SHUETL_PROVIDER: postgresql
+      SHUETL_IDENTITY: host
+      SHUETL_DATABASE_URL: postgresql+psycopg://shuetl:shuetl@localhost:5432/shuetl
+      SHUETL_RUNTIME_DATABASE_URL: postgresql+psycopg://shuetl_runtime:runtime-only@localhost:5432/shuetl
+      SHUETL_POSTGRESQL_SSLMODE: disable
     steps:
       - uses: actions/checkout@v7
 
@@ -115,15 +164,44 @@ jobs:
           enable-cache: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
       - name: Sync dependencies
-        run: uv sync --locked --all-groups --extra test --extra sqlite --extra postgresql
+        run: >-
+          uv sync --locked --all-groups --extra test --extra sqlite
+          --extra postgresql --extra sql
 
-      - name: Run release gate
-        run: uv run python scripts/check_release.py
+      - name: Provision runtime role for ETLantic 0.56.2
+        run: |
+          uv run python - <<'PY'
+          import psycopg
+
+          with psycopg.connect("postgresql://shuetl:shuetl@localhost:5432/shuetl", autocommit=True) as connection:
+              connection.execute(
+                  "CREATE ROLE shuetl_runtime LOGIN PASSWORD 'runtime-only'"
+              )
+              connection.execute(
+                  "GRANT CONNECT ON DATABASE shuetl TO shuetl_runtime"
+              )
+              connection.execute(
+                  "ALTER DEFAULT PRIVILEGES FOR ROLE shuetl "
+                  "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO shuetl_runtime"
+              )
+              connection.execute(
+                  "ALTER DEFAULT PRIVILEGES FOR ROLE shuetl "
+                  "GRANT USAGE, SELECT ON SEQUENCES TO shuetl_runtime"
+              )
+          PY
+
+      - name: Run qualification gate
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            uv run python scripts/check_release.py
+          else
+            uv run python scripts/check_release.py --allow-open
+          fi
 
       - name: Upload distributions and evidence
         uses: actions/upload-artifact@v7
         with:
-          name: shuetl-0.5-artifacts-${{ matrix.python-version }}
+          name: shuetl-0.6-artifacts-${{ matrix.python-version }}
           path: |
             dist/*
-            docs/evidence/0.5/openapi.normalized.json
+            docs/evidence/0.6/openapi.normalized.json

@@ -25,7 +25,7 @@ def test_normalized_openapi_matches_committed_evidence() -> None:
         Path(__file__).resolve().parents[2]
         / "docs"
         / "evidence"
-        / "0.1"
+        / "0.6"
         / "openapi.normalized.json"
     )
     expected = json.loads(evidence_path.read_text(encoding="utf-8"))

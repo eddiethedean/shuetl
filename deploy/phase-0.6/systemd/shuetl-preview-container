@@ -1,0 +1,62 @@
+#!/bin/sh
+set -eu
+
+environment_file=${SHUETL_ENV_FILE:-/etc/shuetl/phase-0.6.env}
+: "${SHUETL_IMAGE:?Set SHUETL_IMAGE to the approved image digest}"
+: "${SHUETL_FACTORY:?Set SHUETL_FACTORY to the trusted host factory}"
+
+case "$SHUETL_IMAGE" in
+    *@sha256:????????????????????????????????????????????????????????????????) ;;
+    *) echo "SHUETL_IMAGE must end in a sha256 digest" >&2; exit 2 ;;
+esac
+image_digest=${SHUETL_IMAGE##*@sha256:}
+case "$image_digest" in
+    *[!0-9a-f]*) echo "SHUETL_IMAGE has an invalid sha256 digest" >&2; exit 2 ;;
+esac
+
+if [ "${1:-}" = "--check" ]; then
+    exit 0
+fi
+
+instance=${1:?Pass gateway, scheduler, worker, or action-worker}
+case "$instance" in
+    gateway)
+        role=gateway
+        kind=
+        probe_port=${SHUETL_GATEWAY_PROBE_PORT:-9100}
+        ;;
+    scheduler)
+        role=scheduler
+        kind=
+        probe_port=${SHUETL_SCHEDULER_PROBE_PORT:-9101}
+        ;;
+    worker)
+        role=worker
+        kind=runs
+        probe_port=${SHUETL_WORKER_PROBE_PORT:-9102}
+        ;;
+    action-worker)
+        role=worker
+        kind=actions
+        probe_port=${SHUETL_ACTION_PROBE_PORT:-9103}
+        ;;
+    *) echo "Unsupported ShuETL role instance" >&2; exit 2 ;;
+esac
+
+set -- run --rm --pull=always --network=host --name "shuetl-phase06-$instance" \
+    --env-file "$environment_file" \
+    --env SHUETL_PROFILE=postgresql-preview \
+    --env "SHUETL_ROLE=$role" \
+    --env "SHUETL_PROBE_PORT=$probe_port"
+if [ -n "$kind" ]; then
+    set -- "$@" --env "SHUETL_WORKER_KIND=$kind"
+fi
+set -- "$@" \
+    --volume /var/lib/shuetl/artifacts:/var/lib/shuetl/artifacts:rw \
+    --volume /etc/shuetl/profiles:/app/profiles:ro
+if [ -n "$kind" ]; then
+    exec /usr/bin/podman "$@" "$SHUETL_IMAGE" shuetl serve \
+        --role "$role" --factory "$SHUETL_FACTORY" --kind "$kind"
+fi
+exec /usr/bin/podman "$@" "$SHUETL_IMAGE" shuetl serve \
+    --role "$role" --factory "$SHUETL_FACTORY"

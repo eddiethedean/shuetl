@@ -12,6 +12,7 @@ from .errors import (
 from .identity import HostIdentityAdapter
 from .integration import ShuETL
 from .providers import LocalProviderBundle, PostgreSQLProviderBundle
+from .runtime import HostRuntimeBindings
 from .settings import ShuETLSettings
 
 __all__ = (
@@ -28,4 +29,5 @@ __all__ = (
     "CapabilityError",
     "ProviderReadinessError",
     "HostIdentityAdapter",
+    "HostRuntimeBindings",
 )

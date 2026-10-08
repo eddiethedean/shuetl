@@ -25,7 +25,7 @@ provider status, transition, and CI definition provide supporting context.
 | Gate B | PostgreSQL 18.6 runtime integration with no schema `CREATE`, run 37788036525 | PASS |
 | Gate C | Hosted artifact and installed-wheel qualification matrix, run 37788036525 | PASS |
 | SHA-256 wheel | `34112e77cfa28ca48d50319ebea11c7594415350ea522c073cf9b8aa4fa4919a` |
-| SHA-256 sdist | `7c2fc8a7f493b48fc985ce23f98a01ea35f0e34c44f129a5f3587d39412962fe` |
+| SHA-256 sdist | `66085ea8b1291380872ea0bc7dc4396d43bae94a2ebaaa671f9f8a557ccf803e` |
 
 ## Acceptance results
 

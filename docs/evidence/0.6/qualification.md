@@ -9,7 +9,8 @@ source and artifact. AC-024 passes only as a ledger-integrity criterion.
 
 ## Environment and source
 
-- Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+- Current source commit: bf72590 (ETLantic 0.56.2 implementation; hosted qualification pending).
+- Historical source commits below identify the earlier 0.56.0 runs.
 - Upstream: published ETLantic, etlantic-fastapi, and
   etlantic-sqlmodel wheels at 0.56.0; optional SQL and Foundry packages
   are pinned to 0.56.0.
@@ -27,13 +28,13 @@ Command: uv lock --check && uv run python scripts/check_artifact.py
 
 Result: PASS
 
-Observed result: Hosted PR run 37661869120 passed `uv lock --check` and artifact checks on Python 3.11–3.13.
+Observed result: The current source passed `uv lock --check` and `scripts/check_artifact.py`; the clean-wheel environments resolve core and optional ETLantic packages to 0.56.2.
 
-Source commit: a3018159e4243fd53a8f6ac3bde9a31e2adb91c8.
+Source commit: bf72590.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: GitHub Actions ubuntu-24.04, Python 3.11–3.13, uv 0.11.3; hosted PR run 37661869120.
+Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; local release gate.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: package pins and artifacts.
 

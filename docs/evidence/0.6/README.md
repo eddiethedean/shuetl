@@ -10,7 +10,7 @@ provider status, transition, and CI definition provide supporting context.
 
 | Field | Value |
 | --- | --- |
-| Source commit | 3b27a55f28c9c4671a8eb7f057a81ac775d5420c (implementation source; hosted run 37668515171) |
+| Source commit | bf72590 (ETLantic 0.56.2 implementation source; hosted qualification pending) |
 | OS and architecture | macOS 26.6.2 arm64 local |
 | Python version | CPython 3.13.9 local; hosted Python 3.11–3.13 matrix passed in run 37668515171 |
 | uv version | 0.11.3 |
@@ -25,7 +25,7 @@ provider status, transition, and CI definition provide supporting context.
 | Gate B | PostgreSQL 18.6 runtime integration with no schema `CREATE`, pending | OPEN |
 | Gate C | Hosted artifact and installed-wheel qualification matrix, pending 0.56.2 run | OPEN |
 | SHA-256 wheel | `34112e77cfa28ca48d50319ebea11c7594415350ea522c073cf9b8aa4fa4919a` |
-| SHA-256 sdist | `f47e4d3c88003b65e98b3d0ab96f29efd3f967db66d699b98d8dedef8a9d9c23` |
+| SHA-256 sdist | `8b6af58acec69f8a138b87c755bc6972b453478bf4c18f10975ad8711c2b30be` |
 
 ## Acceptance results
 

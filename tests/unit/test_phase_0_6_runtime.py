@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import signal
 import socket
 import threading
 import time
@@ -553,3 +554,77 @@ def test_gateway_gates_requests_until_provider_recovers_and_serves_local_probes(
     assert inspections >= 2
     assert backend.close_count == 1
     assert closed == [True]
+
+
+def test_runtime_role_signal_drains_active_tick_before_one_time_cleanup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        probe_port = listener.getsockname()[1]
+
+    settings = _settings(
+        "worker",
+        probe_port=probe_port,
+        probe_refresh_seconds=0.1,
+        probe_stale_after_seconds=2.0,
+        shutdown_grace_seconds=1.0,
+        runtime_poll_interval_seconds=0.1,
+    )
+    entered_tick = threading.Event()
+    release_tick = threading.Event()
+    events: list[str] = []
+
+    class Worker:
+        def tick(self, _context: ControlPlaneContext, *, limit: int = 1) -> int:
+            assert limit == 1
+            events.append("tick-start")
+            entered_tick.set()
+            assert release_tick.wait(2.0)
+            events.append("tick-finish")
+            return 1
+
+        def drain(self) -> None:
+            events.append("drain")
+            release_tick.set()
+
+    backend = _FakeBackend(types.SimpleNamespace(), "production")
+    runtime = ManagedRuntime(
+        settings,
+        HostRuntimeBindings(authorizer=MemoryAuthorizer()),
+        backend,
+        service=Worker(),
+        context=_context(),
+    )
+
+    def monitor(
+        _runtime: ManagedRuntime,
+        state: supervisor._ProbeState,
+        stop: threading.Event,
+        _interval: float,
+    ) -> None:
+        state.provider_result(True, "ready")
+        stop.wait()
+
+    monkeypatch.setattr(supervisor, "_monitor_provider", monitor)
+    handlers: dict[int, Any] = {}
+
+    def register(signum: int, handler: Any) -> Any:
+        previous = handlers.get(signum)
+        handlers[signum] = handler
+        return previous
+
+    monkeypatch.setattr(supervisor.signal, "signal", register)
+
+    def request_shutdown() -> None:
+        assert entered_tick.wait(2.0)
+        handlers[signal.SIGTERM](signal.SIGTERM, None)
+
+    requester = threading.Thread(target=request_shutdown)
+    requester.start()
+    assert supervisor.serve_runtime_role(runtime) == 0
+    requester.join(timeout=2.0)
+
+    assert not requester.is_alive()
+    assert events == ["tick-start", "drain", "tick-finish"]
+    assert backend.close_count == 1

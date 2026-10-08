@@ -9,7 +9,7 @@ source and artifact. AC-024 passes only as a ledger-integrity criterion.
 
 ## Environment and source
 
-- Current source commit: 24ca3920b0a2171e827c5b607ac4c4907af8217f (ETLantic 0.56.2 implementation; hosted qualification pending).
+- Current source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6 (ETLantic 0.56.2 implementation; hosted run 37788036525).
 - Historical source commits below identify the earlier 0.56.0 runs.
 - Upstream: published ETLantic, etlantic-fastapi, and
   etlantic-sqlmodel wheels at 0.56.0; optional SQL and Foundry packages
@@ -30,11 +30,11 @@ Result: PASS
 
 Observed result: The current source passed `uv lock --check` and `scripts/check_artifact.py`; the clean-wheel environments resolve core and optional ETLantic packages to 0.56.2.
 
-Source commit: bf72590.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
 Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; local release gate.
+Environment: GitHub Actions Ubuntu 24.04, CPython 3.11–3.13, uv 0.11.3; release gate run 37788036525.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: package pins and artifacts.
 
@@ -48,21 +48,21 @@ Requirement: An installed-artifact Gate 0 probe executes one real scheduled and 
 
 Command: uv run python scripts/check_clean_wheel.py
 
-Result: OPEN
+Result: PASS
 
-Observed result: Historical hosted PR run 37661869120 passed the installed-wheel manual and scheduled submission fixture on Python 3.11–3.13. The current 0.56.2 fixture now removes schema CREATE privileges; no hosted run has qualified this revision.
+Observed result: Hosted run 37788036525 passed the installed-wheel manual and scheduled submission fixture on PostgreSQL 18.6 with Python 3.11–3.13; both reports and sink/effect rows were observed.
 
-Source commit: a3018159e4243fd53a8f6ac3bde9a31e2adb91c8.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; installed wheel and separate runtime role; hosted PR run 37661869120.
+Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; installed wheel and separate runtime role; hosted run 37788036525.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: installed artifact Gate 0.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: The current fixture removes schema `CREATE`, but no hosted 0.56.2 PostgreSQL run has validated it yet.
+Limitation: Installed-wheel PostgreSQL fixture succeeded on PostgreSQL 18.6 and Python 3.11–3.13 with schema CREATE withheld; the remaining acceptance criteria are separate.
 
 ## AC-003
 
@@ -180,21 +180,21 @@ Requirement: Every role performs read-only compatibility/connectivity/schema pre
 
 Command: uv run python scripts/check_clean_wheel.py
 
-Result: OPEN
+Result: PASS
 
-Observed result: The PostgreSQL fixture now provisions the runtime role without schema `CREATE` and verifies that managed role construction leaves the schema snapshot and migration version unchanged. ETLantic 0.56.2's published `current_version()` check uses inspection and `SELECT`; the hosted 0.56.2 result is pending.
+Observed result: Hosted run 37788036525 verified managed backend construction under the runtime role with schema `CREATE` withheld; schema objects and migration version were unchanged across role construction on Python 3.11–3.13. ETLantic 0.56.2 `current_version()` uses inspection and `SELECT`.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; hosted run 37788036525.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: restricted database startup.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: The fixture now withholds schema `CREATE` and compares schema/migration state; hosted PostgreSQL 18.6 execution is pending.
+Limitation: Hosted PostgreSQL 18.6 qualification verified runtime startup without schema CREATE and unchanged schema/migration state on Python 3.11–3.13.
 
 ## AC-009
 
@@ -444,21 +444,21 @@ Requirement: A representative real ETL fixture performs an observable, idempoten
 
 Command: uv run python scripts/check_clean_wheel.py
 
-Result: OPEN
+Result: PASS
 
-Observed result: Historical hosted 0.56.0 qualification exercised two distinct gateway ASGI runtimes while a worker executed the PostgreSQL sink write; the 0.56.2 run is pending.
+Observed result: Hosted run 37788036525 executed manual and scheduled runs through the installed wheel, observed the PostgreSQL sink/effect rows, and verified both gateway health endpoints while the worker executed.
 
-Source commit: 625a7b3f38e35fef2124accdfd0eba3dc0d6c847.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: GitHub Actions Ubuntu 24.04, CPython 3.11–3.13, uv 0.11.3, PostgreSQL 18.6; isolated installed-wheel qualification fixture.
+Environment: GitHub Actions Ubuntu 24.04, CPython 3.11–3.13, uv 0.11.3, PostgreSQL 18.6; installed-wheel qualification fixture; run 37788036525.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: tests/integration/test_postgresql.py::test_preview_runtime_executes_manual_and_scheduled_postgresql_work.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: Historical 0.56.0 sink evidence used in-process TestClient instances; 0.56.2 installed-wheel execution on hosted PostgreSQL is pending.
+Limitation: Installed-wheel fixture observed the sink effect and successful reports while both gateway test clients remained responsive; these gateways were in-process ASGI runtimes, so OS-process contention remains open.
 
 ## AC-021
 
@@ -508,23 +508,23 @@ Limitation: Compose and systemd examples are present; digest identity, ordinary 
 
 Requirement: The release gate and hosted Python 3.11–3.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases.
 
-Command: Pending current 0.56.2 GitHub Actions run
+Command: GitHub Actions run 37788036525
 
 Result: OPEN
 
-Observed result: Historical run 37668515171 passed the matrix for the earlier 0.56.0 implementation; current 0.56.2 run pending.
+Observed result: Run 37788036525 passed Python 3.11–3.13 quality, PostgreSQL integration, and installed-artifact qualification jobs.
 
-Source commit: 3b27a55f28c9c4671a8eb7f057a81ac775d5420c.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; hosted PR run 37668515171.
+Environment: GitHub Actions ubuntu-24.04, PostgreSQL 18.6, Python 3.11–3.13, uv 0.11.3; hosted run 37788036525.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: hosted release matrix.
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: Historical 0.56.0 matrix passed, but the current source revision has not run in hosted CI.
+Limitation: The current workflow passes the 3.11–3.13 quality, PostgreSQL, and installed-artifact jobs, but it does not run subprocess failure-injection cases; AC-023 remains open.
 
 ## AC-024
 

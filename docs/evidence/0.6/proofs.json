@@ -12,8 +12,8 @@
     "artifact": "qualification.md#ac-002",
     "requirement": "An installed-artifact Gate 0 probe executes one real scheduled and one manual submission through the selected PostgreSQL-backed upstream roles; the worker produces an observable ETLantic report rather than no-op completion.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The current fixture removes schema `CREATE`, but no hosted 0.56.2 PostgreSQL run has validated it yet.",
-    "status": "OPEN"
+    "limitation": "Installed-wheel PostgreSQL fixture succeeded on PostgreSQL 18.6 and Python 3.11\u20133.13 with schema CREATE withheld; the remaining acceptance criteria are separate.",
+    "status": "PASS"
   },
   "AC-003": {
     "command": "uv run pytest tests/unit/test_phase_0_6_runtime.py tests/unit/test_package.py -q",
@@ -60,8 +60,8 @@
     "artifact": "qualification.md#ac-008",
     "requirement": "Every role performs read-only compatibility/connectivity/schema preflight and health inspection. Backend construction under a runtime role without schema-creation privileges performs no DDL; missing/incorrect schema fails before construction. Migration is possible only through the explicit operator command.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The fixture now withholds schema `CREATE` and compares schema/migration state; hosted PostgreSQL 18.6 execution is pending.",
-    "status": "OPEN"
+    "limitation": "Hosted PostgreSQL 18.6 qualification verified runtime startup without schema CREATE and unchanged schema/migration state on Python 3.11\u20133.13.",
+    "status": "PASS"
   },
   "AC-009": {
     "command": "uv run pytest tests/unit/test_phase_0_6_runtime.py::test_probe_lifecycle_reports_outage_drain_and_stale_state_without_secrets -q",
@@ -156,8 +156,8 @@
     "artifact": "qualification.md#ac-020",
     "requirement": "A representative real ETL fixture performs an observable, idempotency-keyed sink effect in a worker while both gateways remain responsive.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "Historical 0.56.0 sink evidence used in-process TestClient instances; 0.56.2 installed-wheel execution on hosted PostgreSQL is pending.",
-    "status": "OPEN"
+    "limitation": "Installed-wheel fixture observed the sink effect and successful reports while both gateway test clients remained responsive; these gateways were in-process ASGI runtimes, so OS-process contention remains open.",
+    "status": "PASS"
   },
   "AC-021": {
     "command": "uv run python scripts/check_clean_wheel.py",
@@ -176,11 +176,11 @@
     "status": "OPEN"
   },
   "AC-023": {
-    "command": "Pending current 0.56.2 GitHub Actions run",
+    "command": "GitHub Actions run 37788036525",
     "artifact": "qualification.md#ac-023",
     "requirement": "The release gate and hosted Python 3.11\u20133.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "Historical 0.56.0 matrix passed, but the current source revision has not run in hosted CI.",
+    "limitation": "The current workflow passes the 3.11\u20133.13 quality, PostgreSQL, and installed-artifact jobs, but it does not run subprocess failure-injection cases; AC-023 remains open.",
     "status": "OPEN"
   },
   "AC-024": {

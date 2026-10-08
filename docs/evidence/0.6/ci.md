@@ -22,9 +22,9 @@ gate with open acceptance rows allowed; tag runs use strict evidence mode.
 
 | Gate | Workflow job | Current evidence |
 | --- | --- | --- |
-| A — static and regression | `quality` | Latest run pending for the 0.56.2 implementation. |
-| B — PostgreSQL | `postgresql-integration` | Latest run pending for PostgreSQL 18.6 and Python 3.11–3.13 with no schema `CREATE`. |
-| C — clean artifact | `release-gate` | Latest run pending for the installed-wheel 0.56.2 artifact and the full check script. |
+| A — static and regression | `quality` | Run 37788036525 passed for source 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6. |
+| B — PostgreSQL | `postgresql-integration` | Run 37788036525 passed on PostgreSQL 18.6 and Python 3.11–3.13 with no schema `CREATE`. |
+| C — clean artifact | `release-gate` | Run 37788036525 passed the installed-wheel 0.56.2 artifact and full check script. |
 
 `scripts/check_release.py --allow-open` runs lock, sync, Ruff, Pyright,
 boundary, test, build, artifact, OpenAPI, clean-wheel, and evidence consistency

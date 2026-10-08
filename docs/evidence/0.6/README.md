@@ -10,9 +10,9 @@ provider status, transition, and CI definition provide supporting context.
 
 | Field | Value |
 | --- | --- |
-| Source commit | 24ca3920b0a2171e827c5b607ac4c4907af8217f (ETLantic 0.56.2 implementation; hosted run pending) |
+| Source commit | 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6 (ETLantic 0.56.2 implementation; hosted run 37788036525) |
 | OS and architecture | macOS 26.6.2 arm64 local |
-| Python version | CPython 3.13.9 local; hosted Python 3.11–3.13 matrix passed in run 37668515171 |
+| Python version | CPython 3.13.9 local; hosted Python 3.11–3.13 matrix passed in run 37788036525 |
 | uv version | 0.11.3 |
 | ETLantic source revision | Published etlantic, etlantic-fastapi, and etlantic-sqlmodel 0.56.2 wheels; optional SQL/Foundry pins are 0.56.2 |
 | ShuETL import origin | Editable local source at src/shuetl; isolated wheel uses site-packages |
@@ -21,11 +21,11 @@ provider status, transition, and CI definition provide supporting context.
 | FastAPI import origin | FastAPI 0.141.1 installed dependency; isolated wheel check uses site-packages |
 | Pydantic import origin | Pydantic 2.13.5 installed dependency; isolated wheel check uses site-packages |
 | HTTPX import origin | httpx2 2.12.0 test extra in isolated site-packages; clean-wheel output records its import origin |
-| Gate A | Hosted quality and regression matrix on Python 3.11–3.13, pending 0.56.2 run | OPEN |
-| Gate B | PostgreSQL 18.6 runtime integration with no schema `CREATE`, pending | OPEN |
-| Gate C | Hosted artifact and installed-wheel qualification matrix, pending 0.56.2 run | OPEN |
+| Gate A | Hosted quality and regression matrix on Python 3.11–3.13, run 37788036525 | PASS |
+| Gate B | PostgreSQL 18.6 runtime integration with no schema `CREATE`, run 37788036525 | PASS |
+| Gate C | Hosted artifact and installed-wheel qualification matrix, run 37788036525 | PASS |
 | SHA-256 wheel | `34112e77cfa28ca48d50319ebea11c7594415350ea522c073cf9b8aa4fa4919a` |
-| SHA-256 sdist | `8889a8536f902d71e26b26fefad8ce22376e7d00ef83daa2fb3efadcdda0c647` |
+| SHA-256 sdist | `1bd5ee08e7bfa4eeeca4f67bb570992f2a167272162d68d5ccb580e43ff0f880` |
 
 ## Acceptance results
 
@@ -37,13 +37,13 @@ evidence, or a configured workflow alone.
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | AC-001 | package pins and artifacts | uv lock --check && uv run python scripts/check_artifact.py | qualification.md#ac-001 | PASS | Hosted metadata checks passed; the remaining runtime acceptance criteria are separate and remain open. | implementation run | 2026-10-07 |
-| AC-002 | installed artifact Gate 0 | uv run python scripts/check_clean_wheel.py | qualification.md#ac-002 | OPEN | The current fixture removes schema `CREATE`, but no hosted 0.56.2 PostgreSQL run has validated it yet. | implementation run | 2026-10-08 |
+| AC-002 | installed artifact Gate 0 | uv run python scripts/check_clean_wheel.py | qualification.md#ac-002 | PASS | Installed-wheel PostgreSQL fixture succeeded on PostgreSQL 18.6 and Python 3.11–3.13 with schema CREATE withheld; the remaining acceptance criteria are separate. | implementation run | 2026-10-08 |
 | AC-003 | role startup validation | uv run pytest tests/unit/test_phase_0_6_runtime.py tests/unit/test_package.py -q | qualification.md#ac-003 | OPEN | No installed-artifact starts or full negative matrix for missing runner and incompatible packages has been captured. | implementation run | 2026-10-07 |
 | AC-004 | 0.56 regression compatibility | uv run pytest -q | qualification.md#ac-004 | OPEN | Local PostgreSQL integration cases are skipped without a database; clean-store HTTP/SSE and doctor qualification on the hosted matrix remains open. | implementation run | 2026-10-07 |
 | AC-005 | gateway execution boundary | uv run pytest tests/unit/test_phase_0_6_runtime.py -k gateway -q && uv run python scripts/check_clean_wheel.py | qualification.md#ac-005 | OPEN | Import isolation is verified locally against the published wheel. Separate-process proofs for secret resolution and pipeline execution remain open. | implementation run | 2026-10-08 |
 | AC-006 | runtime identity and ownership | uv run pytest tests/unit/test_phase_0_6_runtime.py -k context -q | qualification.md#ac-006 | OPEN | Typed scope checks are present; process startup and credential-verifier import isolation have not been exercised. | implementation run | 2026-10-07 |
 | AC-007 | shared store and scheduler recovery | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_role_builder_uses_shared_headless_backend_and_bound_scheduler_callback -q | qualification.md#ac-007 | OPEN | The bound callback and same-engine schedule-store wiring are unit-checked; crash and retry behavior across firing, acceptance, and linking commits has not been tested. | implementation run | 2026-10-07 |
-| AC-008 | restricted database startup | uv run python scripts/check_clean_wheel.py | qualification.md#ac-008 | OPEN | The fixture now withholds schema `CREATE` and compares schema/migration state; hosted PostgreSQL 18.6 execution is pending. | implementation run | 2026-10-08 |
+| AC-008 | restricted database startup | uv run python scripts/check_clean_wheel.py | qualification.md#ac-008 | PASS | Hosted PostgreSQL 18.6 qualification verified runtime startup without schema CREATE and unchanged schema/migration state on Python 3.11–3.13. | implementation run | 2026-10-08 |
 | AC-009 | readiness and liveness | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_probe_lifecycle_reports_outage_drain_and_stale_state_without_secrets -q | qualification.md#ac-009 | OPEN | Probe state is unit-tested; real process startup, schema mismatch, and database outage transitions remain unqualified. | implementation run | 2026-10-07 |
 | AC-010 | signal drain and cleanup | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_runtime_role_signal_drains_active_tick_before_one_time_cleanup -q | qualification.md#ac-010 | OPEN | Deterministic unit coverage verifies signal-to-drain ordering and one-time cleanup for an active tick; separate-process SIGTERM/SIGINT, acceptance/lease/effect kill points, and grace expiry remain unqualified. | implementation run | 2026-10-08 |
 | AC-011 | concurrent gateway idempotency | NOT RUN (no separate-process gateway contention fixture exists) | qualification.md#ac-011 | OPEN | Concurrent gateway acceptance and canonical retry identity have not been exercised across OS processes. | implementation run | 2026-10-07 |
@@ -55,10 +55,10 @@ evidence, or a configured workflow alone.
 | AC-017 | stale fencing | NOT RUN (no process-level stale-worker fixture exists) | qualification.md#ac-017 | OPEN | No stale worker completion has been rejected after ownership or fencing-token change in this runtime. | implementation run | 2026-10-07 |
 | AC-018 | cancellation outcomes | NOT RUN (no live cancellation fixture exists) | qualification.md#ac-018 | OPEN | Accepted, leased, and running cancellation outcomes and uncertain effects have not been exercised. | implementation run | 2026-10-07 |
 | AC-019 | database outage recovery | NOT RUN (no runtime disconnect/reconnect fixture exists) | qualification.md#ac-019 | OPEN | Readiness recovery and upstream work resumption after database restoration have not been demonstrated. | implementation run | 2026-10-07 |
-| AC-020 | observable ETL sink effect | uv run python scripts/check_clean_wheel.py | qualification.md#ac-020 | OPEN | Historical 0.56.0 sink evidence used in-process TestClient instances; 0.56.2 installed-wheel execution on hosted PostgreSQL is pending. | implementation run | 2026-10-08 |
+| AC-020 | observable ETL sink effect | uv run python scripts/check_clean_wheel.py | qualification.md#ac-020 | PASS | Installed-wheel fixture observed the sink effect and successful reports while both gateway test clients remained responsive; these gateways were in-process ASGI runtimes, so OS-process contention remains open. | implementation run | 2026-10-08 |
 | AC-021 | credential and secret redaction | uv run python scripts/check_clean_wheel.py | qualification.md#ac-021 | OPEN | The CLI mismatch smoke checks URL redaction; durable payload, report, event, log, and worker-secret boundaries are not comprehensively tested. | implementation run | 2026-10-07 |
 | AC-022 | deployment recipes | NOT RUN (Compose and systemd services have not been rehearsed) | qualification.md#ac-022 | OPEN | Compose and systemd examples are present; digest identity, ordinary supervisor startup, and shutdown have not been rehearsed. | implementation run | 2026-10-07 |
-| AC-023 | hosted release matrix | Pending current 0.56.2 GitHub Actions run | qualification.md#ac-023 | OPEN | Historical 0.56.0 matrix passed, but the current source revision has not run in hosted CI. | implementation run | 2026-10-08 |
+| AC-023 | hosted release matrix | GitHub Actions run 37788036525 | qualification.md#ac-023 | OPEN | The current workflow passes the 3.11–3.13 quality, PostgreSQL, and installed-artifact jobs, but it does not run subprocess failure-injection cases; AC-023 remains open. | implementation run | 2026-10-08 |
 | AC-024 | criterion evidence ledger | uv run python scripts/check_evidence.py --evidence docs/evidence/0.6 | qualification.md#ac-024 | PASS | This check validates ledger structure and references only; it does not establish the underlying runtime acceptance results. | implementation run | 2026-10-07 |
 | AC-025 | fresh-store cutover and rollback | NOT RUN (no migration or rollback rehearsal exists) | qualification.md#ac-025 | OPEN | The handoff sequence is documented; live re-enrollment, reconciliation, sole-authority rollback, and no-replay behavior remain untested. | implementation run | 2026-10-07 |
 | AC-026 | trusted factory and typed bindings | uv run pytest tests/unit/test_phase_0_6_runtime.py -q | qualification.md#ac-026 | OPEN | Core binding and scope checks are unit-tested; full malformed-factory, redaction, and installed-role matrix is open. | implementation run | 2026-10-07 |
@@ -72,14 +72,12 @@ evidence, or a configured workflow alone.
 
 ## Gap register
 
-The no-`CREATE` database-startup boundary, multiprocess failure injection,
-provider and transformation coverage, and transition rehearsal remain open.
-The integration burden stays in ShuETL's composition layer; public composition hooks
-remain injected; no copied route or ETL state machine has been introduced. The
-boundary outcome is qualification-open until the remaining acceptance criteria
-and Gate B are satisfied.
+The no-`CREATE` database-startup boundary is qualified. Multiprocess failure
+injection, provider and transformation coverage, and transition rehearsal remain
+open. The integration burden stays in ShuETL's composition layer; public composition hooks remain injected; no copied route or ETL state machine has been
+introduced. The boundary outcome remains qualification-open until the remaining
+acceptance criteria are satisfied.
 
 Hosted run 37668515171 passed the earlier 0.56.0 Gate A, Gate C, and PostgreSQL
 integration matrix. It does not qualify the current 0.56.2 implementation.
-Current hosted results are pending; all open acceptance criteria and the
-preview decision remain open.
+Current run 37788036525 passed Gates A–C. The subprocess failure-injection contract and other open acceptance criteria remain; the preview decision stays open.

@@ -77,7 +77,7 @@ The current Phase 0.5 secure host integration contract is in
 [`docs/plans/PHASE_0_5_EXECUTION.md`](docs/plans/PHASE_0_5_EXECUTION.md), with
 host authentication guidance in [`docs/IDENTITY.md`](docs/IDENTITY.md).
 
-Phase 0.6 development targets ShuETL 0.6.0 and the published ETLantic 0.56.0
+Phase 0.6 development targets ShuETL 0.6.0 and the published ETLantic 0.56.2
 train. It adds supervised gateway, scheduler, run-worker, and provider-action
 worker roles behind `shuetl serve`. Its production-preview status depends on
 the open acceptance ledger in [`docs/evidence/0.6/README.md`](docs/evidence/0.6/README.md);
@@ -282,7 +282,7 @@ same implementation checks but does not authorize publishing.
 ## Beyond Phase 0.5
 
 The Phase 0.6 implementation adds a standard role-separated runtime on the
-0.56.0 managed backend. Its release remains gated on real PostgreSQL 18.6
+0.56.2 managed backend. Its release remains gated on real PostgreSQL 18.6
 process tests, provider execution, failure injection, and the full acceptance
 ledger. The released 0.5.0 profile remains the published baseline until those
 checks close.

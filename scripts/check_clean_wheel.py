@@ -106,6 +106,8 @@ def verify(wheel: Path) -> None:
 import importlib.metadata as metadata
 import importlib.util
 import pathlib
+import etlantic_fastapi
+import sys
 import sysconfig
 
 purelib = pathlib.Path(sysconfig.get_paths()["purelib"]).resolve()
@@ -124,9 +126,15 @@ for name in modules:
     origins[name] = pathlib.Path(spec.origin).resolve()
 assert all(path.is_relative_to(purelib) for path in origins.values()), origins
 assert metadata.version("shuetl") == "{VERSION}"
-assert metadata.version("etlantic") == "0.56.0"
-assert metadata.version("etlantic-fastapi") == "0.56.0"
+assert metadata.version("etlantic") == "0.56.2"
+assert metadata.version("etlantic-fastapi") == "0.56.2"
 assert metadata.version("sqlalchemy") == "2.0.52"
+runner_modules = [
+    name for name in sys.modules
+    if name.startswith("etlantic.runtime.")
+    and ("execution_host" in name or name.endswith(".execute"))
+]
+assert not runner_modules, runner_modules
 print(origins)
 """,
                 ],
@@ -201,8 +209,8 @@ print(origins)
                         "-c",
                         (
                             "import importlib.metadata as metadata; "
-                            "assert metadata.version('etlantic-sqlmodel') == '0.56.0'; "
-                            "assert metadata.version('etlantic-sql') == '0.56.0'; "
+                            "assert metadata.version('etlantic-sqlmodel') == '0.56.2'; "
+                            "assert metadata.version('etlantic-sql') == '0.56.2'; "
                             "import etlantic_sql"
                         ),
                     ],
@@ -216,7 +224,7 @@ print(origins)
                         "-c",
                         (
                             "import importlib.metadata as metadata; "
-                            "assert metadata.version('etlantic-foundry') == '0.56.0'; "
+                            "assert metadata.version('etlantic-foundry') == '0.56.2'; "
                             "import etlantic_foundry"
                         ),
                     ],

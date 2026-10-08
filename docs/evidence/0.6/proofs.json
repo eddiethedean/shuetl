@@ -2,7 +2,7 @@
   "AC-001": {
     "command": "uv lock --check && uv run python scripts/check_artifact.py",
     "artifact": "qualification.md#ac-001",
-    "requirement": "Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.0`, Python 3.11\u20133.13, exact ETLantic core/FastAPI/SQLModel `0.56.0` pins (and SQL/Foundry `0.56.0` when enabled), the PostgreSQL extra, and migration head `014_cp1_complete_principal_idempotency_0_56`.",
+    "requirement": "Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.0`, Python 3.11\u20133.13, exact ETLantic core/FastAPI/SQLModel `0.56.2` pins (and SQL/Foundry `0.56.2` when enabled), the PostgreSQL extra, and migration head `014_cp1_complete_principal_idempotency_0_56`.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
     "limitation": "Hosted metadata checks passed; the remaining runtime acceptance criteria are separate and remain open.",
     "status": "PASS"
@@ -12,8 +12,8 @@
     "artifact": "qualification.md#ac-002",
     "requirement": "An installed-artifact Gate 0 probe executes one real scheduled and one manual submission through the selected PostgreSQL-backed upstream roles; the worker produces an observable ETLantic report rather than no-op completion.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The runtime role has schema `CREATE` for the fixture, so this does not satisfy the no-schema-`CREATE` boundary in AC-008.",
-    "status": "PASS"
+    "limitation": "The current fixture removes schema `CREATE`, but no hosted 0.56.2 PostgreSQL run has validated it yet.",
+    "status": "OPEN"
   },
   "AC-003": {
     "command": "uv run pytest tests/unit/test_phase_0_6_runtime.py tests/unit/test_package.py -q",
@@ -32,11 +32,11 @@
     "status": "OPEN"
   },
   "AC-005": {
-    "command": "uv run pytest tests/unit/test_phase_0_6_runtime.py -k gateway -q && uv run python -c 'import sys; import etlantic_fastapi; print([n for n in sys.modules if n.startswith(\"etlantic.runtime.\") and (\"execution_host\" in n or n.endswith(\".execute\"))])'",
+    "command": "uv run pytest tests/unit/test_phase_0_6_runtime.py -k gateway -q && uv run python scripts/check_clean_wheel.py",
     "artifact": "qualification.md#ac-005",
     "requirement": "Gateway construction and request handling never start scheduler/worker ticks, import the runner, resolve pipeline secrets, or execute a pipeline.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The public etlantic_fastapi import itself loads etlantic.runtime.execute and etlantic.runtime.action_execution_host. ShuETL request gating is unit-tested, but the gateway cannot satisfy runner-import isolation until ETLantic provides an import boundary or equivalent upstream fix.",
+    "limitation": "Import isolation is verified locally against the published wheel. Separate-process proofs for secret resolution and pipeline execution remain open.",
     "status": "OPEN"
   },
   "AC-006": {
@@ -58,9 +58,9 @@
   "AC-008": {
     "command": "uv run python scripts/check_clean_wheel.py",
     "artifact": "qualification.md#ac-008",
-    "requirement": "Every role performs read-only compatibility/connectivity/schema preflight and health inspection. Backend construction under a runtime role without schema-creation privileges may issue only the documented upstream version-table `CREATE TABLE IF NOT EXISTS`, with no schema change; missing/incorrect schema fails before construction. Migration is possible only through the explicit operator command.",
+    "requirement": "Every role performs read-only compatibility/connectivity/schema preflight and health inspection. Backend construction under a runtime role without schema-creation privileges performs no DDL; missing/incorrect schema fails before construction. Migration is possible only through the explicit operator command.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The fixture now grants schema CREATE to exercise the rest of the managed runtime and verifies no schema changes occur during construction. This does not meet the approved no-schema-CREATE boundary; AC-008 remains open until ETLantic provides a read-only version check or the grant contract is explicitly revised.",
+    "limitation": "The fixture now withholds schema `CREATE` and compares schema/migration state; hosted PostgreSQL 18.6 execution is pending.",
     "status": "OPEN"
   },
   "AC-009": {
@@ -156,8 +156,8 @@
     "artifact": "qualification.md#ac-020",
     "requirement": "A representative real ETL fixture performs an observable, idempotency-keyed sink effect in a worker while both gateways remain responsive.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "Hosted qualification exercised two distinct gateway ASGI runtimes while a worker executed the PostgreSQL sink write. The gateways use in-process TestClient instances; separate OS-process contention remains unqualified.",
-    "status": "PASS"
+    "limitation": "Historical 0.56.0 sink evidence used in-process TestClient instances; 0.56.2 installed-wheel execution on hosted PostgreSQL is pending.",
+    "status": "OPEN"
   },
   "AC-021": {
     "command": "uv run python scripts/check_clean_wheel.py",
@@ -176,12 +176,12 @@
     "status": "OPEN"
   },
   "AC-023": {
-    "command": "GitHub Actions run 37668515171",
+    "command": "Pending current 0.56.2 GitHub Actions run",
     "artifact": "qualification.md#ac-023",
     "requirement": "The release gate and hosted Python 3.11\u20133.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases.",
     "provenance": "docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria",
-    "limitation": "The PR run used `--allow-open`; it does not establish all acceptance criteria or authorize the preview release.",
-    "status": "PASS"
+    "limitation": "Historical 0.56.0 matrix passed, but the current source revision has not run in hosted CI.",
+    "status": "OPEN"
   },
   "AC-024": {
     "command": "uv run python scripts/check_evidence.py --evidence docs/evidence/0.6",

@@ -1,4 +1,4 @@
-# ADR-0014: Role-Separated Managed Runtime on ETLantic 0.56.0
+# ADR-0014: Role-Separated Managed Runtime on ETLantic 0.56.2
 
 - Status: Accepted for implementation; PostgreSQL role qualification remains open.
 - Date: 2026-10-07.
@@ -6,10 +6,10 @@
 
 ## Context
 
-The published 0.56 managed backend supplies shared services and a real worker.
-Its scheduler requires public-service wiring, its worker has no readiness
-method, and its constructor's version inspector issues a
-`CREATE TABLE IF NOT EXISTS` for the schema-version table. The managed firing,
+The published 0.56.2 managed backend supplies shared services and a real worker.
+Its scheduler requires public-service wiring and its worker has no readiness
+method. Its migration version inspector is read-only, which allows backend
+construction under runtime grants without schema creation privileges. The managed firing,
 submission and link operations span recoverable commit boundaries. ADR-0013
 requires the standard host path to supply specifications and identity/resource
 integration without building ETL service graphs. Source-level composition is
@@ -20,8 +20,8 @@ not yet been qualified.
 
 ### Standard composition
 
-Use exact 0.56.0 core/FastAPI/SQLModel packages and independently installed
-0.56.0 SQL/Foundry packages when enabled. ShuETL constructs
+Use exact 0.56.2 core/FastAPI/SQLModel packages and independently installed
+0.56.2 SQL/Foundry packages when enabled. ShuETL constructs
 `etlantic_fastapi.ManagedBackendConfig` and `create_managed_backend` after
 read-only preflight. Each process owns its backend and engine, with the same
 configured database, store ID, execution profile, tenant and workspace.
@@ -150,13 +150,11 @@ publish success on behalf of the terminated runtime.
 The reference deploys a fresh 0.56 store at head
 `014_cp1_complete_principal_idempotency_0_56`; retain the 0.5 application/store
 separately for rollback. Runtime connections cannot own provider tables,
-inherit migration privileges or create schema objects. The sole construction
-exception is upstream `CREATE TABLE IF NOT EXISTS` for the existing version
-table, after preflight. Prove zero schema changes under real runtime grants.
-Readiness/doctor never invoke the mutating version inspector.
+inherit migration privileges or create schema objects. Managed backend
+construction, readiness, and doctor use read-only version inspection. Prove
+zero schema changes under real runtime grants.
 
-This deliberately qualifies the Phase 0.6 construction exception to ADR-0010;
-its health and explicit-migration rules remain applicable. No in-place durable
+ADR-0010's health and explicit-migration rules remain applicable. No in-place durable
 conversion or rolling upgrade is claimed. Rollback requires disabling the new
 deployment's admission/scheduling, reconciling external effects and then
 enabling the retained old deployment. Pending work is never automatically

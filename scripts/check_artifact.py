@@ -58,8 +58,8 @@ def check_wheel(path: Path) -> None:
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
         expected = {
-            "etlantic==0.56.0",
-            "etlantic-fastapi[managed]==0.56.0",
+            "etlantic==0.56.2",
+            "etlantic-fastapi[managed]==0.56.2",
             "fastapi==0.141.1",
             "pydantic==2.13.5",
             "pydantic-settings==2.15.0",
@@ -82,14 +82,14 @@ def check_wheel(path: Path) -> None:
             or 'extra == "postgresql"' in line
         }
         if not any(
-            line.startswith("etlantic-sqlmodel==0.56.0") for line in optional_train
+            line.startswith("etlantic-sqlmodel==0.56.2") for line in optional_train
         ):
             raise ValueError(
-                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.56.0"
+                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.56.2"
             )
         for package, markers in (
-            ("etlantic-sql==0.56.0", ("extra == 'sql'", "extra == 'postgresql'")),
-            ("etlantic-foundry==0.56.0", ("extra == 'foundry'",)),
+            ("etlantic-sql==0.56.2", ("extra == 'sql'", "extra == 'postgresql'")),
+            ("etlantic-foundry==0.56.2", ("extra == 'foundry'",)),
         ):
             if not any(
                 line.removeprefix("Requires-Dist: ").strip().startswith(package)

@@ -187,7 +187,7 @@ class DoctorReport(BaseModel):
             )
         )
         train_ok = all(
-            value is None or value == "0.56.0"
+            value is None or value == "0.56.2"
             for name, value in versions.items()
             if name.startswith("etlantic-")
         )
@@ -196,14 +196,14 @@ class DoctorReport(BaseModel):
                 id="compatibility.etlantic_train",
                 status="pass" if train_ok else "fail",
                 summary=(
-                    "Installed ETLantic extensions match 0.56.0."
+                    "Installed ETLantic extensions match 0.56.2."
                     if train_ok
-                    else "An ETLantic extension is outside the 0.56.0 train."
+                    else "An ETLantic extension is outside the 0.56.2 train."
                 ),
                 remediation=(
                     None
                     if train_ok
-                    else "Align every installed etlantic-* package to 0.56.0."
+                    else "Align every installed etlantic-* package to 0.56.2."
                 ),
             )
         )

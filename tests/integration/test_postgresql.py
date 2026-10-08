@@ -152,12 +152,6 @@ def settings() -> ShuETLSettings:
                 connection.execute(
                     text("GRANT USAGE ON SCHEMA public TO shuetl_runtime")
                 )
-                # ETLantic 0.56.0 migrations.current_version unconditionally
-                # executes CREATE TABLE IF NOT EXISTS, which requires CREATE
-                # on the schema in PostgreSQL even when the table already exists.
-                connection.execute(
-                    text("GRANT CREATE ON SCHEMA public TO shuetl_runtime")
-                )
                 connection.execute(
                     text(
                         "GRANT SELECT, INSERT, UPDATE, DELETE "
@@ -468,7 +462,6 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
     from etlantic.registry import BindingDescriptor, PlanningContext
     from etlantic.secrets import SecretRef
     from etlantic.secrets.provider import SecretResolutionContext
-    from sqlalchemy.exc import ProgrammingError
 
     class TransferRow(Data):
         id: str
@@ -670,17 +663,6 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                 )
         finally:
             admin_engine.dispose()
-        with pytest.raises(ProgrammingError, match="permission denied for schema"):
-            build_managed_runtime(role_settings("worker", 19006))
-        admin_engine = create_postgresql_engine(settings)
-        try:
-            with admin_engine.begin() as connection:
-                connection.execute(
-                    text("GRANT CREATE ON SCHEMA public TO shuetl_runtime")
-                )
-        finally:
-            admin_engine.dispose()
-
         runtime_settings = role_settings("worker", 19004)
         inspection_engine = create_postgresql_engine(runtime_settings)
         try:
@@ -689,7 +671,7 @@ def test_preview_runtime_executes_manual_and_scheduled_postgresql_work(
                     connection.exec_driver_sql("SELECT current_user").scalar_one()
                     == "shuetl_runtime"
                 )
-                assert connection.exec_driver_sql(
+                assert not connection.exec_driver_sql(
                     "SELECT has_schema_privilege(current_user, 'public', 'CREATE')"
                 ).scalar_one()
         finally:

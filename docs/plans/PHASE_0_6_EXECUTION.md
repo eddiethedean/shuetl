@@ -8,8 +8,8 @@
   [release workflow](https://github.com/eddiethedean/shuetl/actions/runs/36659686930)
   passed and published to PyPI.
 - Selected 0.6 compatibility train: published ETLantic core, FastAPI, and
-  SQLModel `0.56.0`, used as published; PostgreSQL `18.6`; Python 3.11–3.13.
-  SQL and Foundry provider packages, when enabled, also use exact `0.56.0`
+  SQLModel `0.56.2`, used as published; PostgreSQL `18.6`; Python 3.11–3.13.
+  SQL and Foundry provider packages, when enabled, also use exact `0.56.2`
   pins. The released ShuETL 0.5.0 baseline uses ETLantic `0.55.0`.
 - Dependency selection is complete. Implementation updates the package pins,
   lock, compatibility checks, and provider metadata to this train. Upstream
@@ -73,13 +73,13 @@ same pinned application artifact
     schedule, firing, and durable-work state
 ```
 
-## Gate 0 — Qualify ShuETL composition on ETLantic 0.56.0
+## Gate 0 — Qualify ShuETL composition on ETLantic 0.56.2
 
-The exact published ETLantic 0.56.0 wheel audit is recorded in
-[ETLANTIC_0_56_WHEEL_AUDIT.md](ETLANTIC_0_56_WHEEL_AUDIT.md). It verifies the
-published package hashes against the upstream qualification manifest and
-identifies the remaining ShuETL process-role, migration-boundary, and target
-PostgreSQL evidence required before Gate 0 closes.
+The published ETLantic 0.56.2 wheel audit is recorded in
+[ETLANTIC_0_56_2_WHEEL_AUDIT.md](ETLANTIC_0_56_2_WHEEL_AUDIT.md). It verifies
+the published package hashes and confirms fixes for gateway import isolation
+and read-only migration-version inspection. ShuETL process-role and target
+PostgreSQL evidence remains required before Gate 0 closes.
 
 The published wheel hashes match the upstream qualification manifest, whose
 release evidence records 44/44 upstream acceptance criteria passed. This
@@ -87,7 +87,7 @@ settles artifact selection; ShuETL's own role integration remains unqualified.
 The stale upstream candidate/support wording is retained as an audit finding
 and does not block implementation against the published release.
 
-| Surface in the 0.56.0 installation | Selected 0.6 composition | Required ShuETL evidence |
+| Surface in the 0.56.2 installation | Selected 0.6 composition | Required ShuETL evidence |
 | --- | --- | --- |
 | `ManagedBackendConfig`, `create_managed_backend`, and `ManagedApplicationService` | Construct the standard SQLModel service graph per process; gateway HTTP and headless submission use the same upstream service contracts. | Exact public imports, scoped authorization, shared database/store identity, and resource ownership. |
 | `etlantic.runtime.scheduler_service.SchedulerService` | Supervise public `tick`, `ready`, and `drain`; pass the bound `managed_service.submit_scheduled_run` method as `run_submitter`. | Preserve upstream discovery of occurrence preparation/recovery; prove manual/scheduled admission parity, occurrence identity, restart and duplicate-scheduler behavior. |
@@ -136,13 +136,11 @@ schema-creation/migration privileges, ownership of provider tables, superuser
 or inherited migration role. Qualification uses an actual connection under
 these grants and executes a real submission and worker write, not only a
 constructor under a session-switched read-only role.
-The 0.56 constructor's version inspector issues `CREATE TABLE IF NOT EXISTS`
-for the already-provisioned version table. Accept this exact upstream
-statement during construction, provided qualification proves it changes no
-schema state under the runtime role. This is a narrow exception to the former
-blanket no-DDL startup requirement; it grants no permission to create or
-upgrade tables. Readiness and doctor use ShuETL's read-only inspection path
-and never call that upstream inspector or reconstruct the backend. Capture
+ETLantic 0.56.2's version inspector checks for the version table and reads the
+version without DDL. Managed backend construction must succeed under the
+runtime role's ordinary data grants, with no schema `CREATE`, table ownership,
+or migration privileges. Readiness and doctor use ShuETL's own read-only
+inspection path and never reconstruct the backend. Capture database grants,
 schema state and executed statements in the acceptance evidence.
 
 ## Process and configuration contract
@@ -250,14 +248,14 @@ interpreter and no migration command silently converts old durable work.
 
 | ID | Required result |
 | --- | --- |
-| AC-001 | Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.0`, Python 3.11–3.13, exact ETLantic core/FastAPI/SQLModel `0.56.0` pins (and SQL/Foundry `0.56.0` when enabled), the PostgreSQL extra, and migration head `014_cp1_complete_principal_idempotency_0_56`. |
+| AC-001 | Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.0`, Python 3.11–3.13, exact ETLantic core/FastAPI/SQLModel `0.56.2` pins (and SQL/Foundry `0.56.2` when enabled), the PostgreSQL extra, and migration head `014_cp1_complete_principal_idempotency_0_56`. |
 | AC-002 | An installed-artifact Gate 0 probe executes one real scheduled and one manual submission through the selected PostgreSQL-backed upstream roles; the worker produces an observable ETLantic report rather than no-op completion. |
 | AC-003 | A single built application artifact starts each of the three roles; wrong/missing role, mismatched `--role` and `SHUETL_ROLE`, local provider, demo identity, missing runner, or incompatible package fails before serving or claiming work. |
 | AC-004 | Existing gateway/local settings, facade, identity, HTTP/SSE and doctor contracts are requalified on 0.56 with fresh stores; `postgresql-pilot` stays gateway-only and no implicit preview or 0.55-store upgrade occurs. |
 | AC-005 | Gateway construction and request handling never start scheduler/worker ticks, import the runner, resolve pipeline secrets, or execute a pipeline. |
 | AC-006 | Scheduler and worker construct no FastAPI app or host credential verifier; each receives a trusted, scope-bound ETLantic service context and a unique owner ID. |
 | AC-007 | All roles use the same provider schema/store identity. Scheduler passes the bound `submit_scheduled_run` method; crash/retry proofs cover occurrence preparation, firing claim, managed acceptance and linking on same-engine stores without assuming one atomic commit. |
-| AC-008 | Every role performs read-only compatibility/connectivity/schema preflight and health inspection. Backend construction under a runtime role without schema-creation privileges may issue only the documented upstream version-table `CREATE TABLE IF NOT EXISTS`, with no schema change; missing/incorrect schema fails before construction. Migration is possible only through the explicit operator command. |
+| AC-008 | Every role performs read-only compatibility/connectivity/schema preflight and health inspection. Backend construction under a runtime role without schema-creation privileges performs no DDL; missing/incorrect schema fails before construction. Migration is possible only through the explicit operator command. |
 | AC-009 | Role-local liveness/readiness report startup, running, draining, provider outage, and schema mismatch without false success or secret-bearing output. |
 | AC-010 | SIGTERM/SIGINT fail readiness, stop new request/tick dispatch, invoke drain and await in-flight work before one-time cleanup. Evidence distinguishes in-flight acceptance/claim windows and grace-period expiry; no concurrent engine disposal or fabricated terminal result occurs. |
 | AC-011 | Two gateway processes given the same scope and idempotency key yield one canonical accepted submission after concurrent requests and retry. |
@@ -314,7 +312,7 @@ after a commit but before its client received the outcome.
 
 ## Verification and implementation order
 
-1. **Adopt the selected artifacts.** Pin core/FastAPI/SQLModel to `0.56.0`
+1. **Adopt the selected artifacts.** Pin core/FastAPI/SQLModel to `0.56.2`
    and enabled SQL/Foundry providers to the same version. Update the lock,
    compatibility inventory, migration head and required-table metadata using
    the wheel audit. Preserve its distinction between upstream evidence and
@@ -370,7 +368,7 @@ records while implementing these packages.
   process termination, or exactly-once external-effect claim. Backup/restore,
   rolling upgrades, broad role-to-role diagnostics, and capacity qualification
   remain Phase 0.7 work.
-- Stop the 0.6 release if the selected published `0.56.0` train cannot provide
+- Stop the 0.6 release if the selected published `0.56.2` train cannot provide
   a real runner, cross-process PostgreSQL coordination, safe drain/fencing, or a
   reproducible installed-artifact reference topology. A green unit suite or
   configured workflow alone does not satisfy this contract.

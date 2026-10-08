@@ -8,8 +8,8 @@ from .errors import CapabilityError, CompatibilityError
 
 CORE_REQUIREMENTS = {
     "shuetl": "0.6.0",
-    "etlantic": "0.56.0",
-    "etlantic-fastapi": "0.56.0",
+    "etlantic": "0.56.2",
+    "etlantic-fastapi": "0.56.2",
     "fastapi": "0.141.1",
     "pydantic": "2.13.5",
     "pydantic-settings": "2.15.0",
@@ -17,7 +17,7 @@ CORE_REQUIREMENTS = {
     "uvicorn": "0.54.0",
 }
 SQLITE_REQUIREMENTS = {
-    "etlantic-sqlmodel": "0.56.0",
+    "etlantic-sqlmodel": "0.56.2",
     "sqlalchemy": "2.0.52",
 }
 POSTGRESQL_REQUIREMENTS = {
@@ -66,9 +66,9 @@ def validate_core() -> dict[str, str | None]:
         if (
             name.startswith("etlantic-")
             and installed is not None
-            and installed != "0.56.0"
+            and installed != "0.56.2"
         ):
-            mismatches.append(f"{name}={installed} (requires ETLantic 0.56.0)")
+            mismatches.append(f"{name}={installed} (requires ETLantic 0.56.2)")
     if mismatches:
         raise CompatibilityError(
             "incompatible ShuETL runtime packages: " + "; ".join(sorted(mismatches))

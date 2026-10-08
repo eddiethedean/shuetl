@@ -126,7 +126,7 @@ def test_execution_profile_checks_distribution_specifiers_and_builtin_plugins(
     monkeypatch.setattr(
         runtime_module,
         "installed_versions",
-        lambda: {"etlantic-sql": "0.56.0", "etlantic-local": None},
+        lambda: {"etlantic-sql": "0.56.2", "etlantic-local": None},
     )
     profile = Profile(
         name="phase06-production",

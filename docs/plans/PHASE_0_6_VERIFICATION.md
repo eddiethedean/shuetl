@@ -4,7 +4,7 @@ Status: planned and unexecuted. This document refines the
 [execution contract](PHASE_0_6_EXECUTION.md) and
 [proposed role ADR](../adr/0014-role-separated-managed-runtime.md).
 Paths and commands below are implementation targets, not existing test claims.
-Use published ETLantic 0.56.0 wheels, PostgreSQL 18.6 and Python 3.11–3.13.
+Use published ETLantic 0.56.2 wheels, PostgreSQL 18.6 and Python 3.11–3.13.
 
 ## Reproducible fixtures
 

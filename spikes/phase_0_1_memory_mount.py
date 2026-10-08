@@ -222,8 +222,8 @@ def run() -> None:
     ):
         version = metadata.version(distribution)
         print(f"{distribution}={version}")
-    assert metadata.version("etlantic") == "0.56.0"
-    assert metadata.version("etlantic-fastapi") == "0.56.0"
+    assert metadata.version("etlantic") == "0.56.2"
+    assert metadata.version("etlantic-fastapi") == "0.56.2"
 
     graph = build_graph()
     app = build_embedded_app(graph)

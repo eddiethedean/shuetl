@@ -17,8 +17,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "etlantic==0.56.0",
-    "etlantic-fastapi[managed]==0.56.0",
+    "etlantic==0.56.2",
+    "etlantic-fastapi[managed]==0.56.2",
     "fastapi==0.141.1",
     "pydantic==2.13.5",
     "pydantic-settings==2.15.0",
@@ -38,17 +38,17 @@ test = [
     "pytest==8.4.2",
 ]
 sqlite = [
-    "etlantic-sqlmodel==0.56.0",
+    "etlantic-sqlmodel==0.56.2",
     "sqlalchemy==2.0.52",
 ]
 postgresql = [
-    "etlantic-sql==0.56.0",
-    "etlantic-sqlmodel==0.56.0",
+    "etlantic-sql==0.56.2",
+    "etlantic-sqlmodel==0.56.2",
     "sqlalchemy==2.0.52",
     "psycopg[binary]==3.3.5",
 ]
-sql = ["etlantic-sql==0.56.0"]
-foundry = ["etlantic-foundry==0.56.0"]
+sql = ["etlantic-sql==0.56.2"]
+foundry = ["etlantic-foundry==0.56.2"]
 
 [project.scripts]
 shuetl = "shuetl.cli:main"

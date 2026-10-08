@@ -7,11 +7,9 @@ preview profile; the clean-wheel gate separately verifies each optional extra
 in its own environment. This keeps the Foundry plugin outside the SQL profile's
 allowlist while still checking its packaged pin. CI provisions a separate
 runtime PostgreSQL role, uses a PostgreSQL 18.6 service, and builds/checks wheel
-and source artifacts. The fixture grants the runtime role schema `CREATE`:
-ETLantic 0.56.0's `current_version` helper runs
-`CREATE TABLE IF NOT EXISTS` unconditionally, and PostgreSQL requires schema
-`CREATE` even when the table exists. This exercises the rest of the managed
-role graph but leaves AC-008's planned no-`CREATE` startup boundary open. The
+and source artifacts. The fixture provisions the runtime role with data
+privileges but no schema `CREATE`; ETLantic 0.56.2's `current_version` helper
+checks and reads the migration table without DDL. The
 release gate runs the PostgreSQL role fixture from an isolated installed wheel.
 `check_pytest_no_skips.py` rejects skips in required PostgreSQL integration
 tests. The release gate clears the PostgreSQL profile environment for the
@@ -24,9 +22,9 @@ gate with open acceptance rows allowed; tag runs use strict evidence mode.
 
 | Gate | Workflow job | Current evidence |
 | --- | --- | --- |
-| A — static and regression | `quality` | [Run 37664305784](https://github.com/eddiethedean/shuetl/actions/runs/37664305784) passed on Python 3.11–3.13. |
-| B — PostgreSQL | `postgresql-integration` | Run 37664305784 passed on PostgreSQL 18.6 and Python 3.11–3.13; the no-`CREATE` grant remains unqualified. |
-| C — clean artifact | `release-gate` | Run 37664305784 passed the build, metadata, isolated extras, installed-wheel PostgreSQL fixture, OpenAPI, boundary, and full check script on Python 3.11–3.13. PR mode used `--allow-open`. |
+| A — static and regression | `quality` | Latest run pending for the 0.56.2 implementation. |
+| B — PostgreSQL | `postgresql-integration` | Latest run pending for PostgreSQL 18.6 and Python 3.11–3.13 with no schema `CREATE`. |
+| C — clean artifact | `release-gate` | Latest run pending for the installed-wheel 0.56.2 artifact and the full check script. |
 
 `scripts/check_release.py --allow-open` runs lock, sync, Ruff, Pyright,
 boundary, test, build, artifact, OpenAPI, clean-wheel, and evidence consistency
@@ -35,6 +33,6 @@ checks without authorizing release. The default command adds
 tag cannot publish until all AC rows and Gate A–C are PASS and the evidence
 outcome is `proceed-to-0.6-preview`.
 
-Run 37664305784 validated implementation source commit
-`625a7b3f38e35fef2124accdfd0eba3dc0d6c847`. The PR gate used `--allow-open`;
-it does not authorize preview while acceptance rows remain open.
+The latest hosted run must validate the exact final implementation source
+commit. PR mode uses `--allow-open`; it does not authorize preview while
+acceptance rows remain open.

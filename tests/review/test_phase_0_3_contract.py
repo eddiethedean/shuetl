@@ -233,7 +233,7 @@ def test_sol_005_doctor_text_contains_every_json_fact() -> None:
         "route_preset: complete",
         "database_configured: false",
         "database_driver: none",
-        "etlantic: 0.56.0",
+        "etlantic: 0.56.2",
         "provider.memory",
         "Use a separately operated provider for production workloads.",
     ):
@@ -245,9 +245,9 @@ def test_sol_005_sqlite_doctor_reports_sqlalchemy_version(
 ) -> None:
     versions = {
         "shuetl": "0.6.0",
-        "etlantic": "0.56.0",
-        "etlantic-fastapi": "0.56.0",
-        "etlantic-sqlmodel": "0.56.0",
+        "etlantic": "0.56.2",
+        "etlantic-fastapi": "0.56.2",
+        "etlantic-sqlmodel": "0.56.2",
         "fastapi": "0.141.1",
         "pydantic": "2.13.5",
         "pydantic-settings": "2.15.0",
@@ -261,7 +261,7 @@ def test_sol_005_sqlite_doctor_reports_sqlalchemy_version(
             database_url=f"sqlite:///{tmp_path / 'missing.db'}",
         )
     )
-    assert report.versions["etlantic-sqlmodel"] == "0.56.0"
+    assert report.versions["etlantic-sqlmodel"] == "0.56.2"
     assert report.versions["sqlalchemy"] == "2.0.52"
 
 

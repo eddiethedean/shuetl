@@ -9,7 +9,7 @@ source and artifact. AC-024 passes only as a ledger-integrity criterion.
 
 ## Environment and source
 
-- Current source commit: bf72590 (ETLantic 0.56.2 implementation; hosted qualification pending).
+- Current source commit: 24ca3920b0a2171e827c5b607ac4c4907af8217f (ETLantic 0.56.2 implementation; hosted qualification pending).
 - Historical source commits below identify the earlier 0.56.0 runs.
 - Upstream: published ETLantic, etlantic-fastapi, and
   etlantic-sqlmodel wheels at 0.56.0; optional SQL and Foundry packages
@@ -222,7 +222,7 @@ Limitation: Probe state is unit-tested; real process startup, schema mismatch, a
 
 Requirement: SIGTERM/SIGINT fail readiness, stop new request/tick dispatch, invoke drain and await in-flight work before one-time cleanup. Evidence distinguishes in-flight acceptance/claim windows and grace-period expiry; no concurrent engine disposal or fabricated terminal result occurs.
 
-Command: NOT RUN (no signal-driven in-flight process fixture exists)
+Command: uv run pytest tests/unit/test_phase_0_6_runtime.py::test_runtime_role_signal_drains_active_tick_before_one_time_cleanup -q
 
 Result: OPEN
 
@@ -238,7 +238,7 @@ Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: signal 
 
 Provenance: docs/plans/PHASE_0_6_EXECUTION.md#acceptance-criteria.
 
-Limitation: SIGTERM/SIGINT during active acceptance, lease claim, effect, and grace expiry have no process-level evidence.
+Limitation: Deterministic unit coverage verifies signal-to-drain ordering and one-time cleanup for an active tick; separate-process SIGTERM/SIGINT, acceptance/lease/effect kill points, and grace expiry remain unqualified.
 
 ## AC-011
 

@@ -10,7 +10,7 @@ provider status, transition, and CI definition provide supporting context.
 
 | Field | Value |
 | --- | --- |
-| Source commit | bf72590 (ETLantic 0.56.2 implementation source; hosted qualification pending) |
+| Source commit | 24ca3920b0a2171e827c5b607ac4c4907af8217f (ETLantic 0.56.2 implementation; hosted run pending) |
 | OS and architecture | macOS 26.6.2 arm64 local |
 | Python version | CPython 3.13.9 local; hosted Python 3.11–3.13 matrix passed in run 37668515171 |
 | uv version | 0.11.3 |
@@ -25,7 +25,7 @@ provider status, transition, and CI definition provide supporting context.
 | Gate B | PostgreSQL 18.6 runtime integration with no schema `CREATE`, pending | OPEN |
 | Gate C | Hosted artifact and installed-wheel qualification matrix, pending 0.56.2 run | OPEN |
 | SHA-256 wheel | `34112e77cfa28ca48d50319ebea11c7594415350ea522c073cf9b8aa4fa4919a` |
-| SHA-256 sdist | `8b6af58acec69f8a138b87c755bc6972b453478bf4c18f10975ad8711c2b30be` |
+| SHA-256 sdist | `8889a8536f902d71e26b26fefad8ce22376e7d00ef83daa2fb3efadcdda0c647` |
 
 ## Acceptance results
 
@@ -45,7 +45,7 @@ evidence, or a configured workflow alone.
 | AC-007 | shared store and scheduler recovery | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_role_builder_uses_shared_headless_backend_and_bound_scheduler_callback -q | qualification.md#ac-007 | OPEN | The bound callback and same-engine schedule-store wiring are unit-checked; crash and retry behavior across firing, acceptance, and linking commits has not been tested. | implementation run | 2026-10-07 |
 | AC-008 | restricted database startup | uv run python scripts/check_clean_wheel.py | qualification.md#ac-008 | OPEN | The fixture now withholds schema `CREATE` and compares schema/migration state; hosted PostgreSQL 18.6 execution is pending. | implementation run | 2026-10-08 |
 | AC-009 | readiness and liveness | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_probe_lifecycle_reports_outage_drain_and_stale_state_without_secrets -q | qualification.md#ac-009 | OPEN | Probe state is unit-tested; real process startup, schema mismatch, and database outage transitions remain unqualified. | implementation run | 2026-10-07 |
-| AC-010 | signal drain and cleanup | NOT RUN (no signal-driven in-flight process fixture exists) | qualification.md#ac-010 | OPEN | SIGTERM/SIGINT during active acceptance, lease claim, effect, and grace expiry have no process-level evidence. | implementation run | 2026-10-07 |
+| AC-010 | signal drain and cleanup | uv run pytest tests/unit/test_phase_0_6_runtime.py::test_runtime_role_signal_drains_active_tick_before_one_time_cleanup -q | qualification.md#ac-010 | OPEN | Deterministic unit coverage verifies signal-to-drain ordering and one-time cleanup for an active tick; separate-process SIGTERM/SIGINT, acceptance/lease/effect kill points, and grace expiry remain unqualified. | implementation run | 2026-10-08 |
 | AC-011 | concurrent gateway idempotency | NOT RUN (no separate-process gateway contention fixture exists) | qualification.md#ac-011 | OPEN | Concurrent gateway acceptance and canonical retry identity have not been exercised across OS processes. | implementation run | 2026-10-07 |
 | AC-012 | gateway commit-boundary recovery | NOT RUN (no gateway kill-point fixture exists) | qualification.md#ac-012 | OPEN | Before-commit and after-commit client ambiguity outcomes have not been injected or observed. | implementation run | 2026-10-07 |
 | AC-013 | duplicate scheduler firing | NOT RUN (no separate-process scheduler contention fixture exists) | qualification.md#ac-013 | OPEN | Two scheduler processes have not been raced against one due logical occurrence. | implementation run | 2026-10-07 |

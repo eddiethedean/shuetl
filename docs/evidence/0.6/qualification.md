@@ -11,12 +11,11 @@ source and artifact. AC-024 passes only as a ledger-integrity criterion.
 
 - Current source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6 (ETLantic 0.56.2 implementation; hosted run 37788036525).
 - Historical source commits below identify the earlier 0.56.0 runs.
-- Upstream: published ETLantic, etlantic-fastapi, and
-  etlantic-sqlmodel wheels at 0.56.0; optional SQL and Foundry packages
-  are pinned to 0.56.0.
+- Upstream: published ETLantic, etlantic-fastapi, and etlantic-sqlmodel
+  wheels at 0.56.2; optional SQL and Foundry packages are pinned to 0.56.2.
 - Local environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3.
-- The local shell had no SHUETL_DATABASE_URL; PostgreSQL integration was
-  not run. GitHub Actions has not run for this implementation revision.
+- The local shell had no SHUETL_DATABASE_URL; PostgreSQL integration ran in
+  GitHub Actions 37788036525 on PostgreSQL 18.6 and Python 3.11–3.13.
 - The proof registry maps each approved requirement to its exact source
   criterion, command, result section, and limitation.
 
@@ -74,11 +73,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: role startup validation.
 
@@ -96,11 +95,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: 0.56 regression compatibility.
 
@@ -118,11 +117,11 @@ Result: OPEN
 
 Observed result: Published ETLantic 0.56.2 fixes the gateway import boundary; the clean-wheel checker now imports `etlantic_fastapi` in a fresh interpreter and asserts neither execution module is loaded. The unit suite covers gateway/runtime separation. Process-level secret and execution isolation remain unqualified.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: gateway execution boundary.
 
@@ -140,11 +139,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: runtime identity and ownership.
 
@@ -162,11 +161,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: shared store and scheduler recovery.
 
@@ -206,11 +205,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: readiness and liveness.
 
@@ -228,11 +227,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: signal drain and cleanup.
 
@@ -250,11 +249,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: concurrent gateway idempotency.
 
@@ -272,11 +271,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: gateway commit-boundary recovery.
 
@@ -294,11 +293,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: duplicate scheduler firing.
 
@@ -316,11 +315,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: scheduler commit-boundary recovery.
 
@@ -338,11 +337,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: duplicate worker and effect semantics.
 
@@ -360,11 +359,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: worker loss and lease recovery.
 
@@ -382,11 +381,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: stale fencing.
 
@@ -404,11 +403,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: cancellation outcomes.
 
@@ -426,11 +425,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: database outage recovery.
 
@@ -470,11 +469,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: credential and secret redaction.
 
@@ -492,11 +491,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: deployment recipes.
 
@@ -536,11 +535,11 @@ Result: PASS
 
 Observed result: The evidence checker validates the record and references.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: criterion evidence ledger.
 
@@ -558,11 +557,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: fresh-store cutover and rollback.
 
@@ -580,11 +579,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: trusted factory and typed bindings.
 
@@ -602,11 +601,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: independent reference host.
 
@@ -624,11 +623,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: provider and transformation matrix.
 
@@ -646,11 +645,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: canonical discovery and controls.
 
@@ -668,11 +667,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: retry, rerun, and extension.
 
@@ -690,11 +689,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: immutable input and report artifacts.
 
@@ -712,11 +711,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: runtime probe and log safety.
 
@@ -734,11 +733,11 @@ Result: OPEN
 
 Observed result: Implementation or fixture status only; the required acceptance result has not been recorded.
 
-Source commit: 6b947b82c7b46c5b38471142f1958f4dc6083144.
+Source commit: 9e77f1aa8ab491af86c6fc16f1a2e9830db998a6.
 
-Upstream: published ETLantic 0.56.0 wheels.
+Upstream: published ETLantic 0.56.2 wheels.
 
-Environment: macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; no local PostgreSQL URL; no hosted run for this revision.
+Environment: local macOS 26.6.2 arm64, CPython 3.13.9, uv 0.11.3; hosted quality, PostgreSQL and installed-wheel run 37788036525. Criterion-specific limitations remain as stated.
 
 Artifact: docs/evidence/0.6/contracts.md; implementation/test reference: provider action workers.
 

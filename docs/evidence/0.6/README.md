@@ -23,7 +23,7 @@ interpreter checks, not additional distinct coverage.
 | Python version | 3.11.14, 3.12.13, 3.13.9 |
 | uv version | Exact executable version in validation.json |
 | ETLantic source revision | Release tag d1f4e5a4d013e37f8adc54b4644ea9b2be66f801 |
-| ShuETL source commit | `0595029938c8917b904470a19c4ccf3d277e7e28` |
+| ShuETL source commit | `40402b6c4f2788605ecfebfe5e25144ddd04a57c` |
 | ShuETL import origin | Isolated wheel site-packages/shuetl/__init__.py |
 | ETLantic import origin | Isolated wheel site-packages/etlantic/__init__.py |
 | etlantic-fastapi import origin | Isolated wheel site-packages/etlantic_fastapi/__init__.py |
@@ -68,10 +68,10 @@ append behavior and a primary-key upsert across two distinct runs, along with
 exact sink rows, input read-only grants and effect receipts. Local and hosted
 PostgreSQL 18.6 installed-wheel runs pass on Python 3.11–3.13. The committed
 [hosted Gate 0 records](hosted-gate0/) and [installed CLI records](hosted-cli/)
-come from [CI run 37982842772](https://github.com/eddiethedean/shuetl/actions/runs/37982842772)
-and are bound to source commit `0595029938c8917b904470a19c4ccf3d277e7e28`.
+come from [CI run 37984396221](https://github.com/eddiethedean/shuetl/actions/runs/37984396221)
+and are bound to source commit `40402b6c4f2788605ecfebfe5e25144ddd04a57c`.
 The ShuETL wheel SHA-256 is
-`b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`;
+`d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1`;
 Gate 0 reference workload SHA-256 is
 `5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2`; CLI
 reference host SHA-256 is
@@ -136,10 +136,10 @@ action worker each reach `/ready` and `/live`, receive SIGTERM, exit successfull
 and leave no seeded credential sentinels in captured logs. The runtime role has
 no schema CREATE rights, migration-role membership or owned objects. The same
 qualification passes in hosted CI on Python 3.11–3.13 for source commit
-`0595029938c8917b904470a19c4ccf3d277e7e28`; the redacted per-interpreter records
-are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37982842772)
+`40402b6c4f2788605ecfebfe5e25144ddd04a57c`; the redacted per-interpreter records
+are in [hosted-cli/](hosted-cli/), and [CI run 37984396221](https://github.com/eddiethedean/shuetl/actions/runs/37984396221)
 binds those results to ShuETL wheel SHA-256
-`b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` and
+`d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1` and
 reference-host wheel SHA-256
 `1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769`.
 This qualifies basic installed startup and signal shutdown only; it does not
@@ -160,10 +160,11 @@ not final release-candidate hashes and must be regenerated if source changes.
 [Regression XML](regression.xml) covers the existing facade/settings/identity,
 HTTP/SSE, memory/SQLite, authorization, provider and boundary contracts plus
 consumer acceptance. [PostgreSQL regression XML](postgresql-regression.xml)
-records six passing PostgreSQL integration tests on a separate disposable
+records seven passing PostgreSQL integration tests on a separate disposable
 database, including scheduler shutdown during an in-flight leader-lease
-acquisition. The added case also passes the hosted Python 3.11–3.13 matrix in
-[CI run 37982842772](https://github.com/eddiethedean/shuetl/actions/runs/37982842772).
+acquisition and readiness recovery after a TCP-level database connectivity
+outage. Both lifecycle cases pass the hosted Python 3.11–3.13 matrix in
+[CI run 37984396221](https://github.com/eddiethedean/shuetl/actions/runs/37984396221).
 PostgreSQL URL configuration was scoped to that file to avoid contaminating
 unit tests that inspect environment precedence.
 
@@ -176,11 +177,11 @@ checks do not establish hosted CI or release acceptance.
 
 ## Acceptance results
 
-All 33 release criteria remain OPEN. Gate 0 feasibility plus local and hosted
-basic CLI smoke tests do not qualify active-work drain, failure recovery, the
-advertised connector matrix or transition/rollback. W02 API freeze and W03/W04
-source implementation are recorded in ADR-0014 and the implementation plan;
-W04 failure qualification and W05–W08 remain required.
+All 33 release criteria remain OPEN. Gate 0 feasibility, hosted basic CLI smoke
+tests, and the newly added local PostgreSQL drain/outage tests do not qualify
+all-role failure recovery, the advertised connector matrix or transition/rollback.
+W02 API freeze and W03/W04 source implementation are recorded in ADR-0014 and the
+implementation plan; hosted W04 fault qualification and W05–W08 remain required.
 
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -220,11 +221,11 @@ W04 failure qualification and W05–W08 remain required.
 
 ## Gap register
 
-Role-specific ShuETL binding/API freeze; active-work drain, provider outage/recovery,
-grace and process-failure qualification; complete live capability matrix;
-fresh-store transition/rollback rehearsal; hosted final-wheel checks and audited
-33-row proofs. No upstream implementation change was required by the completed
-qualification.
+Role-specific ShuETL binding/API freeze; hosted active-work drain and provider
+outage/recovery, exact cleanup, grace and process-failure qualification; complete
+live capability matrix; fresh-store transition/rollback rehearsal; hosted
+final-wheel checks and audited 33-row proofs. No upstream implementation change
+was required by the completed qualification.
 
 ## Reproducible development build
 
@@ -234,8 +235,8 @@ without approving release.
 
 | Artifact | Value |
 | --- | --- |
-| SHA-256 wheel | `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` |
-| SHA-256 sdist | `a10cafbed08ab97e982236388ce32b30831771f67b0e5de7e7f36f5c574885a2` |
+| SHA-256 wheel | `d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1` |
+| SHA-256 sdist | `da674f8d06553d2f489fa96f3ad42da4700e336a01a8a6d1f337d697bd517c5c` |
 
 The fresh-build artifact-hash regression passed after the evidence build.
 `check_evidence.py` intentionally rejects all 33 OPEN criteria and Gates A–C;

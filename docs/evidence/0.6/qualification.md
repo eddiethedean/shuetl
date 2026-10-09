@@ -6,13 +6,13 @@ acceptance criteria or Gates A–C.
 
 ## Exact hosted artifacts
 
-The hosted qualification used source commit
-`0595029938c8917b904470a19c4ccf3d277e7e28` and PostgreSQL 18.6. CI built and
+The current hosted qualification used source commit
+`40402b6c4f2788605ecfebfe5e25144ddd04a57c` and PostgreSQL 18.6. CI built and
 installed ShuETL and the reference wheels outside the checkout.
 
 | Artifact | SHA-256 | Purpose |
 | --- | --- | --- |
-| `shuetl-0.6.0-py3-none-any.whl` | `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` | Installed role/runtime under qualification |
+| `shuetl-0.6.0-py3-none-any.whl` | `d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1` | Installed role/runtime under qualification |
 | `shuetl_phase06_reference-0.0.1-py3-none-any.whl` | `5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2` | Separately installed workload and example transformation |
 | CLI reference-host wheel | `1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769` | Separately installed role CLI bindings |
 
@@ -38,7 +38,7 @@ All three cases verify typed normalization, filtering, quality
 acceptance/rejection, exact destination rows and provider effect receipts. The
 full per-interpreter records, grants, run reports and plans are in
 [`hosted-gate0/`](hosted-gate0/). CLI role startup/readiness/SIGTERM records are
-in [`hosted-cli/`](hosted-cli/). The corresponding [hosted run](https://github.com/eddiethedean/shuetl/actions/runs/37982842772)
+in [`hosted-cli/`](hosted-cli/). The corresponding [hosted run](https://github.com/eddiethedean/shuetl/actions/runs/37984396221)
 passed.
 
 The repository's active-worker signal regression passes locally and in the
@@ -56,9 +56,9 @@ This covers status mapping. A separate PostgreSQL integration test now interrupt
 all runtime database connections through a local TCP fault proxy, observes
 `/ready` fail with `provider_unavailable` while `/live` remains healthy, restores
 connectivity, and observes readiness recover before SIGTERM shutdown. The new
-case passed locally on PostgreSQL 18.6 with no skips; hosted Python matrix
-qualification is pending. It does not cover force termination or competing
-process recovery.
+case passed locally on PostgreSQL 18.6 and in hosted CI on Python 3.11–3.13
+with no skips. It does not cover force termination or competing process
+recovery.
 
 ## Limitations and release status
 

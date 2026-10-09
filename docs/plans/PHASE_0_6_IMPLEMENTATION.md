@@ -244,15 +244,16 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
 - [x] Block the scheduler's PostgreSQL connections through a local TCP fault
   proxy, verify readiness drops while liveness remains healthy, restore
   connectivity, and verify readiness recovers before orderly shutdown. The
-  disposable PostgreSQL test passed locally with zero skips; bind the hosted
-  Python matrix result before claiming hosted qualification.
+  disposable PostgreSQL test passed locally and in hosted Python 3.11–3.13 CI
+  run 37984396221 with zero skips.
 - [ ] Qualify exact cleanup order/count across roles and external termination
   after grace expiry with separate PostgreSQL-backed processes. Never adjust
   upstream leases, repair work or write terminal results.
 
 Exit: source implementation supports all four kinds. Installed startup and basic
-signal shutdown pass locally; drain with active work, outage/recovery and
-grace-expiry behavior remain unqualified.
+signal shutdown pass locally. PostgreSQL scheduler drain and connection
+drain and connection outage/recovery pass locally and in hosted CI; exact cleanup
+order, other-role active drain and external termination remain open.
 
 ## W05 — Qualify advertised live capabilities
 

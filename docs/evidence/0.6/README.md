@@ -152,15 +152,17 @@ fresh provider check. Review then found that transient failures could permanentl
 prevent later ticks. The corrected supervisor permits provider-checked bootstrap
 and recovery ticks; upstream owns prerequisite checks and admission. Failure-path
 regressions cover this correction separately from the recorded installed-process
-smoke test. The recorded artifact hashes below describe the earlier development
-build and must be refreshed during final qualification.
+smoke test. The hashes below bind the reproducible development build; they are
+not final release-candidate hashes and must be regenerated if source changes.
 
 ## Regression and build validation
 
 [Regression XML](regression.xml) covers the existing facade/settings/identity,
 HTTP/SSE, memory/SQLite, authorization, provider and boundary contracts plus
 consumer acceptance. [PostgreSQL regression XML](postgresql-regression.xml)
-records five passing gateway/persistence tests on a separate disposable database.
+records six passing PostgreSQL integration tests on a separate disposable
+database, including scheduler signal drain with an active claim. Hosted
+qualification for this added case is pending.
 PostgreSQL URL configuration was scoped to that file to avoid contaminating
 unit tests that inspect environment precedence.
 
@@ -232,7 +234,7 @@ without approving release.
 | Artifact | Value |
 | --- | --- |
 | SHA-256 wheel | `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` |
-| SHA-256 sdist | `3a91c9fc312997506fa6cdd0cdd534ce0525ec9f87c7cc0b98bac3b592317e93` |
+| SHA-256 sdist | `b2bc8210fb0f742240ee877ec7089bf3868219610ce21df1e4b7089d2e5b3efe` |
 
 The fresh-build artifact-hash regression passed after the evidence build.
 `check_evidence.py` intentionally rejects all 33 OPEN criteria and Gates A–C;

@@ -232,14 +232,14 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
 - [x] Qualify installed-wheel construction, readiness/liveness, SIGTERM shutdown,
   clean exit and credential-sentinel absence for gateway, scheduler, run worker
   and action worker against PostgreSQL 18.6. Evidence: `docs/evidence/0.6/cli-postgresql.json`.
-- [x] Add a barrier-controlled worker regression proving SIGTERM leaves readiness
-  false and backend resources open while an active provider claim drains, then
-  closes runtime resources after the claim finishes. This exercises the
-  supervisor lifecycle with SQLite; PostgreSQL process-level drain qualification
-  remains open.
-- [ ] Qualify cleanup order/count, active claims after signal, provider
-  outage/recovery and grace expiry. Never adjust upstream leases, repair work or
-  write terminal results.
+- [x] Add barrier-controlled drain regressions for the SQLite run worker and a
+  PostgreSQL-backed scheduler. The PostgreSQL case proves SIGTERM leaves
+  readiness false and runtime resources open after grace expiry while a claim is
+  active, then closes after the claim returns. Local PostgreSQL integration
+  passes; hosted Python 3.11–3.13 qualification is pending.
+- [ ] Qualify exact cleanup order/count across roles, provider outage/recovery,
+  and external termination after grace expiry. Never adjust upstream leases,
+  repair work or write terminal results.
 
 Exit: source implementation supports all four kinds. Installed startup and basic
 signal shutdown pass locally; drain with active work, outage/recovery and

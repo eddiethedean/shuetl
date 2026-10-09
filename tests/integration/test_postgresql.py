@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import socket
+import threading
+import time
+import uuid
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
@@ -25,6 +29,8 @@ from etlantic_sqlmodel.migrations import upgrade
 from fastapi import Request
 from fastapi.testclient import TestClient
 from sqlalchemy import text
+from tests.unit.test_runtime_contract import _preview_settings
+from tests.unit.test_runtime_failures import bindings as runtime_bindings
 
 from shuetl import (
     HostIdentityAdapter,
@@ -32,6 +38,8 @@ from shuetl import (
     ShuETL,
     ShuETLSettings,
 )
+from shuetl import runtime as runtime_module
+from shuetl.backend import create_backend_runtime
 from shuetl.diagnostics import DoctorReport
 from shuetl.postgresql import (
     POSTGRESQL_HEAD,
@@ -339,3 +347,97 @@ def test_workspace_firing_and_durable_identity_survive_restart(
             assert len(reopened.durable_work.pending_outbox(ctx)) == 1
     finally:
         reopened.close()
+
+
+def test_postgresql_scheduler_signal_drains_active_claim(
+    settings: ShuETLSettings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep PostgreSQL-backed resources open until an active scheduler claim drains."""
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        probe_port = listener.getsockname()[1]
+    runtime = create_backend_runtime(
+        _preview_settings(
+            role="scheduler",
+            store_id=f"pg-drain-{uuid.uuid4().hex[:10]}",
+            database_url=settings.database_url,
+            probe_port=probe_port,
+            shutdown_grace_seconds=0.1,
+            dispatch_interval_seconds=0.05,
+        ),
+        runtime_bindings(),
+    )
+    states = []
+    handlers = []
+    real_probe = runtime_module.serve_probes
+
+    def capture_probe(state, port):
+        states.append(state)
+        return real_probe(state, port)
+
+    monkeypatch.setattr(runtime_module, "serve_probes", capture_probe)
+    monkeypatch.setattr(
+        runtime_module,
+        "_install_signals",
+        lambda callback: handlers.append(callback) or {},
+    )
+    monkeypatch.setattr(runtime_module, "_restore_signals", lambda previous: None)
+
+    entered = threading.Event()
+    release = threading.Event()
+    store = runtime.backend.schedule_store
+    original = store.acquire_leader_lease
+
+    def blocked_claim(*args, **kwargs):
+        entered.set()
+        assert release.wait(8), "active PostgreSQL claim was not released"
+        return original(*args, **kwargs)
+
+    store.acquire_leader_lease = blocked_claim
+    outcomes = []
+
+    def serve_and_cleanup():
+        result = runtime_module._serve_worker(runtime)
+        return result if runtime_module._close_when_drained(runtime) else 1
+
+    def invoke():
+        try:
+            outcomes.append(serve_and_cleanup())
+        except BaseException as exc:
+            outcomes.append(exc)
+
+    thread = threading.Thread(target=invoke, daemon=True)
+    thread.start()
+    try:
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline and (not handlers or not states):
+            time.sleep(0.01)
+        assert handlers and states, "PostgreSQL scheduler supervisor did not start"
+        assert entered.wait(8), "scheduler did not begin a PostgreSQL claim"
+        assert runtime.role_handle.status().in_flight > 0
+
+        handlers[0](15, None)
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            status, payload = states[0].payload(False)
+            if status == 503 and payload["reason_code"] == "grace_expired":
+                break
+            time.sleep(0.01)
+        assert states[0].payload(False)[0] == 503
+        assert runtime.role_handle.status().in_flight > 0
+        assert not runtime.closed
+        assert not outcomes
+
+        release.set()
+        thread.join(timeout=8)
+        assert not thread.is_alive(), "scheduler did not finish after claim release"
+        assert outcomes == [0]
+        assert runtime.closed
+        assert runtime.role_handle.status().in_flight == 0
+    finally:
+        release.set()
+        if handlers and thread.is_alive():
+            handlers[0](15, None)
+        thread.join(timeout=8)
+        if not runtime.closed:
+            runtime.close()

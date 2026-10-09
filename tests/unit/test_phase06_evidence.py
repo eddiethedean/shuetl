@@ -83,8 +83,16 @@ def ledger(tmp_path, monkeypatch):
         reference_wheel_sha256=reference_digest,
         sink_rows=[[1, "ok", 6]] * 3,
         rejected_rows=[[2, "no", 120]] * 3,
+        postgresql_source_rows=[[10, "ok", 4]],
+        postgresql_rejected_rows=[[11, "no", 120]],
+        connector_grants={
+            "input_select": True,
+            "input_insert": False,
+            "input_update": False,
+            "input_delete": False,
+        },
         sink_effects=[
-            [f"effect-{index}", f"publication-{index}", 1] for index in range(6)
+            [f"effect-{index}", f"publication-{index}", 1] for index in range(8)
         ],
         capability_results={
             "canonical_transform": True,
@@ -97,6 +105,7 @@ def ledger(tmp_path, monkeypatch):
             "quality_range_accept_and_reject": True,
             "quality_membership_accept_and_reject": True,
             "accepted_and_rejected_outputs_independently_observed": True,
+            "postgresql_snapshot_source": True,
         },
     )
     gate0_path.write_text(json.dumps(gate0))
@@ -205,6 +214,15 @@ def test_phase06_gate0_requires_live_transform_and_quality_observations(ledger):
     path = ledger / "postgresql-gate0.json"
     data = json.loads(path.read_text())
     data["capability_results"]["quality_range_accept_and_reject"] = False
+    path.write_text(json.dumps(data))
+    assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
+
+
+def test_phase06_gate0_requires_postgresql_source_and_read_only_grants(ledger):
+    path = ledger / "postgresql-gate0.json"
+    data = json.loads(path.read_text())
+    data["capability_results"]["postgresql_snapshot_source"] = False
+    data["connector_grants"]["input_insert"] = True
     path.write_text(json.dumps(data))
     assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
 

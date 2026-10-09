@@ -238,6 +238,7 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             "quality_range_accept_and_reject",
             "quality_membership_accept_and_reject",
             "accepted_and_rejected_outputs_independently_observed",
+            "postgresql_snapshot_source",
         }
         capabilities = (
             gate0.get("capability_results", {}) if isinstance(gate0, dict) else {}
@@ -261,8 +262,17 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             and all(value is True for value in capabilities.values())
             and gate0.get("sink_rows") == [[1, "ok", 6]] * 3
             and gate0.get("rejected_rows") == [[2, "no", 120]] * 3
+            and gate0.get("postgresql_source_rows") == [[10, "ok", 4]]
+            and gate0.get("postgresql_rejected_rows") == [[11, "no", 120]]
+            and gate0.get("connector_grants")
+            == {
+                "input_select": True,
+                "input_insert": False,
+                "input_update": False,
+                "input_delete": False,
+            }
             and isinstance(gate0.get("sink_effects"), list)
-            and len(gate0["sink_effects"]) == 6
+            and len(gate0["sink_effects"]) == 8
             and all(
                 isinstance(effect, list) and len(effect) == 3 and effect[2] == 1
                 for effect in gate0["sink_effects"]

@@ -97,6 +97,14 @@ class Transfer(Pipeline):
     rejected: Load[NormalizedRow] = Load(input=quality.rejected, asset="rejected")
 
 
+class PostgreSQLTransfer(Pipeline):
+    source: Extract[Row] = Extract(asset="pg-source")
+    normalized = NormalizeRows.step(rows=source)
+    quality = Quality.step(rows=normalized.result)
+    sink: Load[NormalizedRow] = Load(input=quality.result, asset="pg-sink")
+    rejected: Load[NormalizedRow] = Load(input=quality.rejected, asset="pg-rejected")
+
+
 def main():
     role = sys.argv[1]
     root = Path(os.environ["PHASE06_ROOT"])
@@ -176,6 +184,32 @@ def main():
                 },
             )
         )
+        planning.registry.register_binding(
+            BindingDescriptor(
+                binding="pg-source",
+                provider="postgresql",
+                kind="source",
+                location="source_rows",
+                config={"schema": "input", "mode": "snapshot"},
+            )
+        )
+        for binding, location in (
+            ("pg-sink", "postgres_target"),
+            ("pg-rejected", "postgres_rejected"),
+        ):
+            planning.registry.register_binding(
+                BindingDescriptor(
+                    binding=binding,
+                    provider="postgresql",
+                    kind="sink",
+                    location=location,
+                    config={
+                        "schema": "sink",
+                        "mode": "append",
+                        "effect_table": "sink.effects",
+                    },
+                )
+            )
         return planning
 
     clock = FakeScheduleClock(datetime(2026, 10, 9, tzinfo=UTC))
@@ -272,8 +306,19 @@ def main():
                         pipeline_to_dict(definition_from_pipeline(Transfer)),
                     )
                     result = {"registered": True}
+                elif op == "definition-pg":
+                    result = backend.managed_service.register_definition(
+                        ctx,
+                        "postgres-transfer",
+                        pipeline_to_dict(definition_from_pipeline(PostgreSQLTransfer)),
+                    )
+                    result = {"registered": True}
                 elif op == "plan":
                     result = backend.managed_service.plan_definition(ctx, "transfer")
+                elif op == "plan-pg":
+                    result = backend.managed_service.plan_definition(
+                        ctx, "postgres-transfer"
+                    )
                 elif op == "http":
                     assert client is not None
                     response = client.request(

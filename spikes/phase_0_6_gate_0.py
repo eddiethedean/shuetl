@@ -145,10 +145,39 @@ def main():
             evidence["schema_head"] = upgrade(operator)
             with operator.begin() as conn:
                 conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
+                conn.execute(text("CREATE SCHEMA input"))
                 conn.execute(text("CREATE SCHEMA sink"))
                 conn.execute(
                     text(
+                        "CREATE TABLE input.source_rows (id text NOT NULL, "
+                        "payload text NOT NULL, quantity text NOT NULL, "
+                        "discarded text NOT NULL)"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "INSERT INTO input.source_rows "
+                        "(id, payload, quantity, discarded) VALUES "
+                        "('010', 'OK', '2', 'drop-me'), "
+                        "('011', 'no', '60', 'drop-me'), "
+                        "('000', 'ok', '9', 'drop-me')"
+                    )
+                )
+                conn.execute(
+                    text(
                         "CREATE TABLE sink.target (id integer NOT NULL, "
+                        "payload text NOT NULL, quantity integer NOT NULL)"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE TABLE sink.postgres_target (id integer NOT NULL, "
+                        "payload text NOT NULL, quantity integer NOT NULL)"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE TABLE sink.postgres_rejected (id integer NOT NULL, "
                         "payload text NOT NULL, quantity integer NOT NULL)"
                     )
                 )
@@ -187,17 +216,22 @@ def main():
                             f'TO "{runtime}"'
                         )
                     )
+                conn.execute(text(f'GRANT USAGE ON SCHEMA input TO "{runtime}"'))
+                conn.execute(
+                    text(f'GRANT SELECT ON ALL TABLES IN SCHEMA input TO "{runtime}"')
+                )
             with operator.connect() as conn:
                 grants = conn.execute(
                     text(
                         "SELECT has_schema_privilege(:role, 'public', 'CREATE'), "
                         "has_schema_privilege(:role, 'sink', 'CREATE'), "
+                        "has_schema_privilege(:role, 'input', 'CREATE'), "
                         "pg_has_role(:role, "
                         ":owner, 'MEMBER')"
                     ),
                     {"role": runtime, "owner": migrator},
                 ).one()
-                assert tuple(grants) == (False, False, False)
+                assert tuple(grants) == (False, False, False, False)
                 owners = conn.execute(
                     text(
                         "SELECT count(*) FROM pg_class c JOIN pg_roles r ON "
@@ -210,6 +244,23 @@ def main():
                     "schema_create": False,
                     "migration_membership": False,
                     "owned_objects": owners,
+                }
+                input_grants = conn.execute(
+                    text(
+                        "SELECT has_table_privilege(:role, "
+                        "'input.source_rows', 'SELECT'), "
+                        "has_table_privilege(:role, 'input.source_rows', 'INSERT'), "
+                        "has_table_privilege(:role, 'input.source_rows', 'UPDATE'), "
+                        "has_table_privilege(:role, 'input.source_rows', 'DELETE')"
+                    ),
+                    {"role": runtime},
+                ).one()
+                assert tuple(input_grants) == (True, False, False, False), input_grants
+                evidence["connector_grants"] = {
+                    "input_select": True,
+                    "input_insert": False,
+                    "input_update": False,
+                    "input_delete": False,
                 }
             with tempfile.TemporaryDirectory(prefix="shuetl-gate0-") as scratch:
                 root = Path(scratch)
@@ -287,6 +338,37 @@ def main():
                 report = gateway.call("report", run_id=manual_run)
                 assert report["status"] == "succeeded", report
                 evidence["manual_report"] = report
+                gateway.call("definition-pg")
+                evidence["postgresql_source_plan"] = gateway.call("plan-pg")
+                pg_prep = gateway.call(
+                    "http",
+                    method="POST",
+                    path="/v1/definitions/postgres-transfer/preparations",
+                    body={"payload": {}},
+                    headers={"Idempotency-Key": "gate0-postgresql-source"},
+                )
+                assert pg_prep["status"] == 202, pg_prep
+                evidence["postgresql_source_action_tick"] = action.call("tick")
+                pg_operation = gateway.call(
+                    "http",
+                    method="GET",
+                    path=("/v1/preparations/" + pg_prep["body"]["operation_id"]),
+                )
+                assert pg_operation["body"]["status"] == "succeeded", (
+                    pg_operation,
+                    action.stderr_tail(),
+                    gateway.stderr_tail(),
+                )
+                evidence["postgresql_source_preparation"] = pg_operation
+                evidence["postgresql_source_tick"] = worker.call("tick")
+                pg_receipt = pg_operation["body"]["result"]
+                pg_run_id = pg_receipt.get("resource_id") or pg_receipt.get(
+                    "receipt", {}
+                ).get("resource_id")
+                assert pg_run_id, pg_receipt
+                pg_report = gateway.call("report", run_id=pg_run_id)
+                assert pg_report["status"] == "succeeded", pg_report
+                evidence["postgresql_source_report"] = pg_report
                 created = gateway.call(
                     "http",
                     method="POST",
@@ -425,6 +507,25 @@ def main():
                             )
                         )
                     ]
+                    postgresql_source_rows = [
+                        list(row)
+                        for row in conn.execute(
+                            text(
+                                "SELECT id,payload,quantity FROM sink.postgres_target "
+                                "ORDER BY id"
+                            )
+                        )
+                    ]
+                    postgresql_rejected_rows = [
+                        list(row)
+                        for row in conn.execute(
+                            text(
+                                "SELECT id,payload,quantity "
+                                "FROM sink.postgres_rejected "
+                                "ORDER BY id"
+                            )
+                        )
+                    ]
                     effects = [
                         list(row)
                         for row in conn.execute(
@@ -437,12 +538,24 @@ def main():
                     ]
                 assert rows == [[1, "ok", 6]] * 3, rows
                 assert rejected_rows == [[2, "no", 120]] * 3, rejected_rows
-                assert len(effects) == 6 and all(row[2] == 1 for row in effects), (
+                assert postgresql_source_rows == [[10, "ok", 4]], postgresql_source_rows
+                assert postgresql_rejected_rows == [[11, "no", 120]], (
+                    postgresql_rejected_rows
+                )
+                assert len(effects) == 8 and all(row[2] == 1 for row in effects), (
                     effects
                 )
                 evidence["sink_rows"] = rows
                 evidence["rejected_rows"] = rejected_rows
+                evidence["postgresql_source_rows"] = postgresql_source_rows
+                evidence["postgresql_rejected_rows"] = postgresql_rejected_rows
                 evidence["sink_effects"] = effects
+                evidence["connector_grants"] = {
+                    "input_select": True,
+                    "input_insert": False,
+                    "input_update": False,
+                    "input_delete": False,
+                }
                 evidence["capability_results"] = {
                     "canonical_transform": True,
                     "integer_cast": True,
@@ -454,6 +567,7 @@ def main():
                     "quality_range_accept_and_reject": True,
                     "quality_membership_accept_and_reject": True,
                     "accepted_and_rejected_outputs_independently_observed": True,
+                    "postgresql_snapshot_source": True,
                 }
                 for role in reversed(roles):
                     role.close()

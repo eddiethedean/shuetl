@@ -5,12 +5,11 @@ Updated: 2026-10-09 after ETLantic 0.57.0 publication.
 Status: Gate U accepted, exact pins adopted, PostgreSQL Gate 0 qualified.
 W02 public-interface freeze and W03/W04 source implementation are complete.
 The installed 0.6.0 wheel passes local and hosted PostgreSQL 18.6 startup,
-readiness and signal smoke tests for all four roles. Hosted evidence is bound to
-the `c0153da` ShuETL and reference-host wheel hashes in
-[`docs/evidence/0.6/README.md`](../evidence/0.6/README.md). Runtime controls and
-failure ordering have received follow-up source corrections. W04 failure and
-active-work qualification, W05–W08, and hosted final-artifact acceptance remain
-open.
+readiness and signal smoke tests for all four roles. Current hosted evidence and
+wheel hashes are in [`docs/evidence/0.6/README.md`](../evidence/0.6/README.md).
+Runtime controls and failure ordering have received follow-up source
+corrections. W04 PostgreSQL fault qualification, most W05 capability coverage,
+W06–W08, and hosted final-artifact acceptance remain open.
 
 The installed Gate 0 reference workload has been expanded to execute a local
 CSV-to-PostgreSQL transfer with typed normalization, filtering, quality
@@ -255,6 +254,12 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
 - [ ] Freeze the advertised pairing/write-mode/control matrix before final
   qualification. Minimum: immutable CSV/PostgreSQL sources to PostgreSQL sink.
   Optional Foundry, preview and provisioning require separate supported rows.
+- [x] Record the observed baseline and current exclusions in
+  [`docs/evidence/0.6/providers.md`](../evidence/0.6/providers.md). It documents
+  both CSV and PostgreSQL snapshot sources to PostgreSQL append sinks, including
+  exact local sink observations and the current experimental-provider limit.
+  Hosted qualification of the added PostgreSQL-source path is still pending;
+  this inventory is not the final advertised support contract.
 - [ ] Verify exact sink values, canonical reports, bounded transforms and quality
   success/failure, effective overrides, disabled-writer policy, aliases/upsert
   keys, schema drift, retry versus new-run identity and extension execution.
@@ -263,6 +268,11 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
   not-null/range/membership quality rules, accepted/rejected rows and independent
   sink effects. The exact passing fixture is bound to the hosted matrix job;
   this closes only the reference-workload slice, not the advertised support matrix.
+- [x] Extend Gate 0 with a live PostgreSQL repeatable-snapshot source to append
+  sinks, typed normalization and quality acceptance/rejection. The local
+  installed-wheel run passes on PostgreSQL 18.6; input grants are SELECT-only.
+  Hosted Python 3.11–3.13 qualification is required before this row becomes a
+  hosted-pass claim.
 - [ ] Change specifications while reference host runtime code remains unchanged.
   Verify HTTP/headless canonical records and command/control parity.
 - [ ] Exercise action workers for connection/catalog/schema/preflight; test

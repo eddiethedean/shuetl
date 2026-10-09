@@ -9,13 +9,13 @@
   "etlantic_sql_version": "0.57.0",
   "etlantic_version": "0.57.0",
   "etlantic_sqlmodel_version": "0.57.0",
-  "source_commit": "b03e4468a622a4ac9af4080a0e8ae9534f21a742",
-  "shuetl_wheel_sha256": "d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1",
-  "reference_wheel_sha256": "1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769",
+  "source_commit": "c064aa9ead7b78d9f6451895d6799e088ab8682f",
+  "shuetl_wheel_sha256": "3921b62c7d8c27b6a7d5be69e3a4e36ae1a3030ba9020a1db8dcbfbb73060d24",
+  "reference_wheel_sha256": "1bc27163c3c30487a386fd019210594f807253fc50a443ef289754cbf9c5621a",
   "roles": [
     {
       "role": "gateway",
-      "pid": 2659,
+      "pid": 2633,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -29,11 +29,11 @@
         "role": "gateway"
       },
       "probe_host": "127.0.0.1",
-      "gateway_port": 55687
+      "gateway_port": 42853
     },
     {
       "role": "scheduler",
-      "pid": 2673,
+      "pid": 2667,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -51,7 +51,7 @@
     },
     {
       "role": "run_worker",
-      "pid": 2687,
+      "pid": 2680,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -69,7 +69,7 @@
     },
     {
       "role": "action_worker",
-      "pid": 2725,
+      "pid": 2693,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -98,25 +98,25 @@
     {
       "etlantic_fastapi_imported": true,
       "fastapi_imported": true,
-      "pid": 2659,
+      "pid": 2633,
       "role": "gateway"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 2673,
+      "pid": 2667,
       "role": "scheduler"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 2687,
+      "pid": 2680,
       "role": "worker-runs"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 2725,
+      "pid": 2693,
       "role": "worker-actions"
     }
   ],
@@ -124,22 +124,38 @@
     {
       "role": "action_worker",
       "signal": "SIGTERM",
-      "exit_code": 0
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
     },
     {
       "role": "run_worker",
       "signal": "SIGTERM",
-      "exit_code": 0
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
     },
     {
       "role": "scheduler",
       "signal": "SIGTERM",
-      "exit_code": 0
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
     },
     {
       "role": "gateway",
       "signal": "SIGTERM",
-      "exit_code": 0
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
     }
   ],
   "credential_sentinels_absent": true,

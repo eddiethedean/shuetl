@@ -4,19 +4,20 @@ Prepared: 2026-10-08.
 Updated: 2026-10-09 after ETLantic 0.57.0 publication.
 Status: Gate U accepted, exact pins adopted, PostgreSQL Gate 0 qualified.
 W02 public-interface freeze and W03/W04 source implementation are complete.
-The installed 0.6.0 wheel passes local and hosted PostgreSQL 18.6 startup,
-readiness and signal smoke tests for all four roles. Current hosted evidence and
-wheel hashes are in [`docs/evidence/0.6/README.md`](../evidence/0.6/README.md).
-Runtime controls and failure ordering have received follow-up source
-corrections. W04 PostgreSQL fault qualification, most W05 capability coverage,
-W06–W08, and hosted final-artifact acceptance remain open.
+The installed 0.6.0 wheel passes hosted PostgreSQL 18.6 Gate 0 and four-role CLI
+startup/cleanup checks on Python 3.11–3.13. Source-level outage/recovery tests
+pass for scheduler, run-worker and action-worker on the same hosted matrix.
+Current evidence and wheel hashes are in
+[`docs/evidence/0.6/README.md`](../evidence/0.6/README.md). W04 active-work/
+forced-termination qualification, remaining W05 capability coverage, W06–W08,
+and hosted final-artifact acceptance remain open.
 
 The installed Gate 0 reference workload executes CSV-to-PostgreSQL append,
 PostgreSQL snapshot-to-PostgreSQL append, and a keyed PostgreSQL upsert with
 typed normalization, filtering, quality accept/reject outputs, and independent
 sink assertions. Local PostgreSQL 18.6 runs pass. The required hosted Python
-3.11–3.13 Gate 0 matrix and
-installed-role CLI matrix pass on source commit `0595029`; the exact CI records
+3.11–3.13 Gate 0 matrix, two-process role coordination and installed-role CLI
+matrix pass on source commit `c064aa9`; the exact CI records
 and wheel hashes are stored under `docs/evidence/0.6/hosted-gate0/` and
 `hosted-cli/`. This qualifies the development installed baseline only; final
 artifact qualification and the broader acceptance matrix remain open.
@@ -249,10 +250,8 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
 - [x] Extend the TCP fault-proxy test to scheduler, run-worker and action-worker
   roles. The full dedicated PostgreSQL 18.6 integration file passes locally
   (9 passed, 0 skipped), including readiness loss, continued liveness and
-  recovery for all three roles. The earlier hosted run covers the scheduler
-  case; the two worker cases await this change's hosted matrix.
-- [ ] Pass the expanded outage/recovery cases in hosted PostgreSQL 18.6 CI on
-  Python 3.11–3.13 with zero skipped cases.
+  recovery for all three roles. Hosted run 37989243217 passes this expanded
+  suite on Python 3.11–3.13 with zero skipped cases.
 - [x] Qualify exact cleanup order/count across all four installed CLI roles.
   The disposable PostgreSQL harness records one owned-engine disposal followed
   by one host-binding close after SIGTERM for gateway, scheduler, run worker and
@@ -262,11 +261,12 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
   leases, repairs work or writes terminal results.
 
 Exit: source implementation supports all four kinds. Installed startup and basic
-signal shutdown pass locally. PostgreSQL scheduler drain and scheduler outage/
-recovery pass locally and in hosted CI. Run-worker and action-worker outage/
-recovery pass locally and await hosted verification. Exact cleanup order/count
-passes locally for all four CLI roles; other-role active drain and external
-termination remain open pending hosted verification and additional failure cases.
+signal shutdown pass locally. PostgreSQL scheduler drain and scheduler, run-
+worker and action-worker outage/recovery pass locally; hosted run 37989243217
+passes the outage cases for all three runtime roles on Python 3.11–3.13. Exact
+cleanup order/count passes locally and in hosted CI for all four CLI roles.
+Other-role active drain and external termination remain open pending additional
+failure cases.
 
 ## W05 — Qualify advertised live capabilities
 
@@ -277,9 +277,12 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
   workload as separate test wheels, installed without source-checkout imports or
   host ETL code. Hosted CLI and Gate 0 jobs verify the installed origins. This
   demonstrates one extension workload, not a complete private-extension API.
-- [ ] Freeze the advertised pairing/write-mode/control matrix before final
-  qualification. Minimum: immutable CSV/PostgreSQL sources to PostgreSQL sink.
-  Optional Foundry, preview and provisioning require separate supported rows.
+- [x] Freeze the 0.6 candidate pairing/write-mode/control matrix in
+  [`docs/evidence/0.6/providers.md`](../evidence/0.6/providers.md) to the three
+  executed rows and their observed control paths. No untested pairing, mode or
+  path is included; release support remains conditional on AC-028–033, including
+  file-resource immutability/expiry. Optional Foundry, preview and provisioning
+  are excluded unless separately qualified.
 - [x] Record the observed baseline and current exclusions in
   [`docs/evidence/0.6/providers.md`](../evidence/0.6/providers.md). It documents
   CSV and PostgreSQL snapshot sources to PostgreSQL append sinks, plus one
@@ -455,8 +458,8 @@ or qualified with an exact command/artifact reference. No inferred PASS from
 issue closure. Use the dependency register for upstream state and the 0.6 ledger
 for executed qualification; do not create a second acceptance vocabulary.
 
-The next actions are hosted W04 outage qualification, W04 active-work/forced-
-termination qualification, and W05 capability scope/effect evidence. W06
-process-failure injection, W07 transition rehearsal and W08 final-artifact/
-hosted acceptance remain release prerequisites. Do not close Gates A–C based on
-source implementation, Gate 0 feasibility or the basic hosted CLI smoke test.
+The next actions are W04 active-work/forced-termination qualification and W05
+capability scope/effect evidence. W06 process-failure injection, W07 transition
+rehearsal and W08 final-artifact/hosted acceptance remain release prerequisites.
+Do not close Gates A–C based on source implementation, Gate 0 feasibility or
+basic hosted CLI smoke tests.

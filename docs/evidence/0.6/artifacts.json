@@ -4,15 +4,15 @@
   "artifacts": [
     {
       "filename": "shuetl-0.6.0-py3-none-any.whl",
-      "sha256": "d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1"
+      "sha256": "3921b62c7d8c27b6a7d5be69e3a4e36ae1a3030ba9020a1db8dcbfbb73060d24"
     },
     {
       "filename": "shuetl_phase06_host-0.0.1-py3-none-any.whl",
-      "sha256": "1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769"
+      "sha256": "1bc27163c3c30487a386fd019210594f807253fc50a443ef289754cbf9c5621a"
     },
     {
       "filename": "shuetl_phase06_reference-0.0.1-py3-none-any.whl",
-      "sha256": "d1bde3822e756e5c6bdebcf78b8eb0c187e6cea1359d7b72405b7fac65b2b3bc"
+      "sha256": "5668ffa6f89724feba2b5b36d0fcfede08661676a602202818e7d8319226a714"
     }
   ],
   "etlantic_manifest": "docs/reviews/etlantic_0_57/wheel-manifest.json",

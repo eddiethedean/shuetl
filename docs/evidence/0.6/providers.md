@@ -1,11 +1,15 @@
 # Phase 0.6 provider and capability matrix
 
-Status: qualification inventory, not a final support promise. The ETLantic SQL
-provider is marked **Experimental** in version 0.57.0. The rows below record
-observed combinations and keep untested modes out of the release claim until
-the full AC-028–033 review is complete. CSV append, PostgreSQL snapshot append,
-and one primary-key upsert case passed the hosted installed-artifact matrix on
-Python 3.11–3.13.
+Status: frozen 0.6 candidate matrix; qualification inventory, not a final
+support promise. The ETLantic SQL provider is marked **Experimental** in
+version 0.57.0. The candidate scope is exactly the three executed rows below:
+CSV landing snapshot to PostgreSQL append, PostgreSQL snapshot to PostgreSQL
+append, and PostgreSQL snapshot to the single declared-primary-key upsert case.
+The table freezes each row's observed control path. No other pairing, mode or
+control path is in the candidate claim. CSV append, PostgreSQL snapshot append,
+and the primary-key upsert passed the hosted installed-artifact matrix on
+Python 3.11–3.13, but release support remains conditional on the outstanding
+AC-028–033 evidence, including file-resource immutability and expiry.
 
 ## Ownership boundary
 
@@ -22,6 +26,11 @@ owns only its example transformation implementation and quality specification.
 The adopting host owns identity/resource enrollment and any application policy.
 
 ## Executed transfer combinations
+
+The first row's native-scheduled behavior applies to the CSV-to-PostgreSQL
+append case. The two PostgreSQL-source rows are qualified only for the manual
+control paths shown; do not infer scheduled, retry, override, alternate-key,
+or other write-mode support from these observations.
 
 | Source | Sink | Mode | Control path | Observed result | Qualification state |
 | --- | --- | --- | --- | --- | --- |
@@ -82,7 +91,7 @@ The local PostgreSQL 18.6 run used Python 3.13.9, source commit
 `b03e4468a622a4ac9af4080a0e8ae9534f21a742`, ShuETL wheel SHA-256
 `d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1`, and
 reference workload wheel SHA-256
-`d1bde3822e756e5c6bdebcf78b8eb0c187e6cea1359d7b72405b7fac65b2b3bc`. Hosted
-records for all three rows are from [CI run 37986479448](https://github.com/eddiethedean/shuetl/actions/runs/37986479448),
-source commit `b03e4468a622a4ac9af4080a0e8ae9534f21a742`; hosted evidence is
+`d1bde3822e756e5c6bdebcf78b8eb0c187e6cea1359d7b72405b7fac65b2b3bc`. The
+current hosted records for all three rows are from [CI run 37989243217](https://github.com/eddiethedean/shuetl/actions/runs/37989243217),
+source commit `c064aa9ead7b78d9f6451895d6799e088ab8682f`; hosted evidence is
 stored per interpreter under [hosted-gate0/](hosted-gate0/).

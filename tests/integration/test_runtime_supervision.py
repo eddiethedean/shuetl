@@ -226,6 +226,34 @@ def test_scheduler_recovers_after_transient_failure(supervisor, sql_runtime, fai
     assert outcomes == [0]
 
 
+def test_provider_health_loss_reports_unready_and_recovers(
+    supervisor, sql_runtime, monkeypatch
+):
+    runtime = sql_runtime()
+    inspections = []
+
+    def inspect(_engine):
+        inspections.append(True)
+        return SimpleNamespace(state="unreachable" if len(inspections) == 1 else "head")
+
+    monkeypatch.setattr("shuetl.postgresql.inspect_postgresql_engine", inspect)
+    with supervisor(lambda: runtime_module._serve_worker(runtime)) as (
+        state,
+        outcomes,
+        stop,
+    ):
+        wait_for(
+            lambda: state.payload(False)[1]["reason_code"] == "provider_unavailable"
+        )
+        assert state.payload(False)[0] == 503
+        assert state.payload(True)[0] == 200
+        wait_for(lambda: state.payload(False)[0] == 200)
+        assert len(inspections) >= 2
+        assert runtime.role_handle.status().prerequisites == "usable"
+        stop()
+    assert outcomes == [0]
+
+
 def test_worker_signal_waits_for_active_claim_before_cleanup(supervisor, sql_runtime):
     runtime = sql_runtime()
     role = runtime.role_handle

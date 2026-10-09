@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import os
+import select
 import socket
 import threading
 import time
 import uuid
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import suppress
 from dataclasses import replace
 from typing import cast
 
@@ -84,6 +86,94 @@ def _identity_adapter() -> HostIdentityAdapter:
         principal_dependency=principal_dependency,
         context_factory=context_factory,
     )
+
+
+class _PostgreSQLFaultProxy:
+    """A disposable TCP gate that can sever a runtime's PostgreSQL connections."""
+
+    def __init__(self, host: str, port: int) -> None:
+        self.upstream = (host, port)
+        self._available = threading.Event()
+        self._available.set()
+        self._stopped = threading.Event()
+        self._lock = threading.Lock()
+        self._connections: set[tuple[socket.socket, socket.socket]] = set()
+        self._listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._listener.bind(("127.0.0.1", 0))
+        self._listener.listen()
+        self._listener.settimeout(0.1)
+        self.port = self._listener.getsockname()[1]
+        self._accept_thread = threading.Thread(target=self._accept, daemon=True)
+        self._accept_thread.start()
+
+    def __enter__(self) -> _PostgreSQLFaultProxy:
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        self.close()
+
+    def interrupt(self) -> None:
+        self._available.clear()
+        with self._lock:
+            connections = tuple(self._connections)
+        for pair in connections:
+            self._close_pair(pair)
+
+    def recover(self) -> None:
+        self._available.set()
+
+    def close(self) -> None:
+        self._stopped.set()
+        self.interrupt()
+        self._listener.close()
+        self._accept_thread.join(timeout=2)
+
+    def _accept(self) -> None:
+        while not self._stopped.is_set():
+            try:
+                client, _address = self._listener.accept()
+            except TimeoutError:
+                continue
+            except OSError:
+                return
+            if not self._available.is_set():
+                client.close()
+                continue
+            try:
+                upstream = socket.create_connection(self.upstream, timeout=2)
+            except OSError:
+                client.close()
+                continue
+            pair = (client, upstream)
+            with self._lock:
+                self._connections.add(pair)
+            threading.Thread(target=self._relay, args=(pair,), daemon=True).start()
+
+    def _relay(self, pair: tuple[socket.socket, socket.socket]) -> None:
+        client, upstream = pair
+        try:
+            while not self._stopped.is_set():
+                readable, _writable, _errors = select.select(pair, (), (), 0.25)
+                for source in readable:
+                    data = source.recv(65536)
+                    if not data:
+                        return
+                    destination = upstream if source is client else client
+                    destination.sendall(data)
+        except (OSError, ValueError):
+            pass
+        finally:
+            with self._lock:
+                self._connections.discard(pair)
+            self._close_pair(pair)
+
+    @staticmethod
+    def _close_pair(pair: tuple[socket.socket, socket.socket]) -> None:
+        for connection in pair:
+            with suppress(OSError):
+                connection.shutdown(socket.SHUT_RDWR)
+            connection.close()
 
 
 @pytest.fixture(scope="module")
@@ -441,3 +531,101 @@ def test_postgresql_scheduler_signal_drains_active_claim(
         thread.join(timeout=8)
         if not runtime.closed:
             runtime.close()
+
+
+def test_postgresql_scheduler_provider_outage_recovers(
+    settings: ShuETLSettings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine = create_postgresql_engine(settings)
+    try:
+        database_url = engine.url
+    finally:
+        engine.dispose()
+    upstream_host = database_url.host or "127.0.0.1"
+    upstream_port = database_url.port or 5432
+
+    with _PostgreSQLFaultProxy(upstream_host, upstream_port) as proxy:
+        with socket.socket() as probe_listener:
+            probe_listener.bind(("127.0.0.1", 0))
+            probe_port = probe_listener.getsockname()[1]
+        runtime = create_backend_runtime(
+            _preview_settings(
+                role="scheduler",
+                store_id=f"pg-outage-{uuid.uuid4().hex[:10]}",
+                database_url=database_url.set(
+                    host="127.0.0.1", port=proxy.port
+                ).render_as_string(hide_password=False),
+                probe_port=probe_port,
+                shutdown_grace_seconds=0.5,
+                dispatch_interval_seconds=0.05,
+            ),
+            runtime_bindings(),
+        )
+        states = []
+        handlers = []
+        real_probe = runtime_module.serve_probes
+
+        def capture_probe(state, port):
+            states.append(state)
+            return real_probe(state, port)
+
+        monkeypatch.setattr(runtime_module, "serve_probes", capture_probe)
+        monkeypatch.setattr(
+            runtime_module,
+            "_install_signals",
+            lambda callback: handlers.append(callback) or {},
+        )
+        monkeypatch.setattr(runtime_module, "_restore_signals", lambda previous: None)
+        outcomes = []
+
+        def serve_and_cleanup():
+            result = runtime_module._serve_worker(runtime)
+            return result if runtime_module._close_when_drained(runtime) else 1
+
+        def invoke():
+            try:
+                outcomes.append(serve_and_cleanup())
+            except BaseException as exc:
+                outcomes.append(exc)
+
+        thread = threading.Thread(target=invoke, daemon=True)
+        thread.start()
+        try:
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline and (not handlers or not states):
+                time.sleep(0.01)
+            assert handlers and states, "PostgreSQL scheduler supervisor did not start"
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline and states[0].payload(False)[0] != 200:
+                time.sleep(0.01)
+            assert states[0].payload(False)[0] == 200
+
+            proxy.interrupt()
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                status, payload = states[0].payload(False)
+                if status == 503 and payload["reason_code"] == "provider_unavailable":
+                    break
+                time.sleep(0.01)
+            assert states[0].payload(False)[0] == 503
+            assert states[0].payload(False)[1]["reason_code"] == "provider_unavailable"
+            assert states[0].payload(True)[0] == 200
+            assert not runtime.closed
+
+            proxy.recover()
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline and states[0].payload(False)[0] != 200:
+                time.sleep(0.01)
+            assert states[0].payload(False)[0] == 200
+            handlers[0](15, None)
+            thread.join(timeout=8)
+            assert not thread.is_alive(), "scheduler did not stop after recovery"
+            assert outcomes == [0]
+            assert runtime.closed
+        finally:
+            if thread.is_alive() and handlers:
+                handlers[0](15, None)
+            thread.join(timeout=8)
+            assert not thread.is_alive(), "scheduler did not stop during cleanup"
+            if not runtime.closed:
+                runtime.close()

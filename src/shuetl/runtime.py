@@ -251,7 +251,11 @@ def _serve_worker(runtime: BackendRuntime) -> int:
                         else (
                             "dispatch_failed"
                             if dispatch_fault.is_set()
-                            else "prerequisites_unavailable"
+                            else (
+                                "provider_unavailable"
+                                if schema.state == "unreachable"
+                                else "prerequisites_unavailable"
+                            )
                         )
                     ),
                 )

@@ -237,9 +237,18 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
   readiness false and runtime resources open after grace expiry while leader-
   lease acquisition is in flight, then closes after the call returns. Local and
   hosted Python 3.11–3.13 PostgreSQL integration pass.
-- [ ] Qualify exact cleanup order/count across roles, provider outage/recovery,
-  and external termination after grace expiry. Never adjust upstream leases,
-  repair work or write terminal results.
+- [x] Inject an unreachable provider-inspection result followed by a healthy
+  result and verify `/ready` reports `provider_unavailable`, remains live, and
+  recovers. This verifies supervisor status handling; it does not establish a
+  real PostgreSQL connection outage/recovery.
+- [x] Block the scheduler's PostgreSQL connections through a local TCP fault
+  proxy, verify readiness drops while liveness remains healthy, restore
+  connectivity, and verify readiness recovers before orderly shutdown. The
+  disposable PostgreSQL test passed locally with zero skips; bind the hosted
+  Python matrix result before claiming hosted qualification.
+- [ ] Qualify exact cleanup order/count across roles and external termination
+  after grace expiry with separate PostgreSQL-backed processes. Never adjust
+  upstream leases, repair work or write terminal results.
 
 Exit: source implementation supports all four kinds. Installed startup and basic
 signal shutdown pass locally; drain with active work, outage/recovery and

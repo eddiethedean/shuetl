@@ -47,7 +47,18 @@ integration test blocks the scheduler's leader-lease acquisition, sends SIGTERM,
 and verifies readiness remains false and the backend stays open after grace
 expiry until the lease call returns. That test passed locally and in hosted CI
 on Python 3.11–3.13. It does not qualify active run execution, forced
-termination, provider outage/recovery, or multiple competing processes.
+termination, or multiple competing processes.
+
+A supervisor regression injects an `unreachable` provider inspection followed
+by a healthy result. It verifies the role reports `provider_unavailable`, keeps
+liveness healthy, then restores readiness and usable upstream prerequisites.
+This covers status mapping. A separate PostgreSQL integration test now interrupts
+all runtime database connections through a local TCP fault proxy, observes
+`/ready` fail with `provider_unavailable` while `/live` remains healthy, restores
+connectivity, and observes readiness recover before SIGTERM shutdown. The new
+case passed locally on PostgreSQL 18.6 with no skips; hosted Python matrix
+qualification is pending. It does not cover force termination or competing
+process recovery.
 
 ## Limitations and release status
 

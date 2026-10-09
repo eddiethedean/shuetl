@@ -183,6 +183,19 @@ def main():
                 )
                 conn.execute(
                     text(
+                        "CREATE TABLE sink.upsert_target ("
+                        "id integer PRIMARY KEY, payload text NOT NULL, "
+                        "quantity integer NOT NULL)"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE TABLE sink.upsert_rejected (id integer NOT NULL, "
+                        "payload text NOT NULL, quantity integer NOT NULL)"
+                    )
+                )
+                conn.execute(
+                    text(
                         "CREATE TABLE sink.rejected (id integer NOT NULL, "
                         "payload text NOT NULL, quantity integer NOT NULL)"
                     )
@@ -369,6 +382,51 @@ def main():
                 pg_report = gateway.call("report", run_id=pg_run_id)
                 assert pg_report["status"] == "succeeded", pg_report
                 evidence["postgresql_source_report"] = pg_report
+                gateway.call("definition-upsert")
+                evidence["upsert_plan"] = gateway.call("plan-upsert")
+                upsert_ids = []
+                for attempt, quantity in (("initial", None), ("updated", "5")):
+                    if quantity is not None:
+                        with operator.begin() as conn:
+                            conn.execute(
+                                text(
+                                    "UPDATE input.source_rows SET quantity=:quantity "
+                                    "WHERE id='010'"
+                                ),
+                                {"quantity": quantity},
+                            )
+                    upsert_prep = gateway.call(
+                        "http",
+                        method="POST",
+                        path="/v1/definitions/postgres-upsert-transfer/preparations",
+                        body={"payload": {}},
+                        headers={"Idempotency-Key": f"gate0-upsert-{attempt}"},
+                    )
+                    assert upsert_prep["status"] == 202, upsert_prep
+                    evidence[f"upsert_{attempt}_action_tick"] = action.call("tick")
+                    upsert_operation = gateway.call(
+                        "http",
+                        method="GET",
+                        path=(
+                            "/v1/preparations/" + upsert_prep["body"]["operation_id"]
+                        ),
+                    )
+                    assert upsert_operation["body"]["status"] == "succeeded", (
+                        upsert_operation,
+                        action.stderr_tail(),
+                        gateway.stderr_tail(),
+                    )
+                    evidence[f"upsert_{attempt}_preparation"] = upsert_operation
+                    evidence[f"upsert_{attempt}_run_tick"] = worker.call("tick")
+                    upsert_receipt = upsert_operation["body"]["result"]
+                    upsert_run_id = upsert_receipt.get("resource_id") or (
+                        upsert_receipt.get("receipt", {}).get("resource_id")
+                    )
+                    assert upsert_run_id, upsert_receipt
+                    upsert_ids.append(upsert_run_id)
+                    upsert_report = gateway.call("report", run_id=upsert_run_id)
+                    assert upsert_report["status"] == "succeeded", upsert_report
+                    evidence[f"upsert_{attempt}_report"] = upsert_report
                 created = gateway.call(
                     "http",
                     method="POST",
@@ -526,6 +584,24 @@ def main():
                             )
                         )
                     ]
+                    upsert_rows = [
+                        list(row)
+                        for row in conn.execute(
+                            text(
+                                "SELECT id,payload,quantity FROM sink.upsert_target "
+                                "ORDER BY id"
+                            )
+                        )
+                    ]
+                    upsert_rejected_rows = [
+                        list(row)
+                        for row in conn.execute(
+                            text(
+                                "SELECT id,payload,quantity FROM sink.upsert_rejected "
+                                "ORDER BY id"
+                            )
+                        )
+                    ]
                     effects = [
                         list(row)
                         for row in conn.execute(
@@ -542,13 +618,23 @@ def main():
                 assert postgresql_rejected_rows == [[11, "no", 120]], (
                     postgresql_rejected_rows
                 )
-                assert len(effects) == 8 and all(row[2] == 1 for row in effects), (
+                assert upsert_rows == [[10, "ok", 10]], upsert_rows
+                assert upsert_rejected_rows == [[11, "no", 120]] * 2, (
+                    upsert_rejected_rows
+                )
+                assert len(upsert_ids) == 2 and upsert_ids[0] != upsert_ids[1], (
+                    upsert_ids
+                )
+                assert len(effects) == 12 and all(row[2] == 1 for row in effects), (
                     effects
                 )
                 evidence["sink_rows"] = rows
                 evidence["rejected_rows"] = rejected_rows
                 evidence["postgresql_source_rows"] = postgresql_source_rows
                 evidence["postgresql_rejected_rows"] = postgresql_rejected_rows
+                evidence["upsert_rows"] = upsert_rows
+                evidence["upsert_rejected_rows"] = upsert_rejected_rows
+                evidence["upsert_run_ids"] = upsert_ids
                 evidence["sink_effects"] = effects
                 evidence["connector_grants"] = {
                     "input_select": True,
@@ -568,6 +654,7 @@ def main():
                     "quality_membership_accept_and_reject": True,
                     "accepted_and_rejected_outputs_independently_observed": True,
                     "postgresql_snapshot_source": True,
+                    "postgresql_upsert_updates_by_key": True,
                 }
                 for role in reversed(roles):
                     role.close()

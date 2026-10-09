@@ -105,6 +105,16 @@ class PostgreSQLTransfer(Pipeline):
     rejected: Load[NormalizedRow] = Load(input=quality.rejected, asset="pg-rejected")
 
 
+class PostgreSQLUpsertTransfer(Pipeline):
+    source: Extract[Row] = Extract(asset="pg-source")
+    normalized = NormalizeRows.step(rows=source)
+    quality = Quality.step(rows=normalized.result)
+    sink: Load[NormalizedRow] = Load(input=quality.result, asset="upsert-sink")
+    rejected: Load[NormalizedRow] = Load(
+        input=quality.rejected, asset="upsert-rejected"
+    )
+
+
 def main():
     role = sys.argv[1]
     root = Path(os.environ["PHASE06_ROOT"])
@@ -196,6 +206,7 @@ def main():
         for binding, location in (
             ("pg-sink", "postgres_target"),
             ("pg-rejected", "postgres_rejected"),
+            ("upsert-rejected", "upsert_rejected"),
         ):
             planning.registry.register_binding(
                 BindingDescriptor(
@@ -210,6 +221,20 @@ def main():
                     },
                 )
             )
+        planning.registry.register_binding(
+            BindingDescriptor(
+                binding="upsert-sink",
+                provider="postgresql",
+                kind="sink",
+                location="upsert_target",
+                config={
+                    "schema": "sink",
+                    "mode": "upsert",
+                    "key_columns": ["id"],
+                    "effect_table": "sink.effects",
+                },
+            )
+        )
         return planning
 
     clock = FakeScheduleClock(datetime(2026, 10, 9, tzinfo=UTC))
@@ -318,6 +343,19 @@ def main():
                 elif op == "plan-pg":
                     result = backend.managed_service.plan_definition(
                         ctx, "postgres-transfer"
+                    )
+                elif op == "definition-upsert":
+                    result = backend.managed_service.register_definition(
+                        ctx,
+                        "postgres-upsert-transfer",
+                        pipeline_to_dict(
+                            definition_from_pipeline(PostgreSQLUpsertTransfer)
+                        ),
+                    )
+                    result = {"registered": True}
+                elif op == "plan-upsert":
+                    result = backend.managed_service.plan_definition(
+                        ctx, "postgres-upsert-transfer"
                     )
                 elif op == "http":
                     assert client is not None

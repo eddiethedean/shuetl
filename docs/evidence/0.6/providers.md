@@ -3,7 +3,9 @@
 Status: qualification inventory, not a final support promise. The ETLantic SQL
 provider is marked **Experimental** in version 0.57.0. The rows below record
 observed combinations and keep untested modes out of the release claim until
-the full AC-028–033 review is complete.
+the full AC-028–033 review is complete. The CSV and PostgreSQL snapshot append
+rows passed the hosted installed-artifact matrix. The PostgreSQL upsert row
+currently has local evidence only.
 
 ## Ownership boundary
 
@@ -24,7 +26,8 @@ The adopting host owns identity/resource enrollment and any application policy.
 | Source | Sink | Mode | Control path | Observed result | Qualification state |
 | --- | --- | --- | --- | --- | --- |
 | `local-files` CSV landing snapshot | PostgreSQL `sink.target` and `sink.rejected` | PostgreSQL append | Manual HTTP preparation, native scheduler, duplicate trigger | Exact accepted/rejected rows and six independent sink effect receipts; hosted Python 3.11–3.13 records in [Gate 0](hosted-gate0/) | Installed baseline passes; does not qualify immutable-resource ownership or all provider options |
-| PostgreSQL `input.source_rows` repeatable snapshot | PostgreSQL `sink.postgres_target` and `sink.postgres_rejected` | PostgreSQL append | Manual HTTP preparation through action worker; run worker executes accepted receipt | Local PostgreSQL 18.6 installed-wheel run produced `[[10, "ok", 4]]` and `[[11, "no", 120]]`; input was read-only for the runtime principal | Local pass; hosted matrix pending |
+| PostgreSQL `input.source_rows` repeatable snapshot | PostgreSQL `sink.postgres_target` and `sink.postgres_rejected` | PostgreSQL append | Manual HTTP preparation through action worker; run worker executes accepted receipt | Hosted PostgreSQL 18.6 records on Python 3.11–3.13 produced `[[10, "ok", 4]]` and `[[11, "no", 120]]`; input was read-only for the runtime principal | Installed baseline passes; does not qualify all provider options |
+| Same PostgreSQL repeatable snapshot | PostgreSQL `sink.upsert_target` keyed by primary key `id`; rejected rows append | PostgreSQL upsert | Two distinct manual submissions with a source-row update between runs | Local installed run changed key `10` from `[[10, "ok", 4]]` to `[[10, "ok", 10]]`, kept one target row, and observed two distinct run IDs | Local pass; hosted matrix pending |
 
 Both paths execute a transformation implementation packaged outside ShuETL,
 then ETLantic quality acceptance/rejection, and publish through ETLantic's
@@ -43,7 +46,7 @@ destination tables and the provider effect ledger after worker execution.
 | Capability | Current decision |
 | --- | --- |
 | PostgreSQL source modes other than `snapshot` | Not supported by the ETLantic 0.57 SQL connector contract |
-| PostgreSQL sink `overwrite`, `replace`, `upsert`/`merge`, aliases, or key selection | Not qualified for the ShuETL 0.6 candidate; append is the only observed mode |
+| PostgreSQL sink `overwrite`, `replace`, `merge`, aliases, or alternate key selection | Not qualified for the ShuETL 0.6 candidate; one primary-key upsert case is observed |
 | PostgreSQL-to-PostgreSQL alias/resource overlap rejection and schema drift | Not observed in the ShuETL installed workload |
 | Immutable input-resource ownership, checksum mismatch, expiry, retention, and cleanup | Not observed; the CSV fixture uses a temporary landing file |
 | Effective overrides, disabled-writer policy, retry versus deliberate new-run identity | Not observed in this matrix |
@@ -62,7 +65,8 @@ The expanded installed harness is [phase_0_6_gate_0.py](../../../spikes/phase_0_
 the separate workload package is [tests/reference_phase06](../../../tests/reference_phase06/pyproject.toml).
 The local PostgreSQL 18.6 run used Python 3.13.9, the installed ShuETL wheel
 SHA-256 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`,
-and reference workload wheel SHA-256
-`090a72d5ba39bfbb9ed3d0ea13f8f757715221cabd887853bf7bcbd8d31a0e7e`.
-Hosted evidence for this expanded matrix must be recorded after the updated
-Gate 0 job passes on all supported Python versions.
+and updated reference workload wheel SHA-256
+`5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2`. Hosted
+records for the append rows are from [CI run 37981202502](https://github.com/eddiethedean/shuetl/actions/runs/37981202502),
+source commit `32a8ecab6e8fdf4d920d7f9b2b39d87cc83e83a0`; the updated upsert row
+awaits hosted qualification.

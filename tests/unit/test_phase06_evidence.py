@@ -85,6 +85,9 @@ def ledger(tmp_path, monkeypatch):
         rejected_rows=[[2, "no", 120]] * 3,
         postgresql_source_rows=[[10, "ok", 4]],
         postgresql_rejected_rows=[[11, "no", 120]],
+        upsert_rows=[[10, "ok", 10]],
+        upsert_rejected_rows=[[11, "no", 120]] * 2,
+        upsert_run_ids=["run-upsert-initial", "run-upsert-updated"],
         connector_grants={
             "input_select": True,
             "input_insert": False,
@@ -92,7 +95,7 @@ def ledger(tmp_path, monkeypatch):
             "input_delete": False,
         },
         sink_effects=[
-            [f"effect-{index}", f"publication-{index}", 1] for index in range(8)
+            [f"effect-{index}", f"publication-{index}", 1] for index in range(12)
         ],
         capability_results={
             "canonical_transform": True,
@@ -106,6 +109,7 @@ def ledger(tmp_path, monkeypatch):
             "quality_membership_accept_and_reject": True,
             "accepted_and_rejected_outputs_independently_observed": True,
             "postgresql_snapshot_source": True,
+            "postgresql_upsert_updates_by_key": True,
         },
     )
     gate0_path.write_text(json.dumps(gate0))
@@ -222,6 +226,7 @@ def test_phase06_gate0_requires_postgresql_source_and_read_only_grants(ledger):
     path = ledger / "postgresql-gate0.json"
     data = json.loads(path.read_text())
     data["capability_results"]["postgresql_snapshot_source"] = False
+    data["capability_results"]["postgresql_upsert_updates_by_key"] = False
     data["connector_grants"]["input_insert"] = True
     path.write_text(json.dumps(data))
     assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))

@@ -239,6 +239,7 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             "quality_membership_accept_and_reject",
             "accepted_and_rejected_outputs_independently_observed",
             "postgresql_snapshot_source",
+            "postgresql_upsert_updates_by_key",
         }
         capabilities = (
             gate0.get("capability_results", {}) if isinstance(gate0, dict) else {}
@@ -264,6 +265,14 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             and gate0.get("rejected_rows") == [[2, "no", 120]] * 3
             and gate0.get("postgresql_source_rows") == [[10, "ok", 4]]
             and gate0.get("postgresql_rejected_rows") == [[11, "no", 120]]
+            and gate0.get("upsert_rows") == [[10, "ok", 10]]
+            and gate0.get("upsert_rejected_rows") == [[11, "no", 120]] * 2
+            and isinstance(gate0.get("upsert_run_ids"), list)
+            and len(gate0["upsert_run_ids"]) == 2
+            and all(
+                isinstance(value, str) and value for value in gate0["upsert_run_ids"]
+            )
+            and gate0["upsert_run_ids"][0] != gate0["upsert_run_ids"][1]
             and gate0.get("connector_grants")
             == {
                 "input_select": True,
@@ -272,7 +281,7 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
                 "input_delete": False,
             }
             and isinstance(gate0.get("sink_effects"), list)
-            and len(gate0["sink_effects"]) == 8
+            and len(gate0["sink_effects"]) == 12
             and all(
                 isinstance(effect, list) and len(effect) == 3 and effect[2] == 1
                 for effect in gate0["sink_effects"]

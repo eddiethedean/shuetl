@@ -67,6 +67,6 @@ The local PostgreSQL 18.6 run used Python 3.13.9, the installed ShuETL wheel
 SHA-256 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`,
 and updated reference workload wheel SHA-256
 `5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2`. Hosted
-records for all three rows are from [CI run 37981721063](https://github.com/eddiethedean/shuetl/actions/runs/37981721063),
-source commit `0e6673b96bee3a5a603d2b55662f4f9ba5c54c6b`; hosted evidence is
+records for all three rows are from [CI run 37982842772](https://github.com/eddiethedean/shuetl/actions/runs/37982842772),
+source commit `0595029938c8917b904470a19c4ccf3d277e7e28`; hosted evidence is
 stored per interpreter under [hosted-gate0/](hosted-gate0/).

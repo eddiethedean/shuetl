@@ -16,7 +16,7 @@ PostgreSQL snapshot-to-PostgreSQL append, and a keyed PostgreSQL upsert with
 typed normalization, filtering, quality accept/reject outputs, and independent
 sink assertions. Local PostgreSQL 18.6 runs pass. The required hosted Python
 3.11–3.13 Gate 0 matrix and
-installed-role CLI matrix pass on source commit `0e6673b`; the exact CI records
+installed-role CLI matrix pass on source commit `0595029`; the exact CI records
 and wheel hashes are stored under `docs/evidence/0.6/hosted-gate0/` and
 `hosted-cli/`. This qualifies the development installed baseline only; final
 artifact qualification and the broader acceptance matrix remain open.
@@ -234,9 +234,9 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
   and action worker against PostgreSQL 18.6. Evidence: `docs/evidence/0.6/cli-postgresql.json`.
 - [x] Add barrier-controlled drain regressions for the SQLite run worker and a
   PostgreSQL-backed scheduler. The PostgreSQL case proves SIGTERM leaves
-  readiness false and runtime resources open after grace expiry while a claim is
-  active, then closes after the claim returns. Local PostgreSQL integration
-  passes; hosted Python 3.11–3.13 qualification is pending.
+  readiness false and runtime resources open after grace expiry while leader-
+  lease acquisition is in flight, then closes after the call returns. Local and
+  hosted Python 3.11–3.13 PostgreSQL integration pass.
 - [ ] Qualify exact cleanup order/count across roles, provider outage/recovery,
   and external termination after grace expiry. Never adjust upstream leases,
   repair work or write terminal results.
@@ -353,13 +353,13 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
   runs canonical manual/native-scheduled transfer, and uploads sink-backed
   evidence on Python 3.11–3.13, including PostgreSQL snapshot-source append and
   keyed-upsert fixtures.
-  CI run 37981721063 passed all three versions, including the keyed-upsert case;
-  checked-in records bind the runs to source commit `0e6673b` and exact wheel
+  CI run 37982842772 passed all three versions, including the keyed-upsert case;
+  checked-in records bind the runs to source commit `0595029` and exact wheel
   hashes. This does not close final-wheel acceptance.
 - [x] Locally and in hosted CI, build/install the development wheel and reference
   host outside the checkout, verify origins, and run all role kinds against
   PostgreSQL 18.6. Hosted startup/readiness/SIGTERM and transfer evidence is
-  recorded for Python 3.11–3.13 under run 37981721063; fault-integration remains
+  recorded for Python 3.11–3.13 under run 37982842772; fault-integration remains
   open.
 - [ ] Create `docs/evidence/0.6/` with all verification-plan records. Record the
   exact commit, upstream artifacts, schema contract, environments, commands,

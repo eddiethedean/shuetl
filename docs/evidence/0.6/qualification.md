@@ -7,7 +7,7 @@ acceptance criteria or Gates A–C.
 ## Exact hosted artifacts
 
 The hosted qualification used source commit
-`0e6673b96bee3a5a603d2b55662f4f9ba5c54c6b` and PostgreSQL 18.6. CI built and
+`0595029938c8917b904470a19c4ccf3d277e7e28` and PostgreSQL 18.6. CI built and
 installed ShuETL and the reference wheels outside the checkout.
 
 | Artifact | SHA-256 | Purpose |
@@ -38,14 +38,16 @@ All three cases verify typed normalization, filtering, quality
 acceptance/rejection, exact destination rows and provider effect receipts. The
 full per-interpreter records, grants, run reports and plans are in
 [`hosted-gate0/`](hosted-gate0/). CLI role startup/readiness/SIGTERM records are
-in [`hosted-cli/`](hosted-cli/). The corresponding [hosted run](https://github.com/eddiethedean/shuetl/actions/runs/37981721063)
+in [`hosted-cli/`](hosted-cli/). The corresponding [hosted run](https://github.com/eddiethedean/shuetl/actions/runs/37982842772)
 passed.
 
-The repository's active-worker signal regression also passes locally and in
-the quality matrix, using a deterministic SQLite barrier. It confirms the
-supervisor remains unready with resources open while work drains, then closes
-resources after drain. It does not qualify this lifecycle against PostgreSQL,
-forced termination, or multiple competing processes.
+The repository's active-worker signal regression passes locally and in the
+quality matrix using a deterministic SQLite barrier. A separate PostgreSQL
+integration test blocks the scheduler's leader-lease acquisition, sends SIGTERM,
+and verifies readiness remains false and the backend stays open after grace
+expiry until the lease call returns. That test passed locally and in hosted CI
+on Python 3.11–3.13. It does not qualify active run execution, forced
+termination, provider outage/recovery, or multiple competing processes.
 
 ## Limitations and release status
 

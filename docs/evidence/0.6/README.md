@@ -108,14 +108,22 @@ uses `etlantic-local` version **0.50.0**, distinct from its containing core whee
 
 ## Installed CLI startup and signal smoke test
 
-The separately installed 0.6.0 wheel and reference host also pass a four-role
-CLI smoke test against disposable PostgreSQL 18.6: [cli-postgresql.json](cli-postgresql.json).
-Gateway, scheduler, run worker and action worker each reach `/ready` and `/live`,
-receive SIGTERM, exit successfully, and leave no seeded credential sentinels in
-captured logs. The runtime role has no schema CREATE rights, migration-role
-membership or owned objects. Local Python 3.11–3.13 runs all pass; hosted repeats
-are wired into CI but have not run for this change. This does not qualify
-active-work drain, outage/recovery, grace expiry, or failure injection.
+The separately installed 0.6.0 wheel and reference host pass a four-role CLI
+smoke test against disposable PostgreSQL 18.6:
+[local Python 3.13](cli-postgresql.json), [Python 3.11](cli-postgresql-3.11.json),
+and [Python 3.12](cli-postgresql-3.12.json). Gateway, scheduler, run worker and
+action worker each reach `/ready` and `/live`, receive SIGTERM, exit successfully,
+and leave no seeded credential sentinels in captured logs. The runtime role has
+no schema CREATE rights, migration-role membership or owned objects. The same
+qualification now passes in hosted CI on Python 3.11–3.13 for source commit
+`c0153dae5535b6a313622473386a497a82bf6a97`; the redacted per-interpreter records
+are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37974307758)
+binds those results to ShuETL wheel SHA-256
+`b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` and
+reference-host wheel SHA-256
+`1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769`.
+This qualifies basic installed startup and signal shutdown only; it does not
+qualify active-work drain, outage/recovery, grace expiry, or failure injection.
 
 The startup test exposed a lifecycle cycle: ETLantic roles report unknown
 prerequisites until their first tick, while ShuETL previously dispatched only
@@ -145,11 +153,11 @@ checks do not establish hosted CI or release acceptance.
 
 ## Acceptance results
 
-All 33 release criteria remain OPEN. Gate 0 feasibility plus the local CLI smoke
-test do not qualify active-work drain, failure recovery, the advertised
-connector matrix or transition/rollback. W02 API freeze and W03/W04 source
-implementation are recorded in ADR-0014 and the implementation plan; W04
-failure qualification and W05–W08 remain required.
+All 33 release criteria remain OPEN. Gate 0 feasibility plus local and hosted
+basic CLI smoke tests do not qualify active-work drain, failure recovery, the
+advertised connector matrix or transition/rollback. W02 API freeze and W03/W04
+source implementation are recorded in ADR-0014 and the implementation plan;
+W04 failure qualification and W05–W08 remain required.
 
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |

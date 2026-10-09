@@ -4,17 +4,21 @@ Prepared: 2026-10-08.
 Updated: 2026-10-09 after ETLantic 0.57.0 publication.
 Status: Gate U accepted, exact pins adopted, PostgreSQL Gate 0 qualified.
 W02 public-interface freeze and W03/W04 source implementation are complete.
-The installed 0.6.0 wheel now passes a local PostgreSQL 18.6 startup/readiness/
-signal smoke test for all four roles. Runtime controls and failure ordering have
-received follow-up source corrections. W04 failure and active-work qualification,
-W05–W08, and hosted final-artifact acceptance remain open.
+The installed 0.6.0 wheel passes local and hosted PostgreSQL 18.6 startup,
+readiness and signal smoke tests for all four roles. Hosted evidence is bound to
+the `c0153da` ShuETL and reference-host wheel hashes in
+[`docs/evidence/0.6/README.md`](../evidence/0.6/README.md). Runtime controls and
+failure ordering have received follow-up source corrections. W04 failure and
+active-work qualification, W05–W08, and hosted final-artifact acceptance remain
+open.
 
 The [implementation review corrections](../reviews/PHASE_0_6_REVIEW_FIXES.md)
 fix nine startup, recovery, cleanup, binding, evidence and authentication issues.
 Their source regressions and local SCRAM smoke checks do not close release gates.
 The [review follow-up](../reviews/PHASE_0_6_REVIEW_FIXES_FOLLOWUP.md) closes the
 remaining runtime, configuration, boundary and artifact-binding source findings;
-hosted qualification and final evidence are still outstanding.
+hosted basic CLI smoke tests now pass, while failure qualification and final
+artifact evidence remain outstanding.
 
 This is the task sequence for the [execution contract](PHASE_0_6_EXECUTION.md).
 The [verification plan](PHASE_0_6_VERIFICATION.md) remains the authority for
@@ -308,9 +312,10 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
   the reference host outside the checkout, verifies installed origins, and runs
   the public CLI against all four roles on Python 3.11–3.13. Remaining hosted
   fault-integration and final-artifact acceptance are still required.
-- [x] Locally build/install the development wheel and reference host outside the
-  checkout, verify origins, and run all role kinds against PostgreSQL 18.6.
-  Hosted repeats are now wired into CI but have not yet run for this change.
+- [x] Locally and in hosted CI, build/install the development wheel and reference
+  host outside the checkout, verify origins, and run all role kinds against
+  PostgreSQL 18.6. Hosted startup/readiness/SIGTERM evidence is recorded for
+  Python 3.11–3.13 under run 37974307758; fault-integration remains open.
 - [ ] Create `docs/evidence/0.6/` with all verification-plan records. Record the
   exact commit, upstream artifacts, schema contract, environments, commands,
   results, identities, independent effects and limitations. No placeholder PASS.
@@ -363,4 +368,5 @@ for executed qualification; do not create a second acceptance vocabulary.
 The next actions are W04 active-work/outage qualification and W05 capability
 scope/effect evidence. W06 process-failure injection, W07 transition rehearsal
 and W08 final-artifact/hosted acceptance remain release prerequisites. Do not
-close Gates A–C based on source implementation or Gate 0 feasibility.
+close Gates A–C based on source implementation, Gate 0 feasibility or the basic
+hosted CLI smoke test.

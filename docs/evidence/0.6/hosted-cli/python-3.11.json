@@ -1,0 +1,147 @@
+{
+  "schema": "shuetl.phase06.cli-gate/1",
+  "result": "PASS",
+  "python": "3.11.15",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "shuetl_version": "0.6.0",
+  "shuetl_origin": "installed wheel site-packages/shuetl/__init__.py",
+  "reference_host_origin": "installed wheel site-packages/phase06_host/bindings.py",
+  "etlantic_sql_version": "0.57.0",
+  "etlantic_version": "0.57.0",
+  "etlantic_sqlmodel_version": "0.57.0",
+  "source_commit": "c0153dae5535b6a313622473386a497a82bf6a97",
+  "shuetl_wheel_sha256": "b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15",
+  "reference_wheel_sha256": "1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769",
+  "roles": [
+    {
+      "role": "gateway",
+      "pid": 2889,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "gateway"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "gateway"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": 37511
+    },
+    {
+      "role": "scheduler",
+      "pid": 2904,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "scheduler"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "scheduler"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    },
+    {
+      "role": "run_worker",
+      "pid": 2920,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "run_worker"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "run_worker"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    },
+    {
+      "role": "action_worker",
+      "pid": 2957,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "action_worker"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "action_worker"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    }
+  ],
+  "postgresql_version": "18.6 (Debian 18.6-1.pgdg12+2)",
+  "runtime_grants": {
+    "public_schema_create": false,
+    "sink_schema_create": false,
+    "migration_role_membership": false,
+    "owned_objects": 0
+  },
+  "construction_preflight": "PASS",
+  "role_imports": [
+    {
+      "etlantic_fastapi_imported": true,
+      "fastapi_imported": true,
+      "pid": 2889,
+      "role": "gateway"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 2904,
+      "role": "scheduler"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 2920,
+      "role": "worker-runs"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 2957,
+      "role": "worker-actions"
+    }
+  ],
+  "shutdown": [
+    {
+      "role": "action_worker",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    },
+    {
+      "role": "run_worker",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    },
+    {
+      "role": "scheduler",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    },
+    {
+      "role": "gateway",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    }
+  ],
+  "credential_sentinels_absent": true,
+  "cleanup_errors": []
+}

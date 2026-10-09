@@ -1,21 +1,21 @@
 {
   "schema": "shuetl.phase06.cli-gate/1",
   "result": "PASS",
-  "python": "3.13.9",
-  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
   "shuetl_version": "0.6.0",
-  "shuetl_origin": "/private/tmp/shuetl-qualification-yj2g91qh/cli-venv/lib/python3.13/site-packages/shuetl/__init__.py",
-  "reference_host_origin": "/private/tmp/shuetl-qualification-yj2g91qh/cli-venv/lib/python3.13/site-packages/phase06_host/bindings.py",
+  "shuetl_origin": "/home/runner/work/_temp/phase06-venv/lib/python3.13/site-packages/shuetl/__init__.py",
+  "reference_host_origin": "/home/runner/work/_temp/phase06-venv/lib/python3.13/site-packages/phase06_host/bindings.py",
   "etlantic_sql_version": "0.57.0",
   "etlantic_version": "0.57.0",
   "etlantic_sqlmodel_version": "0.57.0",
-  "source_commit": "40402b6c4f2788605ecfebfe5e25144ddd04a57c",
+  "source_commit": "b03e4468a622a4ac9af4080a0e8ae9534f21a742",
   "shuetl_wheel_sha256": "d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1",
   "reference_wheel_sha256": "1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769",
   "roles": [
     {
       "role": "gateway",
-      "pid": 62593,
+      "pid": 2876,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -29,11 +29,11 @@
         "role": "gateway"
       },
       "probe_host": "127.0.0.1",
-      "gateway_port": 58738
+      "gateway_port": 49829
     },
     {
       "role": "scheduler",
-      "pid": 62604,
+      "pid": 2912,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -51,7 +51,7 @@
     },
     {
       "role": "run_worker",
-      "pid": 62611,
+      "pid": 2928,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -69,7 +69,7 @@
     },
     {
       "role": "action_worker",
-      "pid": 62622,
+      "pid": 2943,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -98,25 +98,25 @@
     {
       "etlantic_fastapi_imported": true,
       "fastapi_imported": true,
-      "pid": 62593,
+      "pid": 2876,
       "role": "gateway"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 62604,
+      "pid": 2912,
       "role": "scheduler"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 62611,
+      "pid": 2928,
       "role": "worker-runs"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 62622,
+      "pid": 2943,
       "role": "worker-actions"
     }
   ],

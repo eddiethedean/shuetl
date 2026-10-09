@@ -1,6 +1,6 @@
 # Phase 0.6 source/runtime implementation checks
 
-Recorded: 2026-10-09 for source commit `40402b6c4f2788605ecfebfe5e25144ddd04a57c`.
+Recorded: 2026-10-09 for source commit `b03e4468a622a4ac9af4080a0e8ae9534f21a742`.
 These checks cover the implementation source and an isolated Python 3.13 wheel.
 They do not close the 33 release criteria or the release gates.
 
@@ -9,7 +9,7 @@ They do not close the 33 release criteria or the release gates.
 | Formatting | `ruff format --check .` | PASS | Local workspace |
 | Lint | `ruff check .` | PASS | Source, scripts and tests |
 | Types | `uv run --group dev pyright` | PASS, 0 errors | Python 3.13.9 |
-| Regression | `uv run pytest -q --junitxml=docs/evidence/0.6/regression.xml` | 255 passed, 8 skipped | Seven PostgreSQL tests require the dedicated service job; final-hash test is release-gated |
+| Regression | `uv run pytest -q --junitxml=docs/evidence/0.6/regression.xml` | 256 passed, 8 skipped | Seven PostgreSQL tests require the dedicated service job; final-hash test is release-gated |
 | PostgreSQL regression | `uv run pytest tests/integration/test_postgresql.py -q --junitxml=docs/evidence/0.6/postgresql-regression.xml` | 7 passed, 0 skipped | Disposable PostgreSQL 18.6; includes TCP-fault-proxy outage and readiness recovery |
 | Boundary | `uv run python scripts/check_boundaries.py` | PASS | Local workspace |
 | Build/artifacts | `uv build`; `uv run python scripts/check_artifact.py` | PASS | Wheel and source distribution built locally |

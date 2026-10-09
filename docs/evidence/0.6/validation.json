@@ -3,7 +3,7 @@
   "result": "PASS",
   "release_gates": "OPEN",
   "regression": {
-    "passed": 255,
+    "passed": 256,
     "skipped": 8,
     "skipped_cases": [
       "seven PostgreSQL integration cases were covered separately against a disposable 18.6 service",
@@ -29,6 +29,10 @@
     "3.11.14": "PASS",
     "3.12.13": "PASS",
     "3.13.9": "PASS"
+  },
+  "portable_transform": {
+    "select_drop_rename_filter_lowercase_and_quality": "PASS",
+    "deterministic_sort_deduplicate": "UNQUALIFIED: ETLantic issue #283"
   },
   "installed_cli_postgresql": {
     "3.11.14": "PASS",

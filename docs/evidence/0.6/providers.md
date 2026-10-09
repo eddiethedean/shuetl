@@ -78,10 +78,11 @@ observations are attached.
 
 The expanded installed harness is [phase_0_6_gate_0.py](../../../spikes/phase_0_6_gate_0.py);
 the separate workload package is [tests/reference_phase06](../../../tests/reference_phase06/pyproject.toml).
-The local PostgreSQL 18.6 run used Python 3.13.9, the installed ShuETL wheel
-SHA-256 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`,
-and updated reference workload wheel SHA-256
-`5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2`. Hosted
-records for all three rows are from [CI run 37982842772](https://github.com/eddiethedean/shuetl/actions/runs/37982842772),
-source commit `0595029938c8917b904470a19c4ccf3d277e7e28`; hosted evidence is
+The local PostgreSQL 18.6 run used Python 3.13.9, source commit
+`b03e4468a622a4ac9af4080a0e8ae9534f21a742`, ShuETL wheel SHA-256
+`d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1`, and
+reference workload wheel SHA-256
+`d1bde3822e756e5c6bdebcf78b8eb0c187e6cea1359d7b72405b7fac65b2b3bc`. Hosted
+records for all three rows are from [CI run 37986479448](https://github.com/eddiethedean/shuetl/actions/runs/37986479448),
+source commit `b03e4468a622a4ac9af4080a0e8ae9534f21a742`; hosted evidence is
 stored per interpreter under [hosted-gate0/](hosted-gate0/).

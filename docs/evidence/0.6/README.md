@@ -23,7 +23,7 @@ interpreter checks, not additional distinct coverage.
 | Python version | 3.11.14, 3.12.13, 3.13.9 |
 | uv version | Exact executable version in validation.json |
 | ETLantic source revision | Release tag d1f4e5a4d013e37f8adc54b4644ea9b2be66f801 |
-| ShuETL source commit | `40402b6c4f2788605ecfebfe5e25144ddd04a57c` |
+| ShuETL source commit | `b03e4468a622a4ac9af4080a0e8ae9534f21a742` |
 | ShuETL import origin | Isolated wheel site-packages/shuetl/__init__.py |
 | ETLantic import origin | Isolated wheel site-packages/etlantic/__init__.py |
 | etlantic-fastapi import origin | Isolated wheel site-packages/etlantic_fastapi/__init__.py |
@@ -68,16 +68,21 @@ append behavior and a primary-key upsert across two distinct runs, along with
 exact sink rows, input read-only grants and effect receipts. Local and hosted
 PostgreSQL 18.6 installed-wheel runs pass on Python 3.11–3.13. The committed
 [hosted Gate 0 records](hosted-gate0/) and [installed CLI records](hosted-cli/)
-come from [CI run 37984396221](https://github.com/eddiethedean/shuetl/actions/runs/37984396221)
-and are bound to source commit `40402b6c4f2788605ecfebfe5e25144ddd04a57c`.
+come from [CI run 37986479448](https://github.com/eddiethedean/shuetl/actions/runs/37986479448)
+and are bound to source commit `b03e4468a622a4ac9af4080a0e8ae9534f21a742`.
 The ShuETL wheel SHA-256 is
 `d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1`;
 Gate 0 reference workload SHA-256 is
-`5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2`; CLI
+`d1bde3822e756e5c6bdebcf78b8eb0c187e6cea1359d7b72405b7fac65b2b3bc`; CLI
 reference host SHA-256 is
 `1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769`.
 These development artifacts close only the installed baseline qualification;
 the final release candidate and broader acceptance gates remain open.
+The independent reference host also executes an ETLantic portable plan and
+records selection, projection, rename, quality and output-schema observations.
+Its order-reversal case confirms that ETLantic 0.57.0 ignores canonical sort
+field expressions before keyed deduplication; this remains unqualified and is
+tracked in [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283).
 The [provider matrix](providers.md), [partial qualification record](qualification.md),
 and [hosted CI record](ci.md) identify the demonstrated combinations and current
 limitations.
@@ -130,15 +135,15 @@ uses `etlantic-local` version **0.50.0**, distinct from its containing core whee
 
 The separately installed 0.6.0 wheel and reference host pass a four-role CLI
 smoke test against disposable PostgreSQL 18.6:
-[local Python 3.13](cli-postgresql.json), [Python 3.11](cli-postgresql-3.11.json),
-and [Python 3.12](cli-postgresql-3.12.json). Gateway, scheduler, run worker and
+[hosted Python 3.13](cli-postgresql.json), [Python 3.11](hosted-cli/python-3.11.json),
+and [Python 3.12](hosted-cli/python-3.12.json). Gateway, scheduler, run worker and
 action worker each reach `/ready` and `/live`, receive SIGTERM, exit successfully,
 and leave no seeded credential sentinels in captured logs. The runtime role has
-no schema CREATE rights, migration-role membership or owned objects. The same
-qualification passes in hosted CI on Python 3.11–3.13 for source commit
-`40402b6c4f2788605ecfebfe5e25144ddd04a57c`; the redacted per-interpreter records
-are in [hosted-cli/](hosted-cli/), and [CI run 37984396221](https://github.com/eddiethedean/shuetl/actions/runs/37984396221)
-binds those results to ShuETL wheel SHA-256
+no schema CREATE rights, migration-role membership or owned objects. Redacted
+per-interpreter records are in [hosted-cli/](hosted-cli/), and
+[CI run 37986479448](https://github.com/eddiethedean/shuetl/actions/runs/37986479448)
+binds the results to source commit `b03e4468a622a4ac9af4080a0e8ae9534f21a742`
+and ShuETL wheel SHA-256
 `d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1` and
 reference-host wheel SHA-256
 `1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769`.
@@ -164,7 +169,7 @@ records seven passing PostgreSQL integration tests on a separate disposable
 database, including scheduler shutdown during an in-flight leader-lease
 acquisition and readiness recovery after a TCP-level database connectivity
 outage. Both lifecycle cases pass the hosted Python 3.11–3.13 matrix in
-[CI run 37984396221](https://github.com/eddiethedean/shuetl/actions/runs/37984396221).
+[CI run 37986479448](https://github.com/eddiethedean/shuetl/actions/runs/37986479448).
 PostgreSQL URL configuration was scoped to that file to avoid contaminating
 unit tests that inspect environment precedence.
 
@@ -236,7 +241,7 @@ without approving release.
 | Artifact | Value |
 | --- | --- |
 | SHA-256 wheel | `d1944eb7def4c707787b2b958dafb71db0bb7d4020bf83103b763be443ef98a1` |
-| SHA-256 sdist | `da674f8d06553d2f489fa96f3ad42da4700e336a01a8a6d1f337d697bd517c5c` |
+| SHA-256 sdist | `a7b200e82761e8306cb0952f16d0484daca59af82bc42b00ece8fbefe41f5113` |
 
 The fresh-build artifact-hash regression passed after the evidence build.
 `check_evidence.py` intentionally rejects all 33 OPEN criteria and Gates A–C;

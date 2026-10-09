@@ -259,6 +259,88 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
         portable = (
             gate0.get("portable_conformance", {}) if isinstance(gate0, dict) else {}
         )
+        coordination = gate0.get("coordination", {}) if isinstance(gate0, dict) else {}
+        coordination_roles = (
+            coordination.get("role_instances", [])
+            if isinstance(coordination, dict)
+            else []
+        )
+        runtime_instances = [
+            row
+            for row in [*role_rows, *coordination_roles]
+            if isinstance(row, dict)
+            and str(row.get("started", "")).split("@", 1)[0] != "gateway"
+        ]
+        owner_ids = [row.get("owner_id") for row in runtime_instances]
+        expected_coordination_roles = {
+            "gateway@2",
+            "scheduler@2",
+            "run-worker@2",
+            "action-worker@2",
+        }
+
+        def contended_once(name: str) -> bool:
+            rows = coordination.get(name) if isinstance(coordination, dict) else None
+            return (
+                isinstance(rows, list)
+                and len(rows) == 2
+                and all(
+                    isinstance(row, dict)
+                    and isinstance(row.get("count"), int)
+                    and row["count"] >= 0
+                    for row in rows
+                )
+                and sum(row["count"] for row in rows) == 1
+            )
+
+        preparation = (
+            coordination.get("same_key_preparation", {})
+            if isinstance(coordination, dict)
+            else {}
+        )
+        coordination_good = (
+            isinstance(coordination, dict)
+            and coordination.get("same_store_identity") == "gate0"
+            and isinstance(coordination_roles, list)
+            and len(coordination_roles) == 4
+            and {
+                row.get("started")
+                for row in coordination_roles
+                if isinstance(row, dict)
+            }
+            == expected_coordination_roles
+            and all(
+                isinstance(row, dict)
+                and isinstance(row.get("pid"), int)
+                and isinstance(row.get("http_imported"), bool)
+                for row in coordination_roles
+            )
+            and len(runtime_instances) == 6
+            and all(isinstance(owner_id, str) and owner_id for owner_id in owner_ids)
+            and len(set(owner_ids)) == 6
+            and all(
+                row.get("http_imported") is row.get("started", "").startswith("gateway")
+                for row in coordination_roles
+                if isinstance(row, dict)
+            )
+            and isinstance(preparation, dict)
+            and isinstance(preparation.get("operation_ids"), list)
+            and len(preparation["operation_ids"]) == 1
+            and isinstance(preparation["operation_ids"][0], str)
+            and bool(preparation["operation_ids"][0])
+            and preparation.get("status_codes") == [202, 202]
+            and isinstance(preparation.get("accepted_run_ids"), list)
+            and len(preparation["accepted_run_ids"]) == 2
+            and all(
+                isinstance(run_id, str) and run_id
+                for run_id in preparation["accepted_run_ids"]
+            )
+            and len(set(preparation["accepted_run_ids"])) == 1
+            and contended_once("action_worker_contention")
+            and contended_once("run_worker_contention")
+            and contended_once("scheduler_contention")
+            and contended_once("scheduled_worker_contention")
+        )
         portable_good = isinstance(portable, dict) and (
             portable.get("plan_identity") == "dtcs.transform-plan/2"
             and portable.get("actions")
@@ -317,6 +399,7 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             and str(gate0.get("postgresql_version", "")).startswith("18.6")
             and gate0.get("schema_head")
             == "014_cp1_complete_principal_idempotency_0_56"
+            and coordination_good
             and gate0.get("grants")
             == {
                 "schema_create": False,
@@ -362,9 +445,13 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             errors.append("Phase 0.6 PostgreSQL Gate 0 evidence is not qualified")
         else:
             pids = [row.get("pid") for row in role_rows]
-            if any(not isinstance(pid, int) for pid in pids) or len(set(pids)) != 4:
+            all_pids = pids + [row["pid"] for row in coordination_roles]
+            if (
+                any(not isinstance(pid, int) for pid in all_pids)
+                or len(set(all_pids)) != 8
+            ):
                 errors.append(
-                    "Phase 0.6 Gate 0 roles must have four distinct process IDs"
+                    "Phase 0.6 Gate 0 coordination must have eight distinct process IDs"
                 )
             for name, role in role_map.items():
                 versions = role.get("versions")

@@ -319,11 +319,17 @@ silently dropping the required baseline or accepting skipped cases.
 Owner: ShuETL subprocess fixtures, observing upstream outcomes. Depends on W04
 and a working W05 fixture. Acceptance: AC-007/010–019/021/031/032.
 
-- [ ] Run two processes of each role kind on one store with distinct owners.
-  Include both action and run worker contention.
+- [x] Run two processes of each role kind on one PostgreSQL store with distinct
+  process/owner IDs. The installed Gate 0 harness now starts a second gateway,
+  scheduler, run worker and action worker; concurrent same-key preparation,
+  action/run worker claims and scheduler ticks each produce one canonical
+  operation or claim. Local PostgreSQL 18.6 passed; the hosted matrix will bind
+  this expanded record to all three Python versions.
 - [ ] Add deterministic barriers/observations around public commit boundaries,
   bounded deadlines, process-group cleanup and diagnostic capture. Avoid
-  sleep-only synchronization and production fault hooks.
+  sleep-only synchronization and production fault hooks. The current fixture
+  uses a parent-side barrier to start independent process calls together; it
+  does not inject a crash at a database commit boundary.
 - [ ] Kill gateways before/after acceptance and retry the logical idempotency
   token; inspect one canonical submission and changed-intent conflicts.
 - [ ] Kill schedulers across preparation, claim, accept and link; verify one

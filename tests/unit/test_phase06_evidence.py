@@ -166,7 +166,53 @@ def ledger(tmp_path, monkeypatch):
             "portable_quality_uniqueness": True,
             "portable_quality_keeps_rejections_separate": True,
         },
+        coordination={
+            "same_store_identity": "gate0",
+            "role_instances": [
+                {
+                    "started": role,
+                    "pid": index + 5,
+                    "http_imported": role.startswith("gateway"),
+                    "owner_id": (
+                        None if role.startswith("gateway") else f"owner-{role}"
+                    ),
+                }
+                for index, role in enumerate(
+                    (
+                        "gateway@2",
+                        "scheduler@2",
+                        "run-worker@2",
+                        "action-worker@2",
+                    )
+                )
+            ],
+            "same_key_preparation": {
+                "operation_ids": ["operation-shared"],
+                "status_codes": [202, 202],
+                "accepted_run_ids": ["run-shared", "run-shared"],
+            },
+            "action_worker_contention": [
+                {"count": 1},
+                {"count": 0},
+            ],
+            "run_worker_contention": [
+                {"count": 1},
+                {"count": 0},
+            ],
+            "scheduler_contention": [
+                {"count": 1},
+                {"count": 0},
+            ],
+            "scheduled_worker_contention": [
+                {"count": 1},
+                {"count": 0},
+            ],
+        },
     )
+    for role in gate0["roles"]:
+        role["owner_id"] = (
+            None if role["started"] == "gateway" else f"owner-{role['started']}"
+        )
     gate0_path.write_text(json.dumps(gate0))
     cli_path = evidence / "cli-postgresql.json"
     cli = json.loads(cli_path.read_text())
@@ -293,6 +339,32 @@ def test_phase06_gate0_requires_postgresql_source_and_read_only_grants(ledger):
     data["connector_grants"]["input_insert"] = True
     path.write_text(json.dumps(data))
     assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
+
+
+def test_phase06_gate0_requires_distinct_process_contention_evidence(ledger):
+    path = ledger / "postgresql-gate0.json"
+    data = json.loads(path.read_text())
+    data["coordination"]["run_worker_contention"][1]["count"] = 1
+    path.write_text(json.dumps(data))
+    assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
+
+
+def test_phase06_gate0_requires_unique_runtime_owner_ids(ledger):
+    path = ledger / "postgresql-gate0.json"
+    data = json.loads(path.read_text())
+    data["coordination"]["role_instances"][1]["owner_id"] = data["roles"][1]["owner_id"]
+    path.write_text(json.dumps(data))
+    assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
+
+
+def test_phase06_gate0_requires_eight_distinct_process_ids(ledger):
+    path = ledger / "postgresql-gate0.json"
+    data = json.loads(path.read_text())
+    data["coordination"]["role_instances"][0]["pid"] = data["roles"][0]["pid"]
+    path.write_text(json.dumps(data))
+    assert any(
+        "eight distinct process IDs" in error for error in check_evidence.check(ledger)
+    )
 
 
 def test_failed_upstream_contract_is_rejected(ledger):

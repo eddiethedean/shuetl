@@ -313,7 +313,8 @@ class PostgreSQLUpsertTransfer(Pipeline):
 
 
 def main():
-    role = sys.argv[1]
+    requested_role = sys.argv[1]
+    role, _, _instance = requested_role.partition("@")
     root = Path(os.environ["PHASE06_ROOT"])
     ctx = ControlPlaneContext(
         principal=Principal("gate0-workload", issuer="reference-host", kind="service"),
@@ -469,6 +470,7 @@ def main():
     startup_sql = list(statements)
     worker = None
     client = None
+    owner_id = None
     if role == "gateway":
         from etlantic_fastapi import adapt_managed_backend
         from fastapi.testclient import TestClient
@@ -487,13 +489,14 @@ def main():
         client = TestClient(ShuETL(api=adapter.api).create_app(prefix="/etl"))
         client.__enter__()
     elif role == "scheduler":
-        worker = backend.create_scheduler(
-            owner_id=f"scheduler-{os.getpid()}", clock=clock
-        )
+        owner_id = f"scheduler-{os.getpid()}"
+        worker = backend.create_scheduler(owner_id=owner_id, clock=clock)
     elif role == "run-worker":
-        worker = backend.create_execution_host(owner_id=f"run-{os.getpid()}")
+        owner_id = f"run-{os.getpid()}"
+        worker = backend.create_execution_host(owner_id=owner_id)
     elif role == "action-worker":
-        worker = backend.create_action_execution_host(worker_id=f"action-{os.getpid()}")
+        owner_id = f"action-{os.getpid()}"
+        worker = backend.create_action_execution_host(worker_id=owner_id)
     else:
         raise ValueError(role)
     import etlantic_sqlmodel
@@ -501,8 +504,9 @@ def main():
     print(
         json.dumps(
             {
-                "started": role,
+                "started": requested_role,
                 "pid": os.getpid(),
+                "owner_id": owner_id,
                 "startup_sql": startup_sql,
                 "origin": etlantic_sqlmodel.__file__,
                 "reference_origin": __file__,

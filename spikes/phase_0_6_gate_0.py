@@ -16,7 +16,9 @@ import selectors
 import subprocess
 import tempfile
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 
 from etlantic_sqlmodel.migrations import upgrade
 from sqlalchemy import create_engine, text
@@ -87,6 +89,24 @@ class Role:
                     self.process.wait(timeout=10)
 
 
+def _parallel(actions):
+    """Start independent process requests together after a parent barrier."""
+    barrier = Barrier(len(actions))
+
+    def invoke(action):
+        barrier.wait(timeout=15)
+        return action()
+
+    with ThreadPoolExecutor(max_workers=len(actions)) as executor:
+        futures = [executor.submit(invoke, action) for action in actions]
+        return [future.result(timeout=45) for future in futures]
+
+
+def _parallel_ticks(roles, *, instant=None):
+    values = {} if instant is None else {"instant": instant}
+    return _parallel([lambda role=role: role.call("tick", **values) for role in roles])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--disposable-admin-url", required=True)
@@ -104,6 +124,7 @@ def main():
     runtime_password = secrets.token_urlsafe(24)
     admin = create_engine(args.disposable_admin_url, isolation_level="AUTOCOMMIT")
     roles = []
+    coordination_roles = []
     evidence = {
         "schema": "shuetl.phase06.gate0/1",
         "result": "FAIL",
@@ -319,18 +340,85 @@ def main():
                 assert len({r.startup["pid"] for r in roles}) == 4
                 assert all(not r.startup["http_imported"] for r in roles[1:])
                 assert not gateway.startup["execution_imported"]
+                for name in (
+                    "gateway@2",
+                    "scheduler@2",
+                    "run-worker@2",
+                    "action-worker@2",
+                ):
+                    role_env = dict(env)
+                    if name.startswith(("run-worker", "action-worker")):
+                        role_env["ETLANTIC_SQL_URL"] = runtime_url.render_as_string(
+                            hide_password=False
+                        )
+                    replica = Role(
+                        args.python,
+                        name,
+                        role_env,
+                        scratch,
+                        redactions=(
+                            runtime_url.render_as_string(hide_password=False),
+                            runtime_password,
+                        ),
+                    )
+                    coordination_roles.append(replica)
+                gateway_replica, scheduler_replica, worker_replica, action_replica = (
+                    coordination_roles
+                )
+                instances = [*roles, *coordination_roles]
+                assert len({role.startup["pid"] for role in instances}) == 8
+                assert all(
+                    not role.startup["http_imported"]
+                    for role in instances
+                    if role.startup["started"].split("@", 1)[0] != "gateway"
+                )
+                evidence["coordination"] = {
+                    "role_instances": [role.startup for role in coordination_roles],
+                    "distinct_process_ids": True,
+                    "same_store_identity": "gate0",
+                }
                 evidence["portable_conformance"] = gateway.call("portable-conformance")
                 gateway.call("definition")
                 evidence["plan"] = gateway.call("plan")
-                prep = gateway.call(
-                    "http",
-                    method="POST",
-                    path="/v1/definitions/transfer/preparations",
-                    body={"payload": {}},
-                    headers={"Idempotency-Key": "gate0-manual"},
+                prep_requests = _parallel(
+                    [
+                        lambda role=role: role.call(
+                            "http",
+                            method="POST",
+                            path="/v1/definitions/transfer/preparations",
+                            body={"payload": {}},
+                            headers={"Idempotency-Key": "gate0-manual"},
+                        )
+                        for role in (gateway, gateway_replica)
+                    ]
                 )
-                assert prep["status"] == 202, prep
-                evidence["action_tick"] = action.call("tick")
+                assert all(response["status"] == 202 for response in prep_requests), (
+                    prep_requests
+                )
+                operation_ids = {
+                    response["body"]["operation_id"] for response in prep_requests
+                }
+                assert len(operation_ids) == 1, prep_requests
+                prep = prep_requests[0]
+                evidence["coordination"]["same_key_preparation"] = {
+                    "operation_ids": sorted(operation_ids),
+                    "status_codes": [response["status"] for response in prep_requests],
+                }
+                evidence["coordination"]["action_worker_contention"] = _parallel_ticks(
+                    [action, action_replica]
+                )
+                assert (
+                    sum(
+                        result["count"]
+                        for result in evidence["coordination"][
+                            "action_worker_contention"
+                        ]
+                    )
+                    == 1
+                )
+                evidence["action_tick"] = evidence["coordination"][
+                    "action_worker_contention"
+                ]
                 operation = gateway.call(
                     "http",
                     method="GET",
@@ -342,13 +430,43 @@ def main():
                     action.stderr_tail(),
                     gateway.stderr_tail(),
                 )
-                evidence["manual_tick"] = worker.call("tick")
+                evidence["coordination"]["run_worker_contention"] = _parallel_ticks(
+                    [worker, worker_replica]
+                )
+                assert (
+                    sum(
+                        result["count"]
+                        for result in evidence["coordination"]["run_worker_contention"]
+                    )
+                    == 1
+                )
+                evidence["manual_tick"] = evidence["coordination"][
+                    "run_worker_contention"
+                ]
                 # The preparation result is the upstream accept receipt.
                 receipt = operation["body"]["result"]
                 manual_run = receipt.get("resource_id") or receipt.get(
                     "receipt", {}
                 ).get("resource_id")
                 assert manual_run, receipt
+                replica_operation = gateway_replica.call(
+                    "http",
+                    method="GET",
+                    path="/v1/preparations/" + prep["body"]["operation_id"],
+                )
+                replica_receipt = replica_operation["body"]["result"]
+                replica_run = replica_receipt.get("resource_id") or replica_receipt.get(
+                    "receipt", {}
+                ).get("resource_id")
+                assert replica_run == manual_run, (
+                    manual_run,
+                    replica_run,
+                    replica_operation,
+                )
+                evidence["coordination"]["same_key_preparation"]["accepted_run_ids"] = [
+                    manual_run,
+                    replica_run,
+                ]
                 report = gateway.call("report", run_id=manual_run)
                 assert report["status"] == "succeeded", report
                 evidence["manual_report"] = report
@@ -506,13 +624,38 @@ def main():
                     "preview": True,
                     "scope_denial": True,
                 }
-                evidence["scheduler_tick"] = scheduler.call(
-                    "tick", instant="2026-10-09T00:01:00+00:00"
+                evidence["coordination"]["scheduler_contention"] = _parallel_ticks(
+                    [scheduler, scheduler_replica],
+                    instant="2026-10-09T00:01:00+00:00",
                 )
+                assert (
+                    sum(
+                        result["count"]
+                        for result in evidence["coordination"]["scheduler_contention"]
+                    )
+                    == 1
+                )
+                evidence["scheduler_tick"] = evidence["coordination"][
+                    "scheduler_contention"
+                ]
                 firings = gateway.call("firings", schedule_id=schedule_id)
                 evidence["firings"] = firings
                 assert len(firings) == 1 and firings[0]["submission_id"], firings
-                evidence["scheduled_tick"] = worker.call("tick")
+                evidence["coordination"]["scheduled_worker_contention"] = (
+                    _parallel_ticks([worker, worker_replica])
+                )
+                assert (
+                    sum(
+                        result["count"]
+                        for result in evidence["coordination"][
+                            "scheduled_worker_contention"
+                        ]
+                    )
+                    == 1
+                )
+                evidence["scheduled_tick"] = evidence["coordination"][
+                    "scheduled_worker_contention"
+                ]
                 # Resolve the run through the public firing receipt.
                 firing_http = gateway.call(
                     "http", method="GET", path=f"/v1/schedules/{schedule_id}/firings"
@@ -660,11 +803,15 @@ def main():
                 }
                 for role in reversed(roles):
                     role.close()
+                for role in reversed(coordination_roles):
+                    role.close()
                 evidence["result"] = "PASS"
         finally:
             operator.dispose()
     finally:
         for role in reversed(roles):
+            role.close()
+        for role in reversed(coordination_roles):
             role.close()
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(

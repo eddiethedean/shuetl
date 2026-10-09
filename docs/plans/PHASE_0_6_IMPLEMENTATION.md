@@ -364,10 +364,12 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
 - [ ] Create `docs/evidence/0.6/` with all verification-plan records. Record the
   exact commit, upstream artifacts, schema contract, environments, commands,
   results, identities, independent effects and limitations. No placeholder PASS.
-- [ ] Resolve the current source-distribution hash check as part of artifact
+- [x] Resolve the source-distribution hash check as part of artifact
   provenance: compare 0.6 builds with their own reproducible manifest, preserve
   historical 0.5 hashes, and avoid a hash record embedded in the artifact it hashes.
-  Do not refresh historical evidence merely to make changed source match it.
+  The reproducible development build now matches the bound wheel and sdist hashes;
+  the evidence index is excluded from the sdist to avoid self-reference. Historical
+  release evidence remains unchanged.
 - [ ] Review the final supported matrix, dependency/ownership boundaries,
   security/durability findings and migration/rollback instructions.
 - [ ] Qualify a frozen source/artifact candidate. Gate evidence must include the

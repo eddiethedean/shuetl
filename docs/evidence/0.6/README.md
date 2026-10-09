@@ -231,8 +231,8 @@ without approving release.
 
 | Artifact | Value |
 | --- | --- |
-| SHA-256 wheel | `350aa189602feb219867bd57f041bb39b5574e8493488f14ef8494a22d7d336c` |
-| SHA-256 sdist | `52352d3387a40780886a423fed767ef8af3a21c62aa698b80cef5d27ab52f46d` |
+| SHA-256 wheel | `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` |
+| SHA-256 sdist | `3a91c9fc312997506fa6cdd0cdd534ce0525ec9f87c7cc0b98bac3b592317e93` |
 
 The fresh-build artifact-hash regression passed after the evidence build.
 `check_evidence.py` intentionally rejects all 33 OPEN criteria and Gates A–C;

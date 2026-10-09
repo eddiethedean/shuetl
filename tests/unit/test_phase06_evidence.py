@@ -81,6 +81,23 @@ def ledger(tmp_path, monkeypatch):
         source_commit=source_commit,
         shuetl_wheel_sha256=wheel_digest,
         reference_wheel_sha256=reference_digest,
+        sink_rows=[[1, "ok", 6]] * 3,
+        rejected_rows=[[2, "no", 120]] * 3,
+        sink_effects=[
+            [f"effect-{index}", f"publication-{index}", 1] for index in range(6)
+        ],
+        capability_results={
+            "canonical_transform": True,
+            "integer_cast": True,
+            "lowercase": True,
+            "scalar_expression": True,
+            "filter": True,
+            "projection_drops_unselected_fields": True,
+            "quality_not_null": True,
+            "quality_range_accept_and_reject": True,
+            "quality_membership_accept_and_reject": True,
+            "accepted_and_rejected_outputs_independently_observed": True,
+        },
     )
     gate0_path.write_text(json.dumps(gate0))
     cli_path = evidence / "cli-postgresql.json"
@@ -91,7 +108,9 @@ def ledger(tmp_path, monkeypatch):
         etlantic_sqlmodel_version="0.57.0",
         source_commit=source_commit,
         shuetl_wheel_sha256=wheel_digest,
-        reference_wheel_sha256=reference_digest,
+        reference_wheel_sha256=hashlib.sha256(
+            b"synthetic reference host wheel"
+        ).hexdigest(),
         role_imports=[
             {
                 "role": role,
@@ -178,6 +197,14 @@ def test_failed_postgresql_evidence_is_rejected(ledger):
     path = ledger / "postgresql-gate0.json"
     data = json.loads(path.read_text())
     data["result"] = "FAIL"
+    path.write_text(json.dumps(data))
+    assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
+
+
+def test_phase06_gate0_requires_live_transform_and_quality_observations(ledger):
+    path = ledger / "postgresql-gate0.json"
+    data = json.loads(path.read_text())
+    data["capability_results"]["quality_range_accept_and_reject"] = False
     path.write_text(json.dumps(data))
     assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
 

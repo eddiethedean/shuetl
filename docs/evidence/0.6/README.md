@@ -60,8 +60,14 @@ revisions; adapted fixtures use canonical inputs and explicitly assert rejection
 ## Installed-artifact PostgreSQL Gate 0
 
 Harness: [phase_0_6_gate_0.py](../../../spikes/phase_0_6_gate_0.py).
-Reference host: [separately built package](../../../tests/reference_phase06/pyproject.toml).
-Neither is a supported role CLI or a replacement runtime.
+Reference workload: [separately built package](../../../tests/reference_phase06/pyproject.toml).
+The harness is not a supported role CLI or a replacement runtime. Its workload
+now performs typed CSV normalization, filtering, quality acceptance/rejection,
+and writes to independent PostgreSQL accepted/rejected sinks; the harness
+asserts exact sink rows and effect receipts. A local PostgreSQL 18.6 installed-
+wheel run passes. Required hosted repeats are wired in the Python 3.11–3.13
+`phase06-gate0` matrix; record those outputs and final wheel hashes before
+refreshing the committed Gate 0 evidence.
 
 ```sh
 python spikes/phase_0_6_gate_0.py \

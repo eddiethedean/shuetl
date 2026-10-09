@@ -24,7 +24,9 @@ from sqlalchemy.engine import make_url
 
 
 class Role:
-    def __init__(self, python, role, env, cwd):
+    def __init__(self, python, role, env, cwd, redactions=()):
+        self.stderr_path = Path(cwd) / f"{role}.stderr"
+        self.redactions = tuple(redactions)
         with (Path(cwd) / f"{role}.stderr").open("w") as log:
             self.process = subprocess.Popen(
                 [python, "-I", "-m", "phase06_reference", role],
@@ -39,10 +41,23 @@ class Role:
         try:
             self.startup = self.read()
             assert self.startup["started"] == role, self.startup
-        except BaseException:
+        except BaseException as exc:
             self.process.kill()
             self.process.wait(timeout=10)
-            raise
+            diagnostic = self.stderr_path.read_text(encoding="utf-8", errors="replace")[
+                -4000:
+            ]
+            for secret in self.redactions:
+                diagnostic = diagnostic.replace(secret, "<redacted>")
+            raise RuntimeError(
+                f"{role} failed during startup: {exc}; stderr={diagnostic}"
+            ) from exc
+
+    def stderr_tail(self):
+        diagnostic = self.stderr_path.read_text(encoding="utf-8", errors="replace")
+        for secret in self.redactions:
+            diagnostic = diagnostic.replace(secret, "<redacted>")
+        return diagnostic[-4000:]
 
     def read(self):
         assert self.process.stdout is not None
@@ -133,8 +148,14 @@ def main():
                 conn.execute(text("CREATE SCHEMA sink"))
                 conn.execute(
                     text(
-                        "CREATE TABLE sink.target (id text NOT NULL, payload text NOT "
-                        "NULL)"
+                        "CREATE TABLE sink.target (id integer NOT NULL, "
+                        "payload text NOT NULL, quantity integer NOT NULL)"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE TABLE sink.rejected (id integer NOT NULL, "
+                        "payload text NOT NULL, quantity integer NOT NULL)"
                     )
                 )
                 conn.execute(
@@ -193,7 +214,12 @@ def main():
             with tempfile.TemporaryDirectory(prefix="shuetl-gate0-") as scratch:
                 root = Path(scratch)
                 (root / "landing").mkdir()
-                content = "id,payload\n001,gate0-value\n"
+                content = (
+                    "id,payload,quantity,discarded\n"
+                    "001,OK,3,drop-me\n"
+                    "002,no,60,drop-me\n"
+                    "000,ok,9,drop-me\n"
+                )
                 (root / "landing/input.csv").write_text(content)
                 evidence["input_sha256"] = hashlib.sha256(content.encode()).hexdigest()
                 env = {
@@ -213,7 +239,16 @@ def main():
                         role_env["ETLANTIC_SQL_URL"] = runtime_url.render_as_string(
                             hide_password=False
                         )
-                    role = Role(args.python, name, role_env, scratch)
+                    role = Role(
+                        args.python,
+                        name,
+                        role_env,
+                        scratch,
+                        redactions=(
+                            runtime_url.render_as_string(hide_password=False),
+                            runtime_password,
+                        ),
+                    )
                     roles.append(role)
                     evidence["roles"].append(role.startup)
                 gateway, scheduler, worker, action = roles
@@ -221,6 +256,7 @@ def main():
                 assert all(not r.startup["http_imported"] for r in roles[1:])
                 assert not gateway.startup["execution_imported"]
                 gateway.call("definition")
+                evidence["plan"] = gateway.call("plan")
                 prep = gateway.call(
                     "http",
                     method="POST",
@@ -236,7 +272,11 @@ def main():
                     path="/v1/preparations/" + prep["body"]["operation_id"],
                 )
                 evidence["manual_preparation"] = operation
-                assert operation["body"]["status"] == "succeeded", operation
+                assert operation["body"]["status"] == "succeeded", (
+                    operation,
+                    action.stderr_tail(),
+                    gateway.stderr_tail(),
+                )
                 evidence["manual_tick"] = worker.call("tick")
                 # The preparation result is the upstream accept receipt.
                 receipt = operation["body"]["result"]
@@ -370,7 +410,19 @@ def main():
                     rows = [
                         list(row)
                         for row in conn.execute(
-                            text("SELECT id,payload FROM sink.target ORDER BY id")
+                            text(
+                                "SELECT id,payload,quantity FROM sink.target "
+                                "ORDER BY id"
+                            )
+                        )
+                    ]
+                    rejected_rows = [
+                        list(row)
+                        for row in conn.execute(
+                            text(
+                                "SELECT id,payload,quantity FROM sink.rejected "
+                                "ORDER BY id"
+                            )
                         )
                     ]
                     effects = [
@@ -383,12 +435,26 @@ def main():
                             )
                         )
                     ]
-                assert rows == [["001", "gate0-value"]] * 3, rows
-                assert len(effects) == 3 and all(row[2] == 1 for row in effects), (
+                assert rows == [[1, "ok", 6]] * 3, rows
+                assert rejected_rows == [[2, "no", 120]] * 3, rejected_rows
+                assert len(effects) == 6 and all(row[2] == 1 for row in effects), (
                     effects
                 )
                 evidence["sink_rows"] = rows
+                evidence["rejected_rows"] = rejected_rows
                 evidence["sink_effects"] = effects
+                evidence["capability_results"] = {
+                    "canonical_transform": True,
+                    "integer_cast": True,
+                    "lowercase": True,
+                    "scalar_expression": True,
+                    "filter": True,
+                    "projection_drops_unselected_fields": True,
+                    "quality_not_null": True,
+                    "quality_range_accept_and_reject": True,
+                    "quality_membership_accept_and_reject": True,
+                    "accepted_and_rejected_outputs_independently_observed": True,
+                }
                 for role in reversed(roles):
                     role.close()
                 evidence["result"] = "PASS"

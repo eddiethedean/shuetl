@@ -12,7 +12,7 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any
 
-from etlantic import Data, Extract, Load, Pipeline
+from etlantic import Data, Extract, Input, Load, Output, Pipeline, Transformation
 from etlantic.authoring import definition_from_pipeline
 from etlantic.authoring.serialize import pipeline_to_dict
 from etlantic.control_plane import (
@@ -28,6 +28,13 @@ from etlantic.control_plane import (
     WorkspaceRef,
 )
 from etlantic.profile import Profile
+from etlantic.quality import (
+    QualityRuleset,
+    make_quality_gate,
+    rule_membership,
+    rule_not_null,
+    rule_range,
+)
 from etlantic.registry import BindingDescriptor, PlanningContext
 from etlantic_sqlmodel import SQLModelBackendConfig, create_managed_backend
 from sqlalchemy import create_engine, event
@@ -36,11 +43,58 @@ from sqlalchemy import create_engine, event
 class Row(Data):
     id: str
     payload: str
+    quantity: str
+
+
+class NormalizedRow(Data):
+    id: int
+    payload: str
+    quantity: int
+
+
+class NormalizeRows(Transformation):
+    rows: Input[Row]
+    result: Output[NormalizedRow]
+
+
+def normalize_rows(rows):
+    normalized = []
+    for row in rows:
+        identifier = int(row["id"])
+        quantity = int(row["quantity"])
+        if identifier > 0 and quantity > 0:
+            normalized.append(
+                {
+                    "id": identifier,
+                    "payload": str(row["payload"]).lower(),
+                    "quantity": quantity * 2,
+                }
+            )
+    return normalized
+
+
+NormalizeRows.implementation("local")(normalize_rows)
+
+
+Quality = make_quality_gate(
+    NormalizedRow,
+    QualityRuleset(
+        rules=(
+            rule_not_null("id"),
+            rule_range("quantity", min_value=1, max_value=100),
+            rule_membership("payload", ["ok"]),
+        )
+    ),
+    name="ReferenceQualityGate",
+)
 
 
 class Transfer(Pipeline):
     source: Extract[Row] = Extract(asset="source")
-    sink: Load[Row] = Load(input=source, asset="sink")
+    normalized = NormalizeRows.step(rows=source)
+    quality = Quality.step(rows=normalized.result)
+    sink: Load[NormalizedRow] = Load(input=quality.result, asset="sink")
+    rejected: Load[NormalizedRow] = Load(input=quality.rejected, asset="rejected")
 
 
 def main():
@@ -56,6 +110,7 @@ def main():
     auth = MemoryAuthorizer()
     for action in (
         "definition.write",
+        "definition.plan",
         "run.submit",
         "run.read",
         "run.report",
@@ -68,6 +123,7 @@ def main():
     profile = Profile(
         name="gate0",
         security_mode="production",
+        portable_transform_policy="native",
         plugin_allowlist={
             "etlantic": "0.57.0",
             "etlantic-local": "0.50.0",
@@ -100,6 +156,19 @@ def main():
                 provider="postgresql",
                 kind="sink",
                 location="target",
+                config={
+                    "schema": "sink",
+                    "mode": "append",
+                    "effect_table": "sink.effects",
+                },
+            )
+        )
+        planning.registry.register_binding(
+            BindingDescriptor(
+                binding="rejected",
+                provider="postgresql",
+                kind="sink",
+                location="rejected",
                 config={
                     "schema": "sink",
                     "mode": "append",
@@ -203,6 +272,8 @@ def main():
                         pipeline_to_dict(definition_from_pipeline(Transfer)),
                     )
                     result = {"registered": True}
+                elif op == "plan":
+                    result = backend.managed_service.plan_definition(ctx, "transfer")
                 elif op == "http":
                     assert client is not None
                     response = client.request(

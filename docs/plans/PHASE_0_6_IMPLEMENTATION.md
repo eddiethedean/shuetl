@@ -12,6 +12,13 @@ failure ordering have received follow-up source corrections. W04 failure and
 active-work qualification, W05–W08, and hosted final-artifact acceptance remain
 open.
 
+The installed Gate 0 reference workload has been expanded to execute a local
+CSV-to-PostgreSQL transfer with typed normalization, filtering, quality
+accept/reject outputs, and independent sink assertions. Its local PostgreSQL
+18.6 run passes. A required hosted Python 3.11–3.13 Gate 0 matrix now runs this
+same installed-wheel harness; its hosted results and final hashes remain to be
+recorded before Gate 0 evidence can be refreshed.
+
 The [implementation review corrections](../reviews/PHASE_0_6_REVIEW_FIXES.md)
 fix nine startup, recovery, cleanup, binding, evidence and authentication issues.
 Their source regressions and local SCRAM smoke checks do not close release gates.
@@ -244,6 +251,11 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
 - [ ] Verify exact sink values, canonical reports, bounded transforms and quality
   success/failure, effective overrides, disabled-writer policy, aliases/upsert
   keys, schema drift, retry versus new-run identity and extension execution.
+- [x] Add a concrete CSV/PostgreSQL-to-PostgreSQL fixture to Gate 0. It verifies
+  integer normalization, lowercase, scalar arithmetic, filtering, projection,
+  not-null/range/membership quality rules, accepted/rejected rows and independent
+  sink effects. The exact passing fixture is bound to the hosted matrix job;
+  this closes only the reference-workload slice, not the advertised support matrix.
 - [ ] Change specifications while reference host runtime code remains unchanged.
   Verify HTTP/headless canonical records and command/control parity.
 - [ ] Exercise action workers for connection/catalog/schema/preflight; test
@@ -312,6 +324,10 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
   the reference host outside the checkout, verifies installed origins, and runs
   the public CLI against all four roles on Python 3.11–3.13. Remaining hosted
   fault-integration and final-artifact acceptance are still required.
+- [x] Add a separate hosted PostgreSQL 18.6 Gate 0 matrix job that builds and
+  installs ShuETL and the independent reference workload outside the checkout,
+  runs canonical manual/native-scheduled transfer, and uploads sink-backed
+  evidence on Python 3.11–3.13.
 - [x] Locally and in hosted CI, build/install the development wheel and reference
   host outside the checkout, verify origins, and run all role kinds against
   PostgreSQL 18.6. Hosted startup/readiness/SIGTERM evidence is recorded for
@@ -326,9 +342,11 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
 - [ ] Review the final supported matrix, dependency/ownership boundaries,
   security/durability findings and migration/rollback instructions.
 - [ ] Qualify a frozen source/artifact candidate. Gate evidence must include the
-  source commit and SHA-256 of the ShuETL and reference-host wheels; Gate 0 and
-  CLI qualification must agree on both hashes. The release build and post-download
-  publish job now recheck the qualified hashes before publication. After any
+  source commit and SHA-256 of the ShuETL wheel plus the distinct Gate 0 reference
+  workload and CLI reference-host wheels. Gate 0 and CLI qualification must agree
+  on the ShuETL wheel hash and source commit; each reference fixture is bound to
+  its own hash. The release build and post-download publish job now recheck the
+  qualified hashes before publication. After any
   subsequent source or packaged-document change, rebuild and rerun affected gates.
 - [ ] Publish/tag 0.6.0 only when Gates U/0/A–C and AC-001–033 pass with zero skipped
   required cases. Verify distribution metadata and clean-install role smoke tests

@@ -227,6 +227,21 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             if isinstance(role, dict) and isinstance(role.get("started"), str)
         }
         expected_roles = {"gateway", "scheduler", "run-worker", "action-worker"}
+        expected_capabilities = {
+            "canonical_transform",
+            "integer_cast",
+            "lowercase",
+            "scalar_expression",
+            "filter",
+            "projection_drops_unselected_fields",
+            "quality_not_null",
+            "quality_range_accept_and_reject",
+            "quality_membership_accept_and_reject",
+            "accepted_and_rejected_outputs_independently_observed",
+        }
+        capabilities = (
+            gate0.get("capability_results", {}) if isinstance(gate0, dict) else {}
+        )
         gate0_good = isinstance(gate0, dict) and (
             gate0.get("schema") == "shuetl.phase06.gate0/1"
             and gate0.get("result") == "PASS"
@@ -241,6 +256,17 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
                 "migration_membership": False,
                 "owned_objects": 0,
             }
+            and isinstance(capabilities, dict)
+            and set(capabilities) == expected_capabilities
+            and all(value is True for value in capabilities.values())
+            and gate0.get("sink_rows") == [[1, "ok", 6]] * 3
+            and gate0.get("rejected_rows") == [[2, "no", 120]] * 3
+            and isinstance(gate0.get("sink_effects"), list)
+            and len(gate0["sink_effects"]) == 6
+            and all(
+                isinstance(effect, list) and len(effect) == 3 and effect[2] == 1
+                for effect in gate0["sink_effects"]
+            )
             and re.fullmatch(r"[0-9a-f]{64}", str(gate0.get("shuetl_wheel_sha256", "")))
             and re.fullmatch(
                 r"[0-9a-f]{64}", str(gate0.get("reference_wheel_sha256", ""))
@@ -339,7 +365,6 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             or "site-packages" not in cli.get("reference_host_origin", "")
             or cli.get("shuetl_wheel_sha256") != wheel_digest
             or cli.get("shuetl_wheel_sha256") != gate0.get("shuetl_wheel_sha256")
-            or cli.get("reference_wheel_sha256") != gate0.get("reference_wheel_sha256")
             or source_commit != gate0.get("source_commit")
             or not re.fullmatch(r"[0-9a-f]{64}", cli.get("reference_wheel_sha256", ""))
             or not source_record

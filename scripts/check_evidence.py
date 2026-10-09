@@ -530,7 +530,10 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             )
             or len(cli_shutdown) != 4
             or any(
-                not isinstance(row, dict) or row.get("exit_code") != 0
+                not isinstance(row, dict)
+                or row.get("exit_code") != 0
+                or row.get("cleanup_events")
+                != ["backend.engine_disposed", "bindings.close"]
                 for row in cli_shutdown
             )
             or "site-packages" not in cli.get("shuetl_origin", "")

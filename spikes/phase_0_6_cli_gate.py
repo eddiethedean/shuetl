@@ -452,8 +452,22 @@ def main(argv: list[str] | None = None) -> int:
                 process.send_signal(signal.SIGTERM)
                 exit_code = process.wait(timeout=15)
                 assert exit_code == 0, (role_name, exit_code)
+                lifecycle_path = root / f"lifecycle-{process.pid}.jsonl"
+                lifecycle_events = [
+                    json.loads(line)["event"]
+                    for line in lifecycle_path.read_text(encoding="utf-8").splitlines()
+                ]
+                assert lifecycle_events == [
+                    "backend.engine_disposed",
+                    "bindings.close",
+                ], (role_name, lifecycle_events)
                 evidence["shutdown"].append(
-                    {"role": role_name, "signal": "SIGTERM", "exit_code": exit_code}
+                    {
+                        "role": role_name,
+                        "signal": "SIGTERM",
+                        "exit_code": exit_code,
+                        "cleanup_events": lifecycle_events,
+                    }
                 )
                 try:
                     status, payload = _probe(probe_port, "live")

@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 from etlantic.control_plane import (
     ControlPlaneContext,
@@ -18,6 +19,7 @@ from etlantic.control_plane import (
 )
 from etlantic.profile import Profile
 from etlantic.registry import BindingDescriptor, PlanningContext
+from sqlalchemy import event
 
 from shuetl import GatewayBindings, RuntimeBindings
 from shuetl.settings import ShuETLSettings
@@ -32,6 +34,13 @@ AUTHORIZATIONS = (
     "schedule.read",
     "action.execute",
 )
+_cleanup_observer_installed = False
+
+
+def _record_lifecycle(root: Path, event_name: str) -> None:
+    path = root / f"lifecycle-{os.getpid()}.jsonl"
+    with path.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps({"event": event_name}) + "\n")
 
 
 def _context(settings: ShuETLSettings) -> ControlPlaneContext:
@@ -48,7 +57,25 @@ def _context(settings: ShuETLSettings) -> ControlPlaneContext:
 
 def create(settings: ShuETLSettings) -> GatewayBindings | RuntimeBindings:
     """Return process-local bindings for an isolated disposable store."""
+    global _cleanup_observer_installed
     root = Path(os.environ["PHASE06_ROOT"]).resolve()
+    if not _cleanup_observer_installed:
+        import shuetl.backend as runtime_backend
+
+        create_backend = runtime_backend.create_managed_backend
+
+        def observe_backend_creation(*args: Any, **kwargs: Any) -> Any:
+            backend = create_backend(*args, **kwargs)
+            event.listen(
+                backend.engine,
+                "engine_disposed",
+                lambda _engine: _record_lifecycle(root, "backend.engine_disposed"),
+            )
+            return backend
+
+        runtime_backend.create_managed_backend = observe_backend_creation
+        _cleanup_observer_installed = True
+
     context = _context(settings)
     authorizer = MemoryAuthorizer()
     for action in AUTHORIZATIONS:
@@ -111,6 +138,7 @@ def create(settings: ShuETLSettings) -> GatewayBindings | RuntimeBindings:
             profile=profile,
             planning_context_factory=planning_context_factory,
             identity_adapter=identity,
+            close=lambda: _record_lifecycle(root, "bindings.close"),
         )
     else:
         bindings = RuntimeBindings(
@@ -118,6 +146,7 @@ def create(settings: ShuETLSettings) -> GatewayBindings | RuntimeBindings:
             profile=profile,
             planning_context_factory=planning_context_factory,
             context=context,
+            close=lambda: _record_lifecycle(root, "bindings.close"),
         )
     role_name = (
         f"worker-{settings.worker_kind}" if settings.role == "worker" else settings.role

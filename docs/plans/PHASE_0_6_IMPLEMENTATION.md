@@ -246,14 +246,19 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
   connectivity, and verify readiness recovers before orderly shutdown. The
   disposable PostgreSQL test passed locally and in hosted Python 3.11–3.13 CI
   run 37984396221 with zero skips.
-- [ ] Qualify exact cleanup order/count across roles and external termination
-  after grace expiry with separate PostgreSQL-backed processes. Never adjust
-  upstream leases, repair work or write terminal results.
+- [x] Qualify exact cleanup order/count across all four installed CLI roles.
+  The disposable PostgreSQL harness records one owned-engine disposal followed
+  by one host-binding close after SIGTERM for gateway, scheduler, run worker and
+  action worker; local Python 3.13 passed. Hosted verification remains pending.
+- [ ] Exercise active PostgreSQL work through grace expiry and external process
+  termination for each applicable role. Verify no ShuETL path adjusts upstream
+  leases, repairs work or writes terminal results.
 
 Exit: source implementation supports all four kinds. Installed startup and basic
-signal shutdown pass locally. PostgreSQL scheduler drain and connection
-drain and connection outage/recovery pass locally and in hosted CI; exact cleanup
-order, other-role active drain and external termination remain open.
+signal shutdown pass locally. PostgreSQL scheduler drain and connection outage/
+recovery pass locally and in hosted CI. Exact cleanup order/count passes locally
+for all four CLI roles; other-role active drain and external termination remain
+open pending hosted verification and additional failure cases.
 
 ## W05 — Qualify advertised live capabilities
 
@@ -323,8 +328,9 @@ and a working W05 fixture. Acceptance: AC-007/010–019/021/031/032.
   process/owner IDs. The installed Gate 0 harness now starts a second gateway,
   scheduler, run worker and action worker; concurrent same-key preparation,
   action/run worker claims and scheduler ticks each produce one canonical
-  operation or claim. Local PostgreSQL 18.6 passed; the hosted matrix will bind
-  this expanded record to all three Python versions.
+  operation or claim. Local PostgreSQL 18.6 passed. [Hosted CI run 37988337495](https://github.com/eddiethedean/shuetl/actions/runs/37988337495)
+  passed the expanded Gate 0 on Python 3.11–3.13 for source commit
+  `87a9549dcc148bf5317b4b747d90a6bdcdbee6c2`.
 - [ ] Add deterministic barriers/observations around public commit boundaries,
   bounded deadlines, process-group cleanup and diagnostic capture. Avoid
   sleep-only synchronization and production fault hooks. The current fixture

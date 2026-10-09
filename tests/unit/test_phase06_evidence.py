@@ -252,6 +252,11 @@ def ledger(tmp_path, monkeypatch):
             )
         ],
     )
+    for shutdown in cli["shutdown"]:
+        shutdown["cleanup_events"] = [
+            "backend.engine_disposed",
+            "bindings.close",
+        ]
     cli_path.write_text(json.dumps(cli))
     (evidence / "qualification.md").write_text("\n".join(records))
     (evidence / "source.md").write_text(
@@ -364,6 +369,20 @@ def test_phase06_gate0_requires_eight_distinct_process_ids(ledger):
     path.write_text(json.dumps(data))
     assert any(
         "eight distinct process IDs" in error for error in check_evidence.check(ledger)
+    )
+
+
+def test_phase06_cli_requires_backend_before_binding_cleanup(ledger):
+    path = ledger / "cli-postgresql.json"
+    data = json.loads(path.read_text())
+    data["shutdown"][0]["cleanup_events"] = [
+        "bindings.close",
+        "backend.engine_disposed",
+    ]
+    path.write_text(json.dumps(data))
+    assert any(
+        "installed CLI/PostgreSQL evidence is not artifact-qualified" in error
+        for error in check_evidence.check(ledger)
     )
 
 

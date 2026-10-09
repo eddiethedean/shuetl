@@ -1,16 +1,21 @@
 {
   "schema": "shuetl.phase06.cli-gate/1",
   "result": "PASS",
-  "python": "3.13.9",
-  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
   "shuetl_version": "0.6.0",
-  "shuetl_origin": "/private/tmp/shuetl-phase06-venv/lib/python3.13/site-packages/shuetl/__init__.py",
-  "reference_host_origin": "/private/tmp/shuetl-phase06-venv/lib/python3.13/site-packages/phase06_host/bindings.py",
+  "shuetl_origin": "/home/runner/work/_temp/phase06-venv/lib/python3.13/site-packages/shuetl/__init__.py",
+  "reference_host_origin": "/home/runner/work/_temp/phase06-venv/lib/python3.13/site-packages/phase06_host/bindings.py",
   "etlantic_sql_version": "0.57.0",
+  "etlantic_version": "0.57.0",
+  "etlantic_sqlmodel_version": "0.57.0",
+  "source_commit": "e1258176213307b862104cc8e6455abde1b76d60",
+  "shuetl_wheel_sha256": "b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15",
+  "reference_wheel_sha256": "1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769",
   "roles": [
     {
       "role": "gateway",
-      "pid": 90724,
+      "pid": 2893,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -24,11 +29,11 @@
         "role": "gateway"
       },
       "probe_host": "127.0.0.1",
-      "gateway_port": 52134
+      "gateway_port": 56143
     },
     {
       "role": "scheduler",
-      "pid": 90735,
+      "pid": 2907,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -46,7 +51,7 @@
     },
     {
       "role": "run_worker",
-      "pid": 90737,
+      "pid": 2943,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -64,7 +69,7 @@
     },
     {
       "role": "action_worker",
-      "pid": 90748,
+      "pid": 2959,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -89,6 +94,32 @@
     "owned_objects": 0
   },
   "construction_preflight": "PASS",
+  "role_imports": [
+    {
+      "etlantic_fastapi_imported": true,
+      "fastapi_imported": true,
+      "pid": 2893,
+      "role": "gateway"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 2907,
+      "role": "scheduler"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 2943,
+      "role": "worker-runs"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 2959,
+      "role": "worker-actions"
+    }
+  ],
   "shutdown": [
     {
       "role": "action_worker",

@@ -23,7 +23,7 @@ interpreter checks, not additional distinct coverage.
 | Python version | 3.11.14, 3.12.13, 3.13.9 |
 | uv version | Exact executable version in validation.json |
 | ETLantic source revision | Release tag d1f4e5a4d013e37f8adc54b4644ea9b2be66f801 |
-| ShuETL source commit | pending final qualified commit |
+| ShuETL source commit | `e1258176213307b862104cc8e6455abde1b76d60` |
 | ShuETL import origin | Isolated wheel site-packages/shuetl/__init__.py |
 | ETLantic import origin | Isolated wheel site-packages/etlantic/__init__.py |
 | etlantic-fastapi import origin | Isolated wheel site-packages/etlantic_fastapi/__init__.py |
@@ -62,12 +62,20 @@ revisions; adapted fixtures use canonical inputs and explicitly assert rejection
 Harness: [phase_0_6_gate_0.py](../../../spikes/phase_0_6_gate_0.py).
 Reference workload: [separately built package](../../../tests/reference_phase06/pyproject.toml).
 The harness is not a supported role CLI or a replacement runtime. Its workload
-now performs typed CSV normalization, filtering, quality acceptance/rejection,
-and writes to independent PostgreSQL accepted/rejected sinks; the harness
-asserts exact sink rows and effect receipts. A local PostgreSQL 18.6 installed-
-wheel run passes. Required hosted repeats are wired in the Python 3.11–3.13
-`phase06-gate0` matrix; record those outputs and final wheel hashes before
-refreshing the committed Gate 0 evidence.
+performs typed CSV normalization, filtering, quality acceptance/rejection, and
+writes to independent PostgreSQL accepted/rejected sinks; the harness asserts
+exact sink rows and effect receipts. Local and hosted PostgreSQL 18.6 installed-
+wheel runs pass on Python 3.11–3.13. The committed [hosted Gate 0 records](hosted-gate0/)
+and [installed CLI records](hosted-cli/) come from [CI run 37979518647](https://github.com/eddiethedean/shuetl/actions/runs/37979518647)
+and are bound to source commit `e1258176213307b862104cc8e6455abde1b76d60`.
+The ShuETL wheel SHA-256 is
+`b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`;
+Gate 0 reference workload SHA-256 is
+`777e0e45bf6c351df92e5340cb3a490f093f3daf6e4e116d28abc42f18bb9e52`; CLI
+reference host SHA-256 is
+`1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769`.
+These development artifacts close only the installed baseline qualification;
+the final release candidate and broader acceptance gates remain open.
 
 ```sh
 python spikes/phase_0_6_gate_0.py \
@@ -85,9 +93,9 @@ fixtures. No pre-existing application store is accepted or reset.
 
 | Interpreter | Consumer acceptance | Gate 0 feasibility | Installed CLI startup |
 | --- | --- | --- | --- |
-| 3.11.14 | [12 PASS](gate-u-python-3.11.xml) | [PASS](postgresql-gate0-python-3.11.json) | [PASS](cli-postgresql-3.11.json) |
-| 3.12.13 | [12 PASS](gate-u-python-3.12.xml) | [PASS](postgresql-gate0-python-3.12.json) | [PASS](cli-postgresql-3.12.json) |
-| 3.13.9 | [12 PASS](gate-u.xml) | [PASS](postgresql-gate0.json) | [PASS](cli-postgresql.json) |
+| 3.11.14 | [12 PASS](gate-u-python-3.11.xml) | [PASS](hosted-gate0/python-3.11.json) | [PASS](hosted-cli/python-3.11.json) |
+| 3.12.13 | [12 PASS](gate-u-python-3.12.xml) | [PASS](hosted-gate0/python-3.12.json) | [PASS](hosted-cli/python-3.12.json) |
+| 3.13.9 | [12 PASS](gate-u.xml) | [PASS](hosted-gate0/python-3.13.json) | [PASS](hosted-cli/python-3.13.json) |
 
 Each launch uses `python -I -m phase06_reference` outside the repository, with
 installed ShuETL, provider and reference-host wheels. JSON records process IDs,
@@ -121,9 +129,9 @@ and [Python 3.12](cli-postgresql-3.12.json). Gateway, scheduler, run worker and
 action worker each reach `/ready` and `/live`, receive SIGTERM, exit successfully,
 and leave no seeded credential sentinels in captured logs. The runtime role has
 no schema CREATE rights, migration-role membership or owned objects. The same
-qualification now passes in hosted CI on Python 3.11–3.13 for source commit
-`c0153dae5535b6a313622473386a497a82bf6a97`; the redacted per-interpreter records
-are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37974307758)
+qualification passes in hosted CI on Python 3.11–3.13 for source commit
+`e1258176213307b862104cc8e6455abde1b76d60`; the redacted per-interpreter records
+are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37979518647)
 binds those results to ShuETL wheel SHA-256
 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` and
 reference-host wheel SHA-256

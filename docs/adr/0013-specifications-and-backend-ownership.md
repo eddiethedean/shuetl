@@ -1,5 +1,9 @@
 # ADR-0013: Application Specifications and Complete Backend Ownership
 
+Current 0.6 ownership is governed by [ADR-0015](0015-backend-and-deployment-ownership.md).
+Earlier release decisions below remain historical; no 0.6 capability is implied.
+
+
 - Status: Accepted
 - Date: 2026-09-29
 
@@ -73,7 +77,22 @@ Explicit authorization, operator policy, state/effect preconditions and qualifie
 provider capabilities are the grounds for restricting a control. A narrow
 ShuETL convenience interface must not introduce an additional restriction.
 
+## Alternatives
+
+- Require applications to assemble providers and sequence preparation: rejected
+  because the standard consumer would retain ETL implementation responsibilities.
+- Put canonical preparation and execution in ShuETL: rejected because every
+  consumer needs the same ETLantic semantics. ADR-0015 places complete backend
+  and role factories upstream while ShuETL qualifies their deployment.
+- Limit applications to a narrow convenience API: rejected because qualified
+  canonical controls and independent backend extensions must remain accessible.
+
 ## Validation
+
+The [released 0.5 contract evidence](../evidence/0.5/contracts.md) and
+[ownership baseline](../evidence/0.5/ownership.md) are regression inputs, not
+proof of the target headless/backend capabilities. Revised qualification is
+assigned by ADR-0015 and the Phase 0.6 execution/verification plans.
 
 HC-14 and HC-17–HC-23 in the
 [delivery matrix](../plans/CAPABILITY_DELIVERY.md), H05-019–H05-032 in the

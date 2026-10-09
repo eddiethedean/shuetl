@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,6 +33,21 @@ DOMAIN_CLASS_NAMES = {
 }
 ROUTE_DECORATOR_NAMES = {"delete", "get", "patch", "post", "put", "websocket"}
 MIGRATION_DIRECTORY_NAMES = {"alembic", "migrations"}
+STANDARD_HOST_FILES = {"backend.py", "factory.py", "runtime.py"}
+FORBIDDEN_GRAPH_NAMES = {
+    "ManagedApplicationService",
+    "ManagedSchedulerService",
+    "CP1Coordinator",
+    "ManagedBackend",
+}
+PRIVATE_SCHEMA_SQL = re.compile(
+    r"\betlantic_(?:sqlmodel_schema_version|managed_[a-z0-9_]+)\b", re.I
+)
+SQL_STATEMENT = re.compile(
+    r"\b(?:SELECT\s+.+\s+FROM|INSERT\s+INTO|UPDATE\s+\w+|DELETE\s+FROM|"
+    r"CREATE\s+(?:TABLE|SCHEMA)|ALTER\s+TABLE|DROP\s+(?:TABLE|SCHEMA))\b",
+    re.I | re.S,
+)
 
 
 @dataclass(frozen=True)
@@ -79,6 +95,9 @@ def _scan_file(path: Path) -> list[Violation]:
         ]
 
     violations: list[Violation] = []
+    enforce_host_graph = (
+        path.name in STANDARD_HOST_FILES and path.parent.name == "shuetl"
+    )
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
             for module in _modules_from_import(node):
@@ -111,6 +130,62 @@ def _scan_file(path: Path) -> list[Violation]:
                             "import only documented public ETLantic package surfaces",
                         )
                     )
+                if (
+                    enforce_host_graph
+                    and root == "etlantic"
+                    and any(
+                        alias.name.rsplit(".", 1)[-1] in FORBIDDEN_GRAPH_NAMES
+                        for alias in getattr(node, "names", ())
+                    )
+                ):
+                    violations.append(
+                        Violation(
+                            "BOUNDARY-GRAPH",
+                            path,
+                            node.lineno,
+                            "standard role composition imports an upstream semantic "
+                            "service graph",
+                            "compose roles through the frozen public "
+                            "managed-backend factories",
+                        )
+                    )
+        elif (
+            enforce_host_graph
+            and isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+        ):
+            if PRIVATE_SCHEMA_SQL.search(node.value) or SQL_STATEMENT.search(
+                node.value
+            ):
+                violations.append(
+                    Violation(
+                        "BOUNDARY-SCHEMA-SQL",
+                        path,
+                        getattr(node, "lineno", 1),
+                        "standard role composition contains provider-owned schema SQL",
+                        "use ETLantic's public schema inspection and migration "
+                        "contracts",
+                    )
+                )
+        elif enforce_host_graph and isinstance(node, ast.Call):
+            function = node.func
+            called = (
+                function.id
+                if isinstance(function, ast.Name)
+                else (function.attr if isinstance(function, ast.Attribute) else "")
+            )
+            if called in FORBIDDEN_GRAPH_NAMES:
+                violations.append(
+                    Violation(
+                        "BOUNDARY-GRAPH",
+                        path,
+                        node.lineno,
+                        "standard role composition constructs upstream semantic "
+                        f"service {called}",
+                        "compose roles through the frozen public "
+                        "managed-backend factories",
+                    )
+                )
         elif isinstance(node, ast.ClassDef) and node.name in DOMAIN_CLASS_NAMES:
             violations.append(
                 Violation(

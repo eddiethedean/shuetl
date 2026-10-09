@@ -1,5 +1,9 @@
 # ADR-0001: Package Boundary and Merge Trigger
 
+Current 0.6 ownership is governed by [ADR-0015](0015-backend-and-deployment-ownership.md).
+Earlier release decisions below remain historical; no 0.6 capability is implied.
+
+
 - Status: Accepted
 - Date: 2026-09-11
 

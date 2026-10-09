@@ -6,14 +6,17 @@ For every advertised ETL capability, an application changes canonical
 specifications and issues backend commands. It does not implement extraction,
 transformation, validation, loading, submission preparation or run recovery.
 
-ShuETL owns the complete supported backend experience. ETLantic and its provider
-packages own the canonical models, service semantics and implementation. This
-internal division must not require an app to assemble its own ETL engine.
+ShuETL owns the qualified deployment and host-integration experience. ETLantic
+and its providers own the independently usable backend, canonical services,
+complete role factories and ETL implementation. This division must not require
+an app or ShuETL to reconstruct the semantic ETL graph.
 The package direction remains `application → ShuETL → ETLantic/providers`.
 
 This is a planned contract under
-[ADR-0013](../adr/0013-specifications-and-backend-ownership.md). The current 0.4
-caller-owned facade remains supported as an advanced composition surface. The
+[ADR-0013](../adr/0013-specifications-and-backend-ownership.md). The released 0.5
+caller-owned facade remains supported as an advanced composition surface.
+[ADR-0015](../adr/0015-backend-and-deployment-ownership.md) assigns complete backend
+and role factories upstream; ShuETL configures and qualifies their deployment. The
 required standard path starts with deployment configuration, identity/resource
 integration and a pipeline specification, without a caller-built provider graph.
 
@@ -89,8 +92,8 @@ backend engine contract. Secret values never become specification parameters.
 
 ## Standard command contract
 
-These are conceptual operations to map to public ETLantic services during 0.5
-qualification. They do not introduce route aliases or replacement models.
+These are conceptual operations to map to public ETLantic services during Gate U
+and 0.6 qualification. They do not introduce route aliases or replacement models.
 
 | App request | Required backend behavior |
 |---|---|
@@ -173,7 +176,7 @@ declared scalar normalization/expressions and deterministic deduplication,
 together with schema, required-value and range/set validation. Each operation
 publishes its parameters, type/null/error behavior and resource requirements.
 All execution is owned by the backend. The exact operator vocabulary is
-qualified upstream in 0.5 and exercised end to end in 0.6.
+qualified upstream on the selected artifacts and exercised end to end in 0.6.
 
 Cross-batch deduplication must declare key and tie-breaking semantics and
 obtain bounded memory or spill resources. Whole-input validation before

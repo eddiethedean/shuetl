@@ -1,0 +1,80 @@
+{
+  "schema": "etlantic.phase_0_57.headless_wheels/1",
+  "status": "passed",
+  "observed_at": "2026-10-08T19:34:13.623408+00:00",
+  "source_revision": "94fe5c29182c37ab9398146b61609cb6ebc9a59a",
+  "python": "3.11.15 (main, Jul 23 2026, 14:43:45) [Clang 22.1.3 ]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "etlantic_version": "0.57.0",
+  "sqlmodel_version": "0.57.0",
+  "versions_aligned": true,
+  "fastapi_installed": false,
+  "core_wheel": {
+    "name": "etlantic-0.57.0-py3-none-any.whl",
+    "sha256": "ff7939f9134a07c0ef1513d45b76623154e12931c935a01aedfceabcb93ab7b4"
+  },
+  "sqlmodel_wheel": {
+    "name": "etlantic_sqlmodel-0.57.0-py3-none-any.whl",
+    "sha256": "28641b7bfefb888b83bfc00f172f4293913e74717b747ed7a0289737a2d7051f"
+  },
+  "observations": [
+    "migrated in-memory SQLite provider schema",
+    "constructed shared managed backend without FastAPI",
+    "constructed scheduler, run-worker, and action-worker roles",
+    "ticked all three roles and inspected local status",
+    "schedule service reused the backend schedule store",
+    "created and read an authorized schedule through the headless service",
+    "drained roles and closed backend idempotently"
+  ],
+  "role_statuses": {
+    "scheduler": {
+      "schema": "etlantic.runtime_role_status/1",
+      "role": "scheduler",
+      "activity": "idle",
+      "admission": "accepting",
+      "prerequisites": "usable",
+      "reason_code": null,
+      "in_flight": 0,
+      "observed_at": "2026-10-08T19:34:13.615057Z",
+      "capabilities": [
+        "read_status",
+        "cooperative_drain",
+        "leader_standby",
+        "managed_occurrence_recovery"
+      ],
+      "ready": true
+    },
+    "run_worker": {
+      "schema": "etlantic.runtime_role_status/1",
+      "role": "run_worker",
+      "activity": "idle",
+      "admission": "accepting",
+      "prerequisites": "usable",
+      "reason_code": null,
+      "in_flight": 0,
+      "observed_at": "2026-10-08T19:34:13.619110Z",
+      "capabilities": [
+        "read_status",
+        "cooperative_drain",
+        "lease_fencing"
+      ],
+      "ready": true
+    },
+    "action_worker": {
+      "schema": "etlantic.runtime_role_status/1",
+      "role": "action_worker",
+      "activity": "idle",
+      "admission": "accepting",
+      "prerequisites": "usable",
+      "reason_code": null,
+      "in_flight": 0,
+      "observed_at": "2026-10-08T19:34:13.621257Z",
+      "capabilities": [
+        "read_status",
+        "cooperative_drain",
+        "job_fencing"
+      ],
+      "ready": true
+    }
+  }
+}

@@ -16,9 +16,9 @@ exposes.
 | Pipeline definitions, revisions, plans, and fingerprints | ETLantic | Registration and application configuration |
 | Durable submissions, runs, attempts, retries, and recovery | ETLantic | Provider wiring and FastAPI exposure |
 | Schedules, firings, overlap, and misfire semantics | ETLantic | API selection, configuration, and role startup |
-| Reports, events, artifacts, and diagnostics | ETLantic | HTTP/SSE projection and operator documentation |
+| Reports, events, artifacts, and diagnostics | ETLantic; HTTP/SSE projection in etlantic-fastapi | Mount the adapter, configure providers and document operations |
 | HTTP schemas and ETLantic route semantics | `etlantic-fastapi` | Curated mounting and host integration |
-| Relational reference stores and migrations | `etlantic-sqlmodel` or another ETLantic provider | Database configuration and readiness checks |
+| Relational reference stores, schema inspection and migrations | `etlantic-sqlmodel` or another ETLantic provider | Database configuration, public status consumption and explicit upgrade delegation |
 | Authentication and credential implementation | Host application or optional identity provider | Adapt authenticated identity into ETLantic authorization context |
 | Presentation | Host application or optional Hedron adapter | Optional operator-facing composition |
 
@@ -78,7 +78,11 @@ merged into or replaced by `etlantic-fastapi` rather than duplicate it.
 - [PHASE_0_3_EXECUTION.md](PHASE_0_3_EXECUTION.md) — authoritative 0.3 settings, local-provider, diagnostics, and implementation contract
 - [PHASE_0_4_EXECUTION.md](PHASE_0_4_EXECUTION.md) — authoritative 0.4 PostgreSQL pilot contract, acceptance criteria, qualification evidence, and implementation sequence
 - [PHASE_0_5_EXECUTION.md](PHASE_0_5_EXECUTION.md) — 0.5 secure host identity contract, 34 acceptance criteria, verification matrix, and qualification against published ETLantic 0.55.0
-- [PHASE_0_6_EXECUTION.md](PHASE_0_6_EXECUTION.md) — role-separated PostgreSQL preview on published ETLantic 0.56.0, fresh-store transition, process contract, failure matrix, and release gate
+- [PHASE_0_6_EXECUTION.md](PHASE_0_6_EXECUTION.md) — accepted upstream Gate U, exact artifact selection, role-separated preview, fresh-store transition and release gates
+- [PHASE_0_6_IMPLEMENTATION.md](PHASE_0_6_IMPLEMENTATION.md) — ordered implementation work packages, upstream dependencies, review sequence and final-artifact release checklist
+- [../adr/0015-backend-and-deployment-ownership.md](../adr/0015-backend-and-deployment-ownership.md) — accepted backend/provider/HTTP/deployment ownership boundary
+- [ETLANTIC_0_56_DEPENDENCIES.md](ETLANTIC_0_56_DEPENDENCIES.md) — accepted exact 0.57.0 train, upstream issues #278–282 and qualification evidence
+- [../reviews/ETLANTIC_0_57_CANDIDATE_AUDIT.md](../reviews/ETLANTIC_0_57_CANDIDATE_AUDIT.md) — published hashes, matching upstream acceptance, isolated headless/gateway checks and qualification limits
 - [PHASE_0_6_VERIFICATION.md](PHASE_0_6_VERIFICATION.md) — planned fixtures, all 33 acceptance mappings, process faults, evidence layout and CI gates
 - [ETLANTIC_0_56_WHEEL_AUDIT.md](ETLANTIC_0_56_WHEEL_AUDIT.md) — exact published 0.56.0 wheel hashes, managed-service/provider findings, migration boundary, and remaining ShuETL Gate 0 evidence
 - [../IDENTITY.md](../IDENTITY.md) — host-owned authentication, membership, OIDC, session, and local static identity guidance

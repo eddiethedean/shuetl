@@ -37,7 +37,7 @@ from .postgresql import (
 )
 from .settings import ShuETLSettings
 
-SQLITE_HEAD = "005_cp1_reference"
+SQLITE_HEAD = POSTGRESQL_HEAD
 
 
 @dataclass
@@ -119,16 +119,9 @@ class LocalProviderBundle:
                     raw_url,
                     connect_args={"timeout": settings.provider_connect_timeout_seconds},
                 )
-                from sqlalchemy import inspect as inspect_engine
+                from etlantic_sqlmodel import inspect_schema
 
-                if (
-                    "etlantic_sqlmodel_schema_version"
-                    not in inspect_engine(engine).get_table_names()
-                ):
-                    raise ProviderReadinessError(
-                        "SQLite schema is not provisioned at the required head"
-                    )
-                if _read_sqlite_version(engine) != SQLITE_HEAD:
+                if not inspect_schema(engine).compatible:
                     raise ProviderReadinessError(
                         "SQLite schema is not at the required head"
                     )
@@ -339,11 +332,10 @@ def _postgresql_status_message(state: str, missing_tables: tuple[str, ...]) -> s
 
 
 def _read_sqlite_version(engine: Any) -> str | None:
-    with engine.connect() as connection:
-        row = connection.exec_driver_sql(
-            "SELECT version FROM etlantic_sqlmodel_schema_version WHERE id = 1"
-        ).fetchone()
-    return None if row is None else str(row[0])
+    """Compatibility helper; version interpretation belongs to the provider."""
+    from etlantic_sqlmodel import inspect_schema
+
+    return inspect_schema(engine).observed_version
 
 
 def _sqlite_path(value: str) -> Path:

@@ -1,152 +1,174 @@
-# ADR-0014: Role-Separated Managed Runtime on ETLantic 0.56.0
+# ADR-0014: Role-Separated Managed Runtime Composition
 
-- Status: Proposed; concrete Phase 0.6 design, implementation unqualified.
-- Date: 2026-10-07.
+- Status: Accepted implementation contract; qualification remains open.
+- Revised: 2026-10-09.
 - Governing contract: [Phase 0.6](../plans/PHASE_0_6_EXECUTION.md).
+
+2026-10-09: [coverage acceptance](../evidence/0.6/coverage-acceptance.md) closes
+U01–U05, and [installed-artifact PostgreSQL Gate 0](../evidence/0.6/README.md)
+qualifies upstream role composition. W02 now freezes the ShuETL binding and CLI
+surface below. The reference qualification package remains a test fixture;
+final-wheel, lifecycle, failure-matrix and transition qualification remain open.
 
 ## Context
 
-The published 0.56 managed backend supplies shared services and a real worker.
-Its scheduler requires public-service wiring, its worker has no readiness
-method, and its constructor's version inspector issues a non-mutating DDL
-statement on an already migrated store. The managed firing, submission and
-link operations span recoverable commit boundaries. ADR-0013 requires the
-standard host path to supply specifications and identity/resource integration
-without building ETL service graphs.
+ShuETL deploys an upstream-complete backend through isolated gateway, scheduler,
+run-worker and action-worker processes. The earlier 0.56.0 proposal relied on a
+FastAPI-owned backend, bound-method recovery discovery and a DDL exception.
+ADR-0015 replaces those choices with Gate U contracts. Version 0.56.2 fixes the
+version-reader DDL defect; 0.57.0 publishes the remaining requested surfaces.
+Acceptance is tracked in [the dependency register](../plans/ETLANTIC_0_56_DEPENDENCIES.md).
 
-## Proposed decision
+## Decision
 
-### Standard composition
+### Standard composition and ownership
 
-Use exact 0.56.0 core/FastAPI/SQLModel packages and independently installed
-0.56.0 SQL/Foundry packages when enabled. ShuETL constructs
-`etlantic_fastapi.ManagedBackendConfig` and `create_managed_backend` after
-read-only preflight. Each process owns its backend and engine, with the same
-configured database, store ID, execution profile, tenant and workspace.
-Dispose the temporary preflight engine before constructing the backend.
+Select exact published upstream packages after Gate U. ShuETL configures the
+transport-independent backend and its complete role factories. Upstream owns
+service/store assembly and runtime semantics; a provider owns SQLModel engine,
+schema and store requirements. `etlantic-fastapi` adapts the constructed service
+graph for the gateway. Runtime roles require neither the adapter nor HTTP inputs.
 
-The standard CLI is `shuetl serve --role ROLE --factory package.module:callable`.
-`ROLE` must match required `SHUETL_ROLE`. The explicitly trusted factory has
-the planned signature `factory(settings: ShuETLSettings) -> HostRuntimeBindings`.
-`HostRuntimeBindings` is a frozen ShuETL composition object, not an ETL domain
-model. Freeze its exact Python field types during W02 against installed APIs.
+ShuETL retains CLI/settings, host adapters, process/probe supervision, ownership
+of constructed handles and deployment evidence. No standard binding supplies a
+store, scheduler, runner, row callback or preparation coordinator.
+Independent backend packages supply canonical plugins/handlers; runtime bindings
+may reference their asynchronous action handlers for upstream composition.
+Preserve advanced caller-owned facade/bundle interfaces.
 
-| Binding | Meaning and role constraint |
+`shuetl serve --role ROLE --factory package.module:callable` loads explicitly
+trusted integration code after settings/import/version validation. `ROLE` must
+match required `SHUETL_ROLE`. The factory receives validated settings and returns
+a role-specific frozen composition object. `HostBindings`, `GatewayBindings` and
+`RuntimeBindings` are public frozen dataclasses exported from `shuetl`.
+`HostBindings` accepts the canonical authorizer, `Profile`, a planning-context
+factory taking `(ControlPlaneContext, Profile)`, and an optional keyword-only
+zero-argument cleanup callback. `GatewayBindings` adds a `HostIdentityAdapter`
+and an optional ASGI hook. `RuntimeBindings` adds one canonical
+`ControlPlaneContext` and an optional keyword-only `action_handlers` mapping,
+forwarded to upstream backend configuration without implementing action behavior.
+The trusted factory has signature
+`factory(settings) -> HostBindings`; its `module:callable` path must match
+`SHUETL_BINDINGS_FACTORY`.
+
+| Binding | Gateway | Scheduler / run worker / action worker |
+| --- | --- | --- |
+| Authorizer | Canonical upstream contract | Canonical upstream contract where required by the role/backend |
+| Identity | Existing `HostIdentityAdapter`; its guarded pair is authoritative | Trusted canonical scoped service/workload context; no demo/request credentials |
+| HTTP context/principal dependency | Only the adapter's guarded pair | Absent; constructor must not require dummy HTTP callables |
+| Resource/planning bridge | Canonical metadata/reference integration; no runtime secret resolution | Canonical authorized bridges appropriate to the role; no ETL callbacks |
+| Host ASGI hook | Optional, receives constructed integration | Absent and not loaded |
+| Binding cleanup | Optional cleanup for host-owned integration resources | Same ownership rule; no ownership of backend engine or ETL loop |
+
+Factories can live in separate installed modules to keep runtime startup free
+of the host authentication stack. Canonical context validity and authorization
+are checked upstream; ShuETL additionally validates the deployment scope.
+
+### Role construction
+
+The gateway adapts the upstream backend into HTTP and never constructs execution
+hosts. Headless consumers invoke the same authorized upstream service commands
+with explicit context and no synthetic request or direct store operations.
+
+The scheduler comes from an upstream factory that supplies its schedule store
+and preparation/submission/recovery collaborators on the correct store identity.
+ShuETL supplies profile, scope and a unique owner. No callback `__self__` discovery,
+fingerprint computation or firing repair is a ShuETL responsibility. Upstream
+schedule commands serve both headless and HTTP callers.
+
+Run workers use the upstream managed execution factory; action workers select
+its separate action role via `--kind actions` (`runs` is default). Upstream owns
+handler loading/trust, claims, leases, cancellation, fencing and outcomes. Separate
+processes establish concurrency and avoid long ETL ticks starving action jobs.
+ShuETL dispatches through the qualified role lifecycle interface, initially using
+one execution thread per worker; it does not assume unqualified method names.
+
+### Configuration ownership
+
+Constructor values override environment sources. Missing role/profile/provider
+fails closed; CLI/config role or worker-kind disagreement is an error. Local
+providers and static identity remain development-only. A preview uses one explicit
+scope/store/profile per configured role instance.
+
+| Setting | Ownership and planned deployment default |
 | --- | --- |
-| `authorizer` | Public ETLantic authorizer; required in all roles. |
-| `context_factory` | Public upstream context factory with guarded scope outputs; required by the managed constructor. No request authentication is performed by runtime roles. |
-| `identity_adapter` | Existing `HostIdentityAdapter`; required for gateway request identity, absent in runtime bindings. |
-| `service_context` | Upstream `ControlPlaneContext` with a trusted service/workload `Principal` and matching tenant/workspace; required for scheduler/worker, absent in gateway bindings. |
-| `planning_context_factory` | Optional upstream resource/planning bridge. May supply authorized resource references and metadata, never row transforms or a preparation coordinator. |
-| `gateway_app_factory` | Optional trusted hook accepting the constructed ShuETL integration and returning a host ASGI app; gateway-only and not invoked or imported by runtime bindings. Without it, ShuETL builds the dedicated guarded app. |
-| `close` | Optional cleanup of host-owned binding resources, invoked once after backend cleanup. No provider engine or execution loop is owned by these bindings. |
+| Store identity, tenant/workspace | Required explicit canonical values, consistent across roles |
+| Execution profile/provider configuration | Canonical upstream types, approved installed packages; preserve supported controls |
+| Worker kind | Deployment role selector: `runs` default or `actions` |
+| Owner ID | Unique role-prefixed value per process start; never a credential |
+| Poll interval | ShuETL dispatch pacing; default 1 second, finite 0.05–60 seconds |
+| Lease TTL | Upstream runtime configuration; selected role factory default; constraints validated by upstream and deployment policy; never used to implement local lease logic |
+| Probe port | Explicit loopback port per runtime process; gateway uses upstream HTTP probes |
+| Probe refresh / stale threshold | ShuETL evidence freshness; planned 1 / 5 seconds, threshold greater than refresh |
+| Shutdown grace | ShuETL supervision budget; planned 30 seconds, no forced effect interruption guarantee |
+| Artifact/resource volume | Explicit shared deployment location passed to upstream; identity/access/retention semantics upstream |
 
-Backend profile and provider plugins are selected by deployment configuration.
-Execution/resource implementations belong to independent packages. No standard
-binding accepts an alternate scheduler, worker runner, store or row callback.
-Preserve existing explicit facade/bundle injection as an advanced interface.
-Factories for different roles may live in separate installed modules so that
-runtime startup does not import a host authentication stack.
-
-### Role wiring
-
-The gateway composes the existing identity guards and mounts the upstream API;
-it never creates an execution host. Scheduler construction uses the backend's
-schedule and durable stores, execution profile and unique process owner, with
-`run_submitter=backend.api.managed_service.submit_scheduled_run` passed as a
-bound method. This preserves discovery of occurrence preparation and recovery.
-No lambda, fingerprint calculation or firing repair code belongs in ShuETL.
-
-For gateway construction, the identity adapter's guarded context/principal
-pair is authoritative; reject a supplied context factory that bypasses or
-disagrees with that pair. Runtime contexts have no gateway principal dependency.
-
-The worker uses `backend.create_execution_host(owner_id=..., ttl_seconds=...)`.
-One supervisor-owned execution thread calls `tick(service_context, limit=1)`;
-the upstream execution host owns lease heartbeats, cancellation and fencing.
-Separate processes establish concurrency. Bind service scope explicitly and
-require schedule workload identity to match the qualified upstream context
-contract. Principals are stable role identities; lease owners are unique per
-process start, including on the same machine. Owner IDs are not credentials.
-
-`shuetl serve --role worker --kind actions` selects dedicated upstream
-`backend.create_action_execution_host(worker_id=...)` processes. Default
-worker kind is `runs`; the command kind must match configured `worker_kind`.
-Action workers call public `tick(ctx, limit=1)` with independently packaged
-provider handlers selected by the approved backend profile. They share the
-same scope, resource and probe rules, but do not instantiate the run host.
-Their supervisor stops dispatch and waits for active action ticks on signals;
-no nonexistent upstream action-host `drain()` method is assumed. Handler
-loading uses public package APIs fixed in W02, never host row/action callbacks.
-
-### Configuration to freeze
-
-Keep constructor-over-environment precedence and required role/profile/provider
-settings. `identity=host` continues to describe gateway request identity;
-runtime identity comes only from `service_context`, never demo mode or a token
-copied from a request. Add the following planned preview configuration:
-
-| Setting | Default or requirement |
-| --- | --- |
-| `store_id` | Required explicit value shared by all roles. |
-| `tenant_id`, `workspace_id` | Required explicit scope matched by guarded contexts. |
-| `execution_profile` | Required installed, operator-approved upstream profile; preserve full qualified settings. |
-| `worker_kind` | `runs` by default; `actions` selects a dedicated provider-action worker, valid only for worker roles. |
-| `owner_id` | Generated unique role-prefixed value per start; any operator override must still be unique. |
-| `poll_interval_seconds` | 1 second; finite range 0.1–30. Controls supervision pacing only. |
-| `lease_ttl_seconds` | 30 seconds; integer at least 3 and poll interval less than TTL/3. Passed upstream; this does not establish a maximum tick duration. |
-| `probe_port` | Required for runtime roles; loopback-only, distinct per process. Gateway keeps upstream HTTP probes. |
-| `probe_refresh_seconds` | 1 second; positive, independent of the synchronous execution tick. |
-| `probe_stale_after_seconds` | 5 seconds; greater than refresh interval. Stale provider evidence fails readiness. |
-| `shutdown_grace_seconds` | 30 seconds; positive supervisor grace budget, not a guarantee that all effects can be interrupted. |
-| `artifact_root` / resource volume | Explicit shared location when file/artifact capabilities are advertised; identical resource identity across processes. Paths are absent from public diagnostics. |
-
-Probe settings apply only to runtime roles. Record exact aliases and public
-settings schema in W02; reject incompatible role fields before factory loading.
-Any temporary testing TTL or deadline is recorded with the result.
+Aliases use the `SHUETL_` prefix and are case-sensitive. Constructor values
+override environment values. Upstream safety constraints are authoritative;
+deployment may add documented tighter limits. Do not duplicate ETL profile,
+action catalog, retention or per-run policy models in ShuETL.
 
 ### Lifecycle and probes
 
-Use process states `starting`, `running`, `draining`, `stopped` and `failed`.
-These describe supervision, not an ETL run state. Loopback `/live` and `/ready`
-return only role/state/reason codes. Provider checks use read-only queries and
-do not renew leases, execute ticks or perform authentication. A standby
-scheduler is healthy without owning leadership; `SchedulerService.ready()`
-alone cannot prove database health. A long-running worker remains live when
-its supervisor responds and provider checks remain fresh.
+ShuETL process states are `starting`, `running`, `draining`, `stopped`, `failed`.
+Combine public non-mutating upstream runtime/provider facts with process
+responsiveness, deployment scope, probe freshness and drain state. Standby is
+not an error; a zero tick is not a health check. Keep probes responsive during
+active work and never claim/renew work or resolve credentials to inspect health.
 
-Signals fail readiness, stop dispatch and invoke upstream drain. Complete an
-already dispatched tick before closing the backend and bindings once. Drain
-does not retract an in-flight scheduler scan or lease acquisition. If grace
-expires, retain a draining/non-ready process for supervisor termination and
-record an incomplete drain. Never close the engine under its active tick or
-publish success on behalf of the terminated runtime.
+Runtime loopback `/live` and `/ready` expose only role/state/bounded reason codes.
+They are operational probes, the narrowly permitted ShuETL-owned endpoints;
+ETLantic domain routes remain exclusively in its HTTP adapter. `doctor` inspects
+configuration/provider facts and cannot prove another process's health.
+
+Signals stop dispatch and fail readiness, then request the upstream role-specific
+cooperative stop. Document already-dispatched acceptance/claim windows. Finish
+active work before closing the backend and then bindings exactly once. Grace
+expiry stays draining/non-ready and reports incomplete shutdown; the external
+supervisor owns termination. Never close resources under an active tick, alter
+leases or fabricate a terminal outcome. Use upstream status/stop contracts from
+U05 rather than infer guarantees from current `ready`/`drain` method names.
 
 ### Schema and transition
 
-The reference deploys a fresh 0.56 store at head
-`014_cp1_complete_principal_idempotency_0_56`; retain the 0.5 application/store
-separately for rollback. Runtime connections cannot own provider tables,
-inherit migration privileges or create schema objects. The sole construction
-exception is upstream `CREATE TABLE IF NOT EXISTS` for the existing version
-table, after preflight. Prove zero schema changes under real runtime grants.
-Readiness/doctor never invoke the mutating version inspector.
+Use a fresh separately provisioned store at the schema contract selected in W01;
+retain 0.5/0.55 separately for rollback. Read public provider inspection results
+for connectivity, required objects, version integrity and compatibility. Normal
+construction and inspection issue no DDL or explicit commits. Only explicit
+provider migration delegation may change schema. Runtime roles have required
+DML grants but no schema CREATE, provider-table ownership or migration-role access.
 
-This deliberately qualifies the Phase 0.6 construction exception to ADR-0010;
-its health and explicit-migration rules remain applicable. No in-place durable
-conversion or rolling upgrade is claimed. Rollback requires disabling the new
-deployment's admission/scheduling, reconciling external effects and then
-enabling the retained old deployment. Pending work is never automatically
-replayed across stores.
+The former constructor-DDL exception is removed. Version 0.57.0 supplies public
+provider inspection beyond 0.56.2's read-only version fix; consume it and qualify
+the full U04 contract. Preserve
+fresh-store handoff, one trigger authority and explicit uncertain-effect
+reconciliation; no rolling upgrade, durable conversion or cross-store replay.
 
-## Validation and acceptance
+## Alternatives
 
-W02 finalizes the signatures and records accepted decision status only after
-the installed-wheel PostgreSQL 18.6 Gate 0 fixture supports them. AC-002,
-AC-007–010, AC-025–027 and AC-032/033 verify this decision. The remaining Phase
-0.6 criteria establish the release claim. See the
-[verification plan](../plans/PHASE_0_6_VERIFICATION.md).
+- Assemble missing stores and semantic callbacks in ShuETL: rejected by ADR-0015.
+- Require dummy HTTP context factories in runtime roles: rejected; neutral
+  construction is a Gate U prerequisite.
+- Treat present `ready()`/zero tick as health: rejected; use qualified runtime
+  facts plus independent provider and process evidence.
+- Close an engine when shutdown grace expires: rejected while work is active.
 
-Revisit if these public APIs cannot support the isolated graph, bound-method
-recovery, actual runtime grants or safe lifecycle. Missing semantics stay
-upstream defects; they do not authorize a ShuETL execution or recovery engine.
+## Consequences
+
+The implementation follows qualified upstream contracts. ShuETL remains a
+deployment product without inheriting ETL semantics. The standard host path stays
+simple, while upstream library users can construct complete roles independently.
+
+## Validation
+
+Gate U/0 and AC-002/006–010/025–027/032/033 in the execution and verification
+plans qualify these requirements. Preserve the
+[0.5 contract evidence](../evidence/0.5/contracts.md) and
+[ownership baseline](../evidence/0.5/ownership.md) as regression inputs. Unit
+coverage exercises settings, imports, probes and close order; it does not
+substitute for final-wheel PostgreSQL lifecycle or failure qualification.
+
+## Revisit trigger
+
+Revisit if upstream contracts cannot support isolated roles, safe supervision,
+authorized headless parity or real runtime grants without ShuETL semantic code.

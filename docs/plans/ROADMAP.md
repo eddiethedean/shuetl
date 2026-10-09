@@ -385,14 +385,17 @@ Qualify authenticated, authorized single-tenant FastAPI deployments.
 ## 0.6 — Role-Separated Production Preview
 
 The [Phase 0.6 execution contract](PHASE_0_6_EXECUTION.md) defines the exact
-reference topology, selected ETLantic `0.56.0` baseline, process boundary,
-acceptance criteria, fault matrix, and release gate. Use the published managed
-backend, scheduler service and managed execution adapter. ShuETL supplies
-service-context wiring, process supervision and role readiness. The upstream
-file-backed CLI is not the PostgreSQL preview entry point.
-The [verification plan](PHASE_0_6_VERIFICATION.md) supplies the 33-criterion
-mapping and installed-artifact fixtures; [ADR-0014](../adr/0014-role-separated-managed-runtime.md)
-specifies the proposed role construction and supervision contract.
+reference topology, upstream contract Gate U, process boundary, acceptance criteria,
+fault matrix and release gate. ETLantic `0.57.0` publishes the #278–282 contract
+surfaces, accepted in [coverage evidence](../evidence/0.6/coverage-acceptance.md).
+Exact development pins and PostgreSQL role feasibility now pass on Python 3.11–3.13.
+ShuETL API freeze, role implementation and final release qualification remain open. ShuETL
+configures upstream-complete factories and supplies host integration, process
+supervision and operational probes. The file-backed upstream CLI is not the
+PostgreSQL preview entry point.
+The [verification plan](PHASE_0_6_VERIFICATION.md) maps Gate U and all 33 criteria;
+[ADR-0015](../adr/0015-backend-and-deployment-ownership.md) governs ownership and
+[ADR-0014](../adr/0014-role-separated-managed-runtime.md) the revised role contract.
 
 ### Outcome
 
@@ -401,12 +404,12 @@ supervised roles using one ShuETL installation.
 
 ### Deliverables
 
-- Pin ETLantic core/FastAPI/SQLModel to `0.56.0`, with SQL/Foundry on the same
-  train when enabled; qualify the composed roles on PostgreSQL `18.6`.
-- Provision a fresh 0.56 store at migration 014 and document re-enrollment,
-  unfinished-work reconciliation and rollback to the separate 0.5 store.
-  Preserve read-only health probes and qualify the exact non-mutating
-  constructor statement allowed by the execution contract.
+- Close Gate U on published upstream contracts, then select exact compatible
+  backend/HTTP/provider artifacts and qualify roles on PostgreSQL `18.6`.
+- Provision a fresh store at the selected provider schema contract; document
+  re-enrollment, reconciliation and rollback to retained 0.5/0.55. Use public
+  provider inspection and permit no DDL or explicit commits in inspection or
+  ordinary construction.
 - Add process entry points such as:
 
   ```text
@@ -417,8 +420,10 @@ supervised roles using one ShuETL installation.
 
   These commands configure and invoke upstream ETLantic roles.
 - Ensure the production gateway never starts a local execution loop.
-- Supply the standard managed graph in ShuETL; host bindings provide identity
-  and resource integration without a provider graph or execution callback.
+- Configure upstream-complete backend/role factories; role-specific host bindings
+  provide identity/resource integration without a graph or execution callback.
+  Runtime bindings contain no HTTP dependency. Headless schedule commands use
+  the same authorized upstream services as HTTP.
 - Qualify immutable CSV/PostgreSQL-to-PostgreSQL ETL with bounded transforms,
   quality, effective run settings, canonical actions and independently packaged
   extensions. Publish a per-provider pairing/write-mode support matrix.
@@ -450,6 +455,9 @@ supervised roles using one ShuETL installation.
 
 ### Exit gate
 
+- [ ] U01–U05 public contracts are published, pinned and independently qualified.
+- [ ] Neutral backend and authorized HTTP/headless schedule commands pass parity.
+- [ ] Provider inspection/construction works without DDL under real runtime grants.
 - [ ] Two gateways can accept work without creating duplicate logical
       submissions.
 - [ ] Two scheduler instances cannot create a second canonical firing.

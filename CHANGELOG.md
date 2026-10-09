@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.0 — Unreleased
+
+- Accept ETLantic 0.57.0 backend, schedule, schema and role lifecycle contracts;
+  adopt exact core/FastAPI/SQLModel pins while retaining other runtime pins.
+- Delegate schema recognition to the public SQLModel provider API.
+- Qualify separate PostgreSQL gateway/scheduler/run/action processes with
+  restricted runtime grants and real manual/native scheduled effects.
+- Add the `serve --role` CLI, trusted role bindings, provider-backed runtime,
+  loopback probes and cooperative drain/cleanup.
+- Local settings, import-isolation, probe, and shutdown-order checks pass.
+- PostgreSQL role lifecycle, process-fault, live capability, transition and
+  final-artifact qualification remain open; this version is not released.
+
 ## 0.5.0 — Secure host integration (2026-09-30)
 
 - Published to [PyPI](https://pypi.org/project/shuetl/0.5.0/) through Trusted

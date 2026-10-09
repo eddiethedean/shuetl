@@ -2,12 +2,16 @@
 
 ## Architectural statement
 
-ShuETL is an application integration layer over ETLantic's public control-plane
-and runtime packages. FastAPI is a supported host surface, and ShuETL also
-supports headless in-process composition by host applications.
+ShuETL is an application integration and deployment layer over ETLantic's public
+contracts. Released 0.5 provides the guarded FastAPI facade and provider bundles.
+The target 0.6 standard path adds headless and role deployment after upstream
+Gate U; those capabilities remain unqualified. Ownership is governed by
+[ADR-0015](../adr/0015-backend-and-deployment-ownership.md).
 
-ShuETL provides the complete supported backend experience: applications control
-canonical specifications while ETLantic/providers implement every ETL operation.
+ShuETL owns the qualified deployment experience: applications control canonical
+specifications while an independently usable ETLantic backend implements ETL
+operations and complete role construction. ShuETL selects/configures its public
+factories; it does not rebuild their semantic graph.
 The standard path requires no application-built provider graph, connector code
 or preparation coordinator. See [SPECIFICATION_CONTRACT.md](SPECIFICATION_CONTRACT.md).
 
@@ -26,7 +30,7 @@ Data Mover or another host application
           │ installs and depends on ShuETL
           ▼
 ShuETL
-  generic host composition, provider wiring, compatibility, and role setup
+  host/deployment configuration, upstream factory selection, supervision and probes
           │ depends on public contracts
           ▼
 ETLantic + provider packages
@@ -102,7 +106,8 @@ the graph from deployment configuration and exposes canonical specification/
 command access without app runtime factories. The target composition layer owns:
 
 - validated ShuETL integration settings;
-- construction or acceptance of ETLantic provider instances;
+- selection/configuration of upstream-complete backend and role factories;
+- acceptance of caller-owned providers through the existing advanced interface;
 - mounting the authoritative `etlantic-fastapi` router;
 - exposing the same configured ETLantic application services to a headless host
   without requiring an HTTP server or loopback request;
@@ -129,7 +134,12 @@ added to ETLantic before ShuETL supports it.
 - problem-detail/error representation;
 - authorization placement;
 - SSE event and resume behavior;
-- API-level idempotency and optimistic-concurrency requirements.
+- HTTP representation of upstream idempotency and optimistic-concurrency contracts.
+
+Canonical command authorization, schedule fingerprinting/timing, admission and
+recovery orchestration live in public upstream services used by both headless and
+HTTP clients. The adapter does not own their only implementation. Neutral backend
+construction has no HTTP context factory or API-object prerequisite.
 
 ShuETL may select routes, add a mount prefix or tags, and configure dependencies.
 It must not copy route implementations.
@@ -169,7 +179,7 @@ The host owns:
 - authentication and principal creation;
 - top-level middleware, CORS, trusted proxies, and TLS termination;
 - application-wide lifespan composition;
-- deployment supervision and process scaling;
+- infrastructure supervision and process scaling through an external manager;
 - selection of identity, secrets, logging, and observability integrations;
 - business-specific pipeline definitions and runtime profiles;
 - host account-to-principal/scope mapping and credential storage or credential
@@ -336,8 +346,9 @@ subclass provider persistence models to add application columns.
 
 - ETLantic provider packages own their schemas and migrations.
 - Host applications own host-specific tables and migrations.
-- ShuETL may run read-only migration compatibility checks and invoke documented
-  provider upgrade APIs.
+- ShuETL consumes public provider-owned read-only schema compatibility/status
+  and may delegate documented provider upgrade APIs; no table-layout SQL or
+  required-table inventory is implemented in its new standard path.
 - Production startup must fail clearly on an incompatible schema; it must not
   auto-generate DDL from runtime model inspection.
 
@@ -352,7 +363,7 @@ directly by ShuETL.
 
 A valid ShuETL feature should still make sense when phrased as:
 
-> “Configure or expose ETLantic capability X through FastAPI.”
+> “Configure, expose or operate upstream ETLantic capability X for a host or deployment.”
 
 If it instead reads:
 

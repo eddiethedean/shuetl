@@ -19,7 +19,6 @@ from .providers import (
     SQLITE_HEAD,
     LocalProviderBundle,
     PostgreSQLProviderBundle,
-    _read_sqlite_version,
     _sqlite_path,
 )
 from .settings import ShuETLSettings
@@ -177,7 +176,7 @@ class DoctorReport(BaseModel):
         except Exception:
             core_status = "fail"
             core_summary = "Core package versions are incompatible."
-            core_remediation = "Install the qualified ShuETL 0.5 package set."
+            core_remediation = "Install the qualified ShuETL 0.6 package set."
         checks.append(
             DiagnosticCheck(
                 id="compatibility.core",
@@ -187,7 +186,7 @@ class DoctorReport(BaseModel):
             )
         )
         train_ok = all(
-            value is None or value.split(".")[:2] == ["0", "55"]
+            value is None or value == CORE_REQUIREMENTS["etlantic"]
             for name, value in versions.items()
             if name.startswith("etlantic-")
         )
@@ -196,14 +195,14 @@ class DoctorReport(BaseModel):
                 id="compatibility.etlantic_train",
                 status="pass" if train_ok else "fail",
                 summary=(
-                    "Installed ETLantic extensions share the 0.55 train."
+                    "Installed ETLantic extensions share the exact 0.57.0 train."
                     if train_ok
-                    else "An ETLantic extension is outside the 0.55 train."
+                    else "An ETLantic extension is outside the exact 0.57.0 train."
                 ),
                 remediation=(
                     None
                     if train_ok
-                    else "Align every installed etlantic-* package to 0.55."
+                    else "Align every installed etlantic-* package to 0.57.0."
                 ),
             )
         )
@@ -246,12 +245,16 @@ class DoctorReport(BaseModel):
         else:
             available = []
 
+        role_supported = settings.role == "gateway" or (
+            settings.profile == "postgresql-preview"
+            and settings.role in {"scheduler", "worker"}
+        )
         provider_remediation = None
         if not provider_available:
             provider_remediation = (
-                "Install `shuetl[sqlite]==0.5.0`."
+                "Install `shuetl[sqlite]==0.6.0`."
                 if provider == "sqlite"
-                else "Install `shuetl[postgresql]==0.5.0`."
+                else "Install `shuetl[postgresql]==0.6.0`."
             )
         checks.append(
             DiagnosticCheck(
@@ -292,7 +295,7 @@ class DoctorReport(BaseModel):
             if not provider_available:
                 ready = "fail"
                 ready_summary = "SQLite provider dependencies are unavailable."
-                ready_remediation = "Install `shuetl[sqlite]==0.5.0`."
+                ready_remediation = "Install `shuetl[sqlite]==0.6.0`."
                 schema_status = "fail"
                 schema_summary = (
                     "SQLite schema cannot be inspected without the optional provider."
@@ -317,7 +320,7 @@ class DoctorReport(BaseModel):
                     "PostgreSQL provider dependencies are unavailable; "
                     f"TLS mode is {settings.postgresql_sslmode}."
                 )
-                ready_remediation = "Install `shuetl[postgresql]==0.5.0`."
+                ready_remediation = "Install `shuetl[postgresql]==0.6.0`."
                 schema_status = "fail"
                 schema_summary = (
                     "PostgreSQL schema cannot be inspected without the optional "
@@ -361,16 +364,19 @@ class DoctorReport(BaseModel):
                 _identity_check(settings.identity, bundle),
                 DiagnosticCheck(
                     id="role.supported",
-                    status="pass" if settings.role == "gateway" else "fail",
+                    status="pass" if role_supported else "fail",
                     summary=(
-                        "Gateway role is supported."
-                        if settings.role == "gateway"
+                        f"{settings.role.capitalize()} role is supported."
+                        if role_supported
                         else "Role is unsupported."
                     ),
                     remediation=(
                         None
-                        if settings.role == "gateway"
-                        else "Use SHUETL_ROLE=gateway."
+                        if role_supported
+                        else (
+                            "Use gateway for local or postgresql-pilot profiles, "
+                            "or postgresql-preview for scheduler and worker roles."
+                        )
                     ),
                 ),
                 DiagnosticCheck(
@@ -496,23 +502,20 @@ def _inspect_sqlite_schema(
     try:
         from etlantic_sqlmodel import (
             create_sqlite_engine,  # type: ignore[import-not-found]
+            inspect_schema,
         )
-        from sqlalchemy import inspect as inspect_engine
 
         engine = create_sqlite_engine(
             raw_url,
             connect_args={"timeout": settings.provider_connect_timeout_seconds},
         )
-        if (
-            "etlantic_sqlmodel_schema_version"
-            not in inspect_engine(engine).get_table_names()
-        ):
+        status = inspect_schema(engine)
+        if status.compatibility.value == "fresh":
             return (
                 "fail",
                 "SQLite schema is not provisioned.",
                 f"Provision the database at {SQLITE_HEAD}.",
             )
-        version = _read_sqlite_version(engine)
     except Exception:
         return (
             "fail",
@@ -522,7 +525,7 @@ def _inspect_sqlite_schema(
     finally:
         if engine is not None:
             engine.dispose()
-    if version != SQLITE_HEAD:
+    if not status.compatible:
         return (
             "fail",
             "SQLite schema is not at the required migration head.",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+import pytest
 from etlantic.control_plane.memory import MemoryAuthorizer
 from etlantic_fastapi.auth import principal_from_header, static_context_factory
 
@@ -13,6 +14,16 @@ from shuetl import (
     ShuETLSettings,
 )
 from shuetl.cli import main
+from shuetl.compatibility import installed_versions, validate_core
+from shuetl.errors import CompatibilityError
+
+
+def test_compatibility_rejects_mixed_patch_versions(monkeypatch) -> None:
+    versions = installed_versions()
+    versions["etlantic-sql"] = "0.57.1"
+    monkeypatch.setattr("shuetl.compatibility.installed_versions", lambda: versions)
+    with pytest.raises(CompatibilityError, match="etlantic-sql=0.57.1"):
+        validate_core()
 
 
 def test_settings_constructor_overrides_environment(monkeypatch) -> None:
@@ -32,6 +43,16 @@ def test_settings_constructor_overrides_environment(monkeypatch) -> None:
         "identity": "host",
         "api_prefix": "/from-init",
         "route_preset": "complete",
+        "worker_kind": "runs",
+        "bindings_factory": None,
+        "tenant_id": None,
+        "workspace_id": None,
+        "environment": None,
+        "security_domain": None,
+        "store_id": "default",
+        "probe_port": 8090,
+        "shutdown_grace_seconds": 30.0,
+        "dispatch_interval_seconds": 1.0,
         "provider_connect_timeout_seconds": 2.0,
         "postgresql_sslmode": "verify-full",
     }
@@ -86,6 +107,6 @@ def test_doctor_json_is_stable_and_redacted() -> None:
 
 def test_cli_version_and_json(capsys) -> None:
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.strip() == "shuetl 0.5.0"
+    assert capsys.readouterr().out.strip() == "shuetl 0.6.0"
     assert main(["doctor", "--format", "json"]) == 1
     assert json.loads(capsys.readouterr().out)["schema"] == "shuetl.doctor/1"

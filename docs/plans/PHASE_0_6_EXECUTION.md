@@ -2,264 +2,240 @@
 
 ## Planning status
 
-- Target release: `0.6.0`.
-- Released baseline: [`v0.5.0`](https://github.com/eddiethedean/shuetl/tree/v0.5.0)
-  at `d846c3dd15b517def5c736e831202a603ca0e080`; the
-  [release workflow](https://github.com/eddiethedean/shuetl/actions/runs/36659686930)
-  passed and published to PyPI.
-- Selected 0.6 compatibility train: published ETLantic core, FastAPI, and
-  SQLModel `0.56.0`, used as published; PostgreSQL `18.6`; Python 3.11–3.13.
-  SQL and Foundry provider packages, when enabled, also use exact `0.56.0`
-  pins. The released ShuETL 0.5.0 baseline uses ETLantic `0.55.0`.
-- Dependency selection is complete. Implementation updates the package pins,
-  lock, compatibility checks, and provider metadata to this train. Upstream
-  release-document cleanup or a later ETLantic release is not a prerequisite.
-- Status: **planning contract; production role integration is not yet
-  qualified**. Gate 0 below must pass before a 0.6 production-preview claim.
+- Target release: `0.6.0`; released baseline: ShuETL `0.5.0` at
+  `d846c3dd15b517def5c736e831202a603ca0e080`, using ETLantic `0.55.0`.
+- Revised ownership decision: [ADR-0015](../adr/0015-backend-and-deployment-ownership.md),
+  accepted 2026-10-08. [ADR-0014](../adr/0014-role-separated-managed-runtime.md)
+  defines the revised process composition requirements; upstream APIs and the
+  ShuETL binding/API freeze are recorded; installed-runtime qualification remains open.
+- **Upstream selection accepted:** exact published `0.57.0` core, HTTP adapter
+  and SQLModel artifacts now appear in development metadata/lock. The previous
+  0.56.0 selection and constructor-DDL exception are superseded.
+  [Coverage acceptance](../evidence/0.6/coverage-acceptance.md) records U01–U05 PASS;
+  [PostgreSQL evidence](../evidence/0.6/README.md) records Gate 0 feasibility.
+  Gates A–C and all 33 release criteria remain OPEN.
+- PostgreSQL `18.6` and Python 3.11–3.13 remain the target qualification matrix.
+  Select exact published core, HTTP adapter, persistence and enabled provider
+  artifacts after Gate U. Preserve their declared compatibility; pin every
+  enabled package and record hashes. No source-wheel patches or floating pins.
+- Status as of 2026-10-09: **U01–U05 accepted; exact 0.57.0 pins adopted;
+  installed-artifact PostgreSQL role feasibility PASS on Python 3.11–3.13;
+  role binding/CLI/probe/drain source implementation present**. Final-wheel,
+  lifecycle, failure, capability, transition and release gates remain OPEN.
 
-The [role-composition ADR](../adr/0014-role-separated-managed-runtime.md)
-records the proposed concrete wiring and lifecycle decisions. The
-[verification plan](PHASE_0_6_VERIFICATION.md) maps all acceptance criteria to
-fixtures, checks and evidence. These are planning documents; their proposed
-commands and paths are not claims of implemented or passing checks.
 
-This plan refines the [roadmap boundary](ROADMAP.md#06--role-separated-production-preview).
-The [0.5 contract](PHASE_0_5_EXECUTION.md) remains authoritative for host
-identity, authorization, redaction, and the PostgreSQL gateway graph. The
-[runtime design](SCHEDULING_AND_RUNTIME.md) assigns scheduling, leases,
-execution, retries, and recovery to ETLantic. Phase 0.6 adds process
-composition and evidence for those upstream behaviors; it does not implement
-their semantics in ShuETL.
-The standard-consumer and developer-control requirements in
-[ADR-0013](../adr/0013-specifications-and-backend-ownership.md) and
-[CAPABILITY_DELIVERY.md](CAPABILITY_DELIVERY.md) also apply. Existing 0.5
-evidence is the regression baseline; it does not qualify newly composed 0.56
-services or prove the broader host capability plans are already implemented.
+The [verification plan](PHASE_0_6_VERIFICATION.md) maps Gate U, Gate 0 and all
+33 acceptance criteria. Planned verification steps do not count as passing
+evidence. The
+[responsibility review](../reviews/PHASE_0_6_RESPONSIBILITY_REVIEW.md) explains the
+change; the [dependency register](ETLANTIC_0_56_DEPENDENCIES.md) records issue status.
+The [implementation and release plan](PHASE_0_6_IMPLEMENTATION.md) turns this
+contract into ordered work packages, ownership, dependencies and exit checks.
+
+## Responsibility boundary
+
+ETLantic owns canonical models, authorized application and schedule commands,
+planning, admission, idempotency, execution, leases, cancellation and recovery.
+Its providers own connector implementations, persistence, resource access,
+schema requirements and migrations. The standard backend and complete role
+factories are upstream, independent of the HTTP adapter.
+
+`etlantic-fastapi` adapts those services into canonical HTTP routes, wire schemas,
+errors and SSE. ShuETL selects/configures qualified backend factories, composes
+host identity and lifespans, and operates role entry points, process supervision,
+probes, compatibility diagnostics and deployment runbooks. It owns the tested
+operating envelope, not the ETL algorithms or canonical capability catalog.
+Hosts own authentication, membership, credential enrollment, product UI and
+business workflows. External supervisors own scaling, restarts and forced exit.
+
+Keep the 0.5 facade and caller-owned bundles compatible. The new standard path
+must not require a caller-built graph or put correctness-sensitive service
+assembly in ShuETL. An upstream gap blocks that path; it never licenses a
+ShuETL semantic replacement. Canonical services remain usable independently of
+ShuETL, and FastAPI mounting is optional for headless use.
 
 ## Supported preview boundary
 
-The reference deployment uses one version-pinned `shuetl[postgresql]` artifact,
-one qualified PostgreSQL database, and separate supervised gateway, scheduler,
-and worker processes. Its first acceptance fixture uses one explicitly
-configured tenant and workspace. Additional scopes need separate explicit role
-instances or a qualified upstream enumeration and partitioning contract.
+The reference uses one pinned `shuetl[postgresql,server]` application artifact, one
+qualified PostgreSQL store, and separately supervised gateway, scheduler,
+run-worker and action-worker processes. One explicitly configured tenant and
+workspace is the initial supported scope. Additional scopes require separate
+configured role instances or an upstream-qualified partitioning contract.
 
-Two instances of each role must be exercised to prove coordination, but this
-does not imply a general HA, multi-tenant, multi-region, or capacity claim.
-The gateway accepts authenticated control-plane requests and never executes
-pipeline work. Scheduler and worker processes use trusted service contexts;
-they never reuse a caller's host token or session credential. A SQL-only
-deployment is supported only if the selected upstream stores coordinate
-through PostgreSQL without a broker.
+Exercise two instances of every role kind for coordination. This does not imply
+general HA, multi-tenant, multi-region, capacity or exactly-once external-effect
+support. A SQL-only deployment is valid only when the upstream stores supply
+coordination without a broker. HTTP admission never executes ETL or resolves
+runtime credentials; runtime roles receive trusted service contexts.
 
 The minimum live fixture uses immutable CSV and PostgreSQL sources with a
-PostgreSQL sink, bounded declarative transforms and quality checks. It proves
-the standard application path with independently installed backend packages.
-Record every advertised source/destination/write-mode combination in a support
-matrix. Foundry and other providers can be enabled only after their ShuETL
-integration rows pass; upstream's provider matrix is input evidence. Additional
-qualified canonical controls remain accessible even when the reference fixture
-does not exercise them. HTTP/control-plane metadata may use PostgreSQL while
-file inputs and report artifacts use a separately configured shared resource
-volume; the deployment guide must provision and qualify both.
+PostgreSQL sink, bounded canonical transforms and quality rules. Each advertised
+pairing/write mode needs both upstream conformance and ShuETL integration evidence.
+Foundry and other optional providers remain unavailable in the supported profile
+until their rows pass. Qualified canonical controls remain accessible even when
+the reference fixture does not exercise them. Provision shared immutable input
+and report volumes explicitly where advertised; SQL metadata alone is insufficient.
 
 ```text
 same pinned application artifact
-├── gateway × 2: trusted host FastAPI app + ShuETL + etlantic-fastapi
-├── scheduler × 2: upstream timer leadership + schedule/durable stores
-├── worker × 2: upstream execution host + ManagedExecutionAdapter
-├── worker --kind actions × 2: upstream provider-action execution host
-└── PostgreSQL 18.6: provider-owned registry, submission, event,
-    schedule, firing, and durable-work state
+├── gateway × 2: host identity + ShuETL + etlantic-fastapi service adapter
+├── scheduler × 2: upstream-complete managed scheduler
+├── worker --kind runs × 2: upstream managed execution host
+├── worker --kind actions × 2: upstream provider-action host
+└── PostgreSQL + qualified shared resources: upstream-owned state and artifacts
 ```
 
-## Gate 0 — Qualify ShuETL composition on ETLantic 0.56.0
+## Gate U — Upstream contracts before standard-path implementation
 
-The exact published ETLantic 0.56.0 wheel audit is recorded in
-[ETLANTIC_0_56_WHEEL_AUDIT.md](ETLANTIC_0_56_WHEEL_AUDIT.md). It verifies the
-published package hashes against the upstream qualification manifest and
-identifies the remaining ShuETL process-role, migration-boundary, and target
-PostgreSQL evidence required before Gate 0 closes.
+All five surfaces are published in 0.57.0 and accepted in the coverage record.
+The candidate audit binds hashes, signatures, upstream conformance and focused
+isolated checks. The ETLantic GitHub issues remain administratively open; that
+state is separate from ShuETL acceptance and deployment proof.
+Different module names are acceptable if
+the ownership and behavioral contracts below hold.
 
-The published wheel hashes match the upstream qualification manifest, whose
-release evidence records 44/44 upstream acceptance criteria passed. This
-settles artifact selection; ShuETL's own role integration remains unqualified.
-The stale upstream candidate/support wording is retained as an audit finding
-and does not block implementation against the published release.
+| Gate | Required upstream contract | Tracking | ShuETL boundary |
+| --- | --- | --- | --- |
+| U01 | Transport-independent backend/services and provider-owned SQL graph, explicit ownership/cleanup, canonical context validation, separate HTTP adapter | [ETLantic #278](https://github.com/eddiethedean/etlantic/issues/278) | Configure factories; runtime bindings have no HTTP dependencies. |
+| U02 | Authorized schedule create/amend/pause/resume/preview/trigger/read/list/firing services shared by HTTP and headless callers | [ETLantic #279](https://github.com/eddiethedean/etlantic/issues/279) | Delegate canonical commands; no direct store or handler invocation. |
+| U03 | Complete managed scheduler factory with schedule store and explicit preparation/submission/recovery integration | [ETLantic #280](https://github.com/eddiethedean/etlantic/issues/280) | Supply scope/owner/configuration; no callback-identity-dependent semantic wiring. |
+| U04 | Provider-owned read-only schema compatibility/status, including partial/corrupt schema and required objects, reused by construction | [ETLantic #281](https://github.com/eddiethedean/etlantic/issues/281) | Render public status and apply deployment/server policy; no internal-table SQL or inventory duplication. |
+| U05 | Public role-specific runtime status and cooperative-stop guarantees for scheduler, run worker and action worker | [ETLantic #282](https://github.com/eddiethedean/etlantic/issues/282) | Own dispatch, signals, process probes, freshness and cleanup; never leases or run transitions. |
 
-| Surface in the 0.56.0 installation | Selected 0.6 composition | Required ShuETL evidence |
-| --- | --- | --- |
-| `ManagedBackendConfig`, `create_managed_backend`, and `ManagedApplicationService` | Construct the standard SQLModel service graph per process; gateway HTTP and headless submission use the same upstream service contracts. | Exact public imports, scoped authorization, shared database/store identity, and resource ownership. |
-| `etlantic.runtime.scheduler_service.SchedulerService` | Supervise public `tick`, `ready`, and `drain`; pass the bound `managed_service.submit_scheduled_run` method as `run_submitter`. | Preserve upstream discovery of occurrence preparation/recovery; prove manual/scheduled admission parity, occurrence identity, restart and duplicate-scheduler behavior. |
-| `ManagedBackend.create_execution_host()` | Use the supplied `ManagedExecutionAdapter` and real ETLantic runtime. | Observable sink effect, canonical report, leases/fencing, cancellation and recovery. |
-| `ExecutionHost` lifecycle | Provide ShuETL process readiness and signal handling around public tick/drain behavior; no upstream `ready()` method is assumed. | Provider/loop/adapter readiness, outage handling, safe drain and one-time cleanup. |
-| `ManagedBackend.create_action_execution_host()` | Dedicated worker processes with `--kind actions` execute upstream action-job ticks and independently packaged provider handlers. | Isolated live connection/catalog/preflight actions, scoped resource access and bounded failures without gateway execution. |
-| SQLModel stores and migrations | Use one engine per process and migration head `014_cp1_complete_principal_idempotency_0_56`. | PostgreSQL 18.6 coordination, managed firing/submission/link recovery and the startup boundary below. |
-| Upstream scheduler/worker CLI | Use the Python services; the published CLI uses JSON-file stores. | Installed ShuETL commands construct the PostgreSQL graph directly. |
+The 0.56.0 wheel audit and focused 0.56.2 findings remain historical evidence.
+The 0.57.0 candidate removes the headless HTTP dependency, supplies schedule
+commands/store/factory, uses explicit occurrence collaborators and exposes role
+status/drain. U04 now has a public provider inspection API beyond the #273 fix.
+Do not carry the old constructor exception forward.
 
-Gate 0 closes when the role-composition ADR records the public imports,
-signatures, service contexts, lifecycle and resource ownership, and an
-installed-wheel PostgreSQL 18.6 spike executes one manual and one scheduled
-real ETL submission through separate gateway/scheduler/worker processes.
-The ADR confines ShuETL to wiring, supervision and diagnostics; ETLantic owns
-timing, claims, leases, retries, cancellation and recovery. The remaining
-failure matrix is mandatory for the 0.6 release gate.
+Upstream capability schemas, action-handler loading, plugin trust and semantic
+conformance remain upstream responsibilities across these gates. ShuETL's support
+matrix records qualified deployment combinations separately. Do not move the
+exhaustive ETL engine test suite into ShuETL or treat upstream PASS as deployment
+qualification. Independent process/sink observations remain mandatory below.
 
-The managed schedule path is not one firing-and-submission transaction. In
-0.56 it prepares an occurrence, claims its firing with admission deferred,
-submits through the managed service, then links the firing to the durable
-submission. Restart reconciles unlinked accepted firings through upstream
-recovery. Same-engine stores remain required, but qualification must observe
-each commit boundary and canonical identity instead of assuming atomicity.
-Pass the bound submission method directly: a lambda wrapper loses the
-scheduler's automatic discovery of its preparer and recoverer. No ShuETL
-fingerprint, firing-key calculation, replay or repair loop is permitted.
+## Gate 0 — Qualify composition on the selected artifacts
+
+After Gate U, freeze exact versions/imports/signatures, canonical context sources,
+resource ownership and role lifecycle contracts in ADR-0014's qualification record.
+Use a disposable installed-wheel harness before the public CLI exists. On
+PostgreSQL 18.6 under actual runtime grants, construct the upstream backend and
+roles, run one manual and one native-scheduled submission through separate
+processes, and observe canonical reports plus sink effects. Include headless
+schedule-command/HTTP parity and read-only inspection/construction traces.
+
+Upstream owns occurrence preparation, claim, acceptance, linking and recovery.
+Qualify the selected implementation's commit boundaries; a shared engine does
+not establish atomicity. ShuETL must not compute firing keys, fingerprints,
+repair links, or depend on a specific callable's `__self__`. Tests can observe
+public boundaries without putting reconciliation code in the shipped supervisor.
+Gate 0 does not replace any of AC-001–033 or the final-artifact failure matrix.
 
 ### Fresh-store transition and startup boundary
 
-The 0.6 reference starts with a fresh, separately provisioned 0.56 database.
-An operator runs `shuetl database upgrade` with migration privileges to reach
-head `014_cp1_complete_principal_idempotency_0_56` before starting any role.
-Do not point 0.56 processes at the 0.55 store or promise resumption of its
-durable work. Retain the 0.5 application and its separate store for rollback;
-stop new admissions and native scheduling in the old deployment before
-enabling the new deployment. Re-enroll definitions, connections and schedules
-through public APIs, and reconcile unfinished work and external effects
-explicitly before resubmission. A general data converter and rolling upgrade
-remain outside this preview.
+Provision a fresh separate store using the selected provider's explicit migration
+API through `shuetl database upgrade`. Gate U/W01 records its exact schema head;
+`014_cp1_complete_principal_idempotency_0_56` is also the inspected 0.57.0 head, not an
+assumption about a future selected release. Retain the 0.5 application and 0.55
+store for rollback. Disable old admissions/native scheduling before enabling the
+new deployment, re-enroll through canonical APIs, and reconcile unfinished work
+and external effects explicitly. No automatic cross-store replay, converter or
+rolling-upgrade claim is introduced.
 
-ShuETL performs read-only schema preflight before managed-backend construction
-and rejects a fresh, behind, unknown or corrupt schema. Dispose the temporary
-preflight engine before the standard backend creates its own shared engine.
-Runtime database roles have required data privileges but no
-schema-creation/migration privileges, ownership of provider tables, superuser
-or inherited migration role. Qualification uses an actual connection under
-these grants and executes a real submission and worker write, not only a
-constructor under a session-switched read-only role.
-The 0.56 constructor's version inspector issues `CREATE TABLE IF NOT EXISTS`
-for the already-provisioned version table. Accept this exact upstream
-statement during construction, provided qualification proves it changes no
-schema state under the runtime role. This is a narrow exception to the former
-blanket no-DDL startup requirement; it grants no permission to create or
-upgrade tables. Readiness and doctor use ShuETL's read-only inspection path
-and never call that upstream inspector or reconstruct the backend. Capture
-schema state and executed statements in the acceptance evidence.
+Use public provider inspection before admission and construction. Reject fresh,
+behind, partial, unknown and corrupt schemas with safe diagnostics. Neither
+inspection nor normal construction may issue DDL or explicit commits. Any temporary
+inspection resources have an explicit owner and are closed on success/failure.
+Runtime grants allow required DML but exclude schema CREATE, table ownership,
+superuser and inherited migration privileges. Prove this on actual runtime
+connections, not only a session-switched read-only constructor. Capture SQL and
+schema snapshots; normal runtime writes are separate from read-only inspection.
 
 ## Process and configuration contract
 
-The user-facing command is `shuetl serve --role gateway|scheduler|worker`.
-`SHUETL_ROLE` remains required, and the command argument must match it; neither
-source silently overrides the other. A new explicit `postgresql-preview`
-profile accepts only the PostgreSQL provider and one of the three roles.
-The released `postgresql-pilot` profile stays gateway-only, while memory,
-SQLite, and `development-static` remain local-only. Missing or unsupported
-configuration fails before host module loading or database access.
+`shuetl serve --role gateway|scheduler|worker` must match required `SHUETL_ROLE`.
+The new `postgresql-preview` profile supports these roles with PostgreSQL only.
+The existing `postgresql-pilot` remains gateway-only; memory, SQLite and
+`development-static` remain local-only. Missing/unsupported configuration fails
+before host module loading or database access. Constructor values continue to
+override environment settings except that a conflicting explicit CLI role is
+an error, not a silent override.
 
-The standard CLI takes an explicit `--factory package.module:callable` from an
-installed trusted integration package. The factory receives validated settings
-and returns typed identity/authorization/resource bindings, not a provider
-graph or runner. ShuETL constructs the standard managed backend and selected
-role. Gateway bindings include `HostIdentityAdapter` and an optional host-app
-composition hook; runtime bindings include an upstream scoped service context.
-Scheduler and worker bindings do not load the gateway hook or construct a
-FastAPI app. Adopters supply identity, membership and resource bridges;
-ShuETL supplies submission wiring and runtime construction. Existing explicit
-facade/provider injection remains available as an advanced API.
+An explicit trusted `--factory package.module:callable` receives validated settings
+and returns typed host identity/authorization/resource bindings. Gateway bindings
+contain `HostIdentityAdapter`, its guarded HTTP context/principal pair, and an
+optional ASGI composition hook. Runtime bindings contain a trusted canonical
+service context and applicable resource/policy bridges, with no Request, HTTP
+context factory, principal dependency, or gateway hook. The upstream headless
+package must be independently installable without the HTTP adapter even though
+ShuETL retains FastAPI for its existing gateway interface.
 
-Worker commands additionally select `--kind runs|actions` (default `runs`),
-matched to their configured worker kind. Action workers use the same trusted
-bindings, schema, probes and unique ownership rules, but call the upstream
-action execution host instead of a pipeline runner. Required provider actions
-have dedicated processes so a long ETL tick cannot starve their queue. Their
-handlers come from independently installed backend packages. A host does not
-supply connector-action algorithms. Preview or provisioning is exposed only
-when separately qualified; provisioning is never a preflight side effect.
+ShuETL passes bindings/configuration into upstream backend and role factories;
+these own the complete graph and semantic collaborator assembly. The standard
+host supplies no stores, row callbacks, connectors, scheduler or runner. Advanced
+caller-owned injection remains available. Host bindings own only their integration
+resources; upstream backend handles own their engines. Cleanup proceeds after
+active work finishes, backend first and bindings second, once per owned resource.
 
-The proposed factory result and role configuration are specified in ADR-0014.
-Freeze their public signatures and acceptance mapping before implementation.
-Parse and validate the import reference, settings, role and package versions
-before invoking trusted factory code; perform schema preflight before runtime
-construction. Importing explicitly selected trusted code is an operator trust
-decision, not a plugin sandbox. Import/provider errors are redacted at the CLI.
+Workers select `--kind runs|actions`, default `runs`, matching configured
+`worker_kind`. Use dedicated upstream action hosts and independently packaged
+handlers for connection/catalog/schema/preflight work. Preserve upstream loading,
+trust, resource and deadline rules. Preview is separately qualified read-only
+execution; provisioning is a separately authorized mutation. No gateway fallback.
 
-The existing `SHUETL_IDENTITY=host` mode describes gateway request identity,
-not scheduler or worker identity. The role-composition ADR must define how a
-trusted host supplies service principals and scope for runtime roles, validate
-that selection independently of request credentials, and preserve the 0.5
-gateway settings contract. Use ETLantic `Principal` and `ControlPlaneContext`
-with explicit tenant/workspace scope. `development-static` is never a runtime-role
-shortcut.
-
-| Role | May construct | Must reject or omit |
-| --- | --- | --- |
-| Gateway | Guarded host FastAPI app, upstream API router, PostgreSQL control-plane stores. | Scheduler or worker loop, pipeline runner, runtime secret resolution, local provider fallback. |
-| Scheduler | Upstream scheduler with schedule and durable stores on the same engine, bound managed submit method, explicit scoped service context, unique process owner. | Host ASGI app, request credentials, pipeline execution, file-backed CLI stores. |
-| Worker | Upstream execution host with durable store, explicit scoped service context, real runner, unique process owner. | Host ASGI app, no-op runner, scheduler timer calculation, file-backed CLI stores. |
-
-Each role validates the exact installed package train, database TLS setting,
-server version, schema head, and required tables before becoming ready.
-Migrations remain a separate `shuetl database upgrade` operator step with
-separate privileges. Provider construction, startup, readiness, and shutdown
-must not change schema state; construction permits only the version-table
-statement documented above, while health inspection remains free of DDL.
-Keep gateway request identity, service identity, and ETLantic execution
-credentials distinct in configuration, diagnostics, logs, and durable payloads.
-
-`postgresql-pilot` remains a gateway-only configuration/API profile under the
-new package train; this does not promise compatibility with a 0.55 database.
-Requalify existing settings, identity guards, routes, errors, SSE and local
-bundle behavior on 0.56 and use separately provisioned stores. The old 0.5
-binary continues to own its original store. No dual train is loaded in one
-interpreter and no migration command silently converts old durable work.
+ADR-0014 defines configuration ownership and binding requirements. Freeze exact
+public types after Gate U. Validate import syntax/settings/version/role before
+calling trusted factory code, and use provider preflight before role admission.
+Explicit trusted factory loading is not a sandbox; redact import/provider errors.
+`identity=host` describes gateway identity; runtime identity is a trusted scoped
+service/workload Principal, never a copied request token or local demo identity.
+Canonical context validity and per-command authorization are enforced upstream;
+ShuETL additionally rejects deployment scope mismatches.
 
 ## Health and shutdown contract
 
-- Liveness means the supervised process is running and its loop is responsive.
-  Readiness means its own validated provider graph and upstream role are able
-  to accept the work assigned to that role. A healthy gateway alone never
-  proves that a scheduler or worker is ready.
-- The gateway retains the authoritative upstream `/health` and `/ready`
-  behavior for the mounted API. Runtime roles expose loopback-only `/live`
-  and `/ready` operational probes on an explicit per-process port; these
-  contain only role, lifecycle state and bounded reason codes. Probes return
-  200 when satisfied and 503 otherwise. `doctor` inspects configuration and
-  schema, never claims that a different running process is healthy.
-- Runtime readiness requires validated scope/adapter, a running supervisor,
-  fresh read-only provider inspection and no drain state. Scheduler `ready()`
-  is only its drain flag, so it cannot substitute for a database probe. A
-  scheduler waiting for another owner's leader lease can remain ready. A
-  zero-result tick proves neither successful admission nor provider health.
-- A worker's supervisor/probe remains responsive during a synchronous upstream
-  tick. One execution thread invokes `tick(ctx, limit=1)`; ETLantic owns its
-  heartbeat/cancellation monitor. Probe checks never claim work or mutate
-  durable state. Long active work is not a stalled process solely because
-  no new tick has completed.
-- SIGTERM/SIGINT mark the process draining, fail readiness, stop dispatching
-  new ticks/requests and invoke upstream drain. An already dispatched tick may
-  still claim or finish work; record this window instead of promising immediate
-  revocation. Await that tick before closing the backend once. An exceeded
-  grace period reports an incomplete drain and leaves termination to the
-  supervisor; never dispose an engine under active execution or fabricate a
-  terminal result. Restart follows upstream lease/effect recovery.
-- Preserve the `shuetl.doctor/1` fields and redaction behavior for the 0.5
-  pilot. A breaking doctor shape needs a new schema identifier and its own
-  compatibility tests. Process probes must not expose URLs, credentials,
-  principal values, or raw provider exceptions.
+- ShuETL owns process states `starting`, `running`, `draining`, `stopped`, `failed`.
+  These never replace canonical ETL run/attempt states. External supervisors own
+  restarts, scaling and forced termination.
+- Readiness combines upstream role/provider facts, validated scope/configuration,
+  a responsive supervisor, fresh inspection evidence and no drain state. Standby
+  leadership is not failure; a zero-result tick is not a health proof. A healthy
+  gateway does not prove that another role is running or ready.
+- The gateway retains upstream HTTP `/health` and `/ready`. Runtime roles expose
+  loopback `/live` and `/ready` on distinct configured ports, returning only role,
+  process state and bounded reasons, with 200/503 status. These operational probes
+  are the sole scoped exception to ShuETL's no-domain-route boundary. `doctor`
+  checks configuration/provider facts, never a different process's health.
+- Use public non-mutating provider/runtime inspection without claiming work,
+  renewing leases or resolving runtime credentials. A worker supervisor/probe
+  remains responsive during active upstream execution; long work alone does not
+  establish a stall. Tick dispatch and upstream lifecycle signatures are frozen
+  only after U05; the initial deployment uses one execution thread per worker.
+- Signals fail readiness and stop new dispatch/requests, then invoke each role's
+  upstream cooperative-stop contract. An already dispatched operation may still
+  claim/accept/finish work; document that window. Await active work before backend
+  and binding cleanup. Grace expiry remains draining/non-ready and is reported
+  as incomplete; leave termination to the external supervisor. Never dispose an
+  active engine, mutate lease/run state or fabricate a terminal outcome.
+- Preserve `shuetl.doctor/1` compatibility and redaction for the pilot. A breaking
+  report shape needs a new schema and compatibility tests. Public probes/logs
+  exclude credentials, URLs, principal values and raw provider exceptions.
 
 ## Acceptance criteria
 
+
 | ID | Required result |
 | --- | --- |
-| AC-001 | Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.0`, Python 3.11–3.13, exact ETLantic core/FastAPI/SQLModel `0.56.0` pins (and SQL/Foundry `0.56.0` when enabled), the PostgreSQL extra, and migration head `014_cp1_complete_principal_idempotency_0_56`. |
-| AC-002 | An installed-artifact Gate 0 probe executes one real scheduled and one manual submission through the selected PostgreSQL-backed upstream roles; the worker produces an observable ETLantic report rather than no-op completion. |
+| AC-001 | Source, wheel, lock, and clean-wheel metadata identify ShuETL `0.6.0`, Python 3.11–3.13, the exact published ETLantic/provider versions and provider schema contract selected after Gate U, and all enabled optional packages. No floating versions, patched wheels, or assumed 0.56.0 compatibility. |
+| AC-002 | After Gate U, an installed-artifact Gate 0 probe executes one real scheduled and one manual submission through upstream-complete PostgreSQL backend/role factories; canonical reports and independent sink effects are observed. |
 | AC-003 | A single built application artifact starts each of the three roles; wrong/missing role, mismatched `--role` and `SHUETL_ROLE`, local provider, demo identity, missing runner, or incompatible package fails before serving or claiming work. |
-| AC-004 | Existing gateway/local settings, facade, identity, HTTP/SSE and doctor contracts are requalified on 0.56 with fresh stores; `postgresql-pilot` stays gateway-only and no implicit preview or 0.55-store upgrade occurs. |
+| AC-004 | Existing gateway/local settings, facade, identity, HTTP/SSE and doctor contracts are requalified on the selected upstream artifacts with fresh stores; `postgresql-pilot` stays gateway-only and no implicit preview or 0.55-store upgrade occurs. |
 | AC-005 | Gateway construction and request handling never start scheduler/worker ticks, import the runner, resolve pipeline secrets, or execute a pipeline. |
-| AC-006 | Scheduler and worker construct no FastAPI app or host credential verifier; each receives a trusted, scope-bound ETLantic service context and a unique owner ID. |
-| AC-007 | All roles use the same provider schema/store identity. Scheduler passes the bound `submit_scheduled_run` method; crash/retry proofs cover occurrence preparation, firing claim, managed acceptance and linking on same-engine stores without assuming one atomic commit. |
-| AC-008 | Every role performs read-only compatibility/connectivity/schema preflight and health inspection. Backend construction under a runtime role without schema-creation privileges may issue only the documented upstream version-table `CREATE TABLE IF NOT EXISTS`, with no schema change; missing/incorrect schema fails before construction. Migration is possible only through the explicit operator command. |
-| AC-009 | Role-local liveness/readiness report startup, running, draining, provider outage, and schema mismatch without false success or secret-bearing output. |
-| AC-010 | SIGTERM/SIGINT fail readiness, stop new request/tick dispatch, invoke drain and await in-flight work before one-time cleanup. Evidence distinguishes in-flight acceptance/claim windows and grace-period expiry; no concurrent engine disposal or fabricated terminal result occurs. |
+| AC-006 | Scheduler and workers require no FastAPI app, Request, HTTP context factory, principal dependency or host credential verifier. Each receives a trusted scope-bound canonical service context and a unique process owner; upstream headless installation works without the HTTP adapter. |
+| AC-007 | All roles use the same provider schema/store identity. The upstream managed scheduler factory supplies its schedule store and explicit preparation/submission/recovery collaborators. Standard consumers cannot disable recovery by wrapping a callback. Crash/retry proofs cover each canonical commit boundary without assuming atomic acceptance/linking. |
+| AC-008 | All roles consume public provider-owned read-only connectivity/schema compatibility inspection. Inspection and normal backend construction issue no DDL or explicit commits; missing, partial, behind, unknown or corrupt schema fails before admission. Real runtime grants exclude schema creation/ownership; only the explicit operator migration command changes schema. |
+| AC-009 | Role-local liveness/readiness combine upstream runtime/provider facts with process state and evidence freshness; startup, standby, active execution, draining, outage and mismatch produce truthful redacted responses. |
+| AC-010 | SIGTERM/SIGINT fail readiness, stop new request/tick dispatch, invoke the upstream role-specific cooperative-stop contract and await in-flight work before one-time cleanup. Evidence distinguishes dispatched claim windows and grace expiry; ShuETL never changes lease/run state or disposes an engine beneath active execution. |
 | AC-011 | Two gateway processes given the same scope and idempotency key yield one canonical accepted submission after concurrent requests and retry. |
 | AC-012 | Killing a gateway before versus after durable acceptance produces the documented ambiguous-client/committed-store outcomes; retry with the same idempotency key recovers the canonical identity. |
 | AC-013 | Two scheduler processes scanning one due schedule create exactly one canonical firing and linked durable submission for the logical key. |
@@ -274,23 +250,23 @@ interpreter and no migration command silently converts old durable work.
 | AC-022 | Container and ordinary supervisor examples use the same digest-pinned artifact, separate processes, one PostgreSQL service, and no broker; startup and shutdown commands are reproducible. |
 | AC-023 | The release gate and hosted Python 3.11–3.13 matrix run real PostgreSQL, subprocess failure injection, clean-wheel role smoke checks, artifact/OpenAPI/boundary checks, and reject skipped required cases. |
 | AC-024 | A Phase 0.6 evidence ledger maps every AC to an exact command, observed result, source commit, upstream version, environment, artifact, and limitation. |
-| AC-025 | The reference deployment provisions a fresh 0.56 store, rejects use of the 0.55 store, documents re-enrollment and reconciliation of unfinished work, and demonstrates rollback to the retained 0.5 application/store without concurrent trigger authority or automatic replay of uncertain effects. |
-| AC-026 | The trusted factory receives validated settings and returns only typed host bindings. ShuETL constructs the managed graph, scheduler callback and execution host; malformed bindings, wrong scope, demo identity and invalid role-specific fields fail with redacted diagnostics. |
-| AC-027 | An independently installed reference host changes canonical source/destination/transform/quality/schedule specifications and executes real manual/scheduled ETL without constructing stores, implementing connectors or supplying runtime callbacks. Headless and HTTP paths preserve canonical identities and outcomes. |
+| AC-025 | The reference deployment provisions a fresh store for the selected upstream schema, rejects use of the 0.55 store, documents re-enrollment/reconciliation, and demonstrates rollback to the retained 0.5 application/store without concurrent trigger authority or automatic replay of uncertain effects. |
+| AC-026 | The trusted factory returns role-specific host bindings. Gateway bindings alone contain HTTP identity/context and ASGI hooks; runtime bindings contain canonical service identity and resource/policy bridges. ShuETL configures upstream backend/role factories without constructing semantic collaborator graphs. Malformed bindings, wrong scope, demo identity and role-field mismatches fail with redacted diagnostics. |
+| AC-027 | An independently installed reference host changes canonical source/destination/transform/quality/schedule specifications and executes manual/scheduled ETL without stores, connectors or runtime callbacks. HTTP and headless schedule create/amend/pause/resume/preview/trigger/read/list/firing services preserve authorization, revisions and identities without synthetic requests or direct store access. |
 | AC-028 | Every advertised provider pairing/write mode has live source/sink evidence, enabled-writer policy, alias/upsert-key and schema-drift cases. The minimum CSV/PostgreSQL-to-PostgreSQL fixture proves select/drop/rename, casts, filters, scalar expressions, deterministic deduplication and schema/required/range/set quality rules, including failing quality without a falsely successful publication. |
-| AC-029 | Canonical schema/control discovery, complete option round trips and per-run effective configuration agree with live behavior. Missing provider/policy/authorization/state requirements produce upstream diagnostics; supported controls are accessible without a ShuETL-only restriction. |
+| AC-029 | Canonical upstream schema/control discovery, complete option round trips and effective per-run configuration agree with live behavior. ETLantic owns authorization, capability and policy decisions; ShuETL reports deployment support separately and preserves qualified options without a competing catalog or policy model. |
 | AC-030 | Live failed-work retry and deliberate new-run commands preserve upstream attempt/run/lineage identities and admission policy. An independently packaged example extension executes without host ETL code or ShuETL core changes. |
 | AC-031 | Advertised file-input/report-artifact support proves immutable checksums, owner/version access, changed/missing/expired input, retry retention, cross-worker availability and bounded cleanup; gateway artifact delivery does not expose runtime credentials or arbitrary filesystem paths. |
-| AC-032 | Runtime probe state remains accurate during active execution, idle/standby, outage, recovery and drain; stale inspection fails readiness. Probe output, upstream runtime logs and exception handling pass seeded-secret redaction checks without hiding process failure. |
+| AC-032 | Runtime probes remain accurate during execution, idle/standby, outage, recovery and drain by combining public upstream status with process state. Stale evidence fails readiness; zero-result ticks do not prove health. Probe output, upstream logs and error handling pass seeded-secret redaction checks without hiding failure. |
 | AC-033 | Dedicated action workers perform live connection/catalog/schema/preflight operations through public upstream jobs without gateway secret resolution. Scope, resource rotation/revocation, deadline, outage and stale-preflight cases preserve canonical action results. Advertised sample preview is bounded/read-only with cleanup; provisioning requires separate explicit mutation authorization and qualification. |
+
 
 ## Verification matrix
 
-The [verification plan](PHASE_0_6_VERIFICATION.md) assigns AC-001–AC-033 to
-planned files, deterministic fixtures and evidence outputs. Every criterion
-requires an executed proof from the final artifact. All 33 remain unqualified
-for ShuETL 0.6; upstream 44/44 evidence and local PostgreSQL 14 constructor
-smokes do not mark any of these rows passed.
+The [verification plan](PHASE_0_6_VERIFICATION.md) maps every criterion to fixtures
+and evidence owners. All 33 criteria and Gates U/0 remain unqualified. Existing
+upstream 0.56 evidence and SQLite probes do not establish PostgreSQL/process
+acceptance. Required cases must run from the final selected artifacts without skips.
 
 ## Required failure-injection evidence
 
@@ -314,63 +290,50 @@ after a commit but before its client received the outcome.
 
 ## Verification and implementation order
 
-1. **Adopt the selected artifacts.** Pin core/FastAPI/SQLModel to `0.56.0`
-   and enabled SQL/Foundry providers to the same version. Update the lock,
-   compatibility inventory, migration head and required-table metadata using
-   the wheel audit. Preserve its distinction between upstream evidence and
-   ShuETL qualification.
-2. **Freeze process composition.** Finalize ADR-0014 for the trusted host factory,
-   generic supervisor of upstream service ticks, service-context source, and
-   scheduler/worker probe transport, managed-service callback wiring and the
-   narrow construction exception. Keep the 0.5 settings precedence and
-   security boundary explicit. Gate 0 uses a disposable installed-wheel harness
-   before the public CLI exists, so it does not depend on step 3.
-3. **Implement configuration and role graphs.** Add the preview profile,
-   role-specific validation, entry points, and separate provider ownership.
-   Extend compatibility, doctor, artifact, and boundary checks without adding
-   a ShuETL domain model or provider schema.
-4. **Implement role lifecycle.** Wire upstream startup, readiness, drain,
-   signals, and cleanup; keep the gateway ASGI path separate from runtime
-   process imports and secrets.
-5. **Prove cross-process outcomes.** Run the acceptance and fault matrix on
-   disposable PostgreSQL 18.6 (or a newly qualified version), with actual
-   ETL execution and an instrumented sink effect.
-6. **Package the reference deployment.** Supply container and process
-   supervisor recipes, version/digest pinning, configuration and migration
-   order, fresh-store transition/rollback, restart behavior, and at-least-once
-   effect guidance.
-7. **Release gate.** Build clean artifacts, run all required CI jobs, record
-   evidence for the exact commit, review security and durability findings, and
-   publish only after every criterion and Gate 0 passes.
+1. **Close Gate U.** Qualify published upstream contracts U01–U05 and record their
+   evidence, exact artifact versions and public signatures. No ShuETL workaround
+   closes a missing semantic/provider contract.
+2. **Select artifacts and close Gate 0.** Update pins/lock and compatibility records,
+   then prove standard role construction under real runtime grants with manual,
+   scheduled and headless-command parity fixtures. Preserve the 0.5 regression
+   baseline and separately provisioned store transition.
+3. **Implement deployment configuration and lifecycle.** Add role-specific host
+   bindings, upstream factory selection, process entry points, supervisor/probes,
+   cleanup and redacted diagnostics. Preserve advanced facade/bundle interfaces.
+4. **Prove live behavior and failures.** Exercise the support matrix and separate
+   process faults with independent sink observations on PostgreSQL 18.6. Upstream
+   owns semantic conformance; ShuETL owns installed deployment integration.
+5. **Package and release only qualified artifacts.** Record container/supervisor
+   recipes, fresh-store rollback, hashes, CI results and all acceptance evidence.
+   Gates U, 0 and A–C plus AC-001–033 must pass with no unresolved required defect.
 
 ### Implementation work packages
 
 | Package | Depends on | Concrete output and completion evidence |
 | --- | --- | --- |
-| W01 — compatibility and schema | Selected published artifacts | Update `pyproject.toml`, `uv.lock`, compatibility diagnostics, PostgreSQL and SQLite inventories, installed metadata and normalized upstream OpenAPI; AC-001/004/008. |
-| W02 — contract and Gate 0 | W01 | Finalize ADR-0014 and public signatures; disposable PostgreSQL 18.6 installed-wheel role harness with actual runtime grants, manual/scheduled effects, bound-method recovery and scoped contexts; AC-002/007/026. |
-| W03 — settings and standard construction | W02 | Preview settings and trusted binding loader; standard managed graph plus role factories owned by ShuETL, negative configuration/security matrix; AC-003/005/006/026/027. |
-| W04 — supervisor and probes | W03 | Serve entry points, unique owner IDs, loopback operational probes, one-item worker ticks, signals/drain/cleanup and redacted error paths; AC-009/010/019/021/032. |
-| W05 — live capability qualification | W03/W04 | Independent reference host, provider support matrix, immutable resources, transform/quality/effective-settings/run-actions/extension fixtures and dedicated provider-action workers; AC-020/027–031/033. |
-| W06 — process failure matrix | W04/W05 | Deterministic separate-process contention and commit-boundary faults, replay identities, stale fencing and cancellation effects; AC-011–019 plus AC-007/010/021/031/032. |
-| W07 — deployment and transition | W05/W06 | One-artifact container/supervisor recipes, resource-volume/credential/grant setup, fresh-store handoff and rollback rehearsal; AC-022/025. |
-| W08 — evidence and release | W01–W07 | Extend evidence/release/clean-wheel scripts and CI for 33 criteria, final wheel subprocess runs on Python 3.11–3.13/PostgreSQL 18.6, reviewed hashes/limitations and no skipped required cases; AC-023/024 and every release row. |
+| W00 — upstream contract gate | U01–U05 issues and published artifacts | Public backend, schedule services/factory, provider inspection and lifecycle evidence; isolated installations prove Gate U; no ShuETL semantic substitutes. |
+| W01 — compatibility and schema | W00 | Exact metadata/pins/lock and provider-owned schema requirements/status, regression/OpenAPI inventory; AC-001/004/008. |
+| W02 — contract and Gate 0 | W01 | Freeze ADR-0014 signatures; installed-wheel PostgreSQL 18.6 harness with runtime grants, complete scheduler, manual/scheduled effects and headless parity; AC-002/006/007/026/027. |
+| W03 — settings and standard construction | W02 | Role-specific bindings and upstream factory selection, deployment scope/compatibility checks and public inspection; no graph algorithms, handler copies or schema SQL; AC-003/005/006/026/027. |
+| W04 — supervisor and probes | W03, U05 | CLI, owner IDs, dispatch/signals, fresh operational probes and one-time cleanup around upstream role contracts; AC-009/010/019/021/032. |
+| W05 — live capability qualification | W03/W04 | Independent host and extension fixtures, upstream conformance references plus installed pairing/mode/resource/command/action-worker proofs; AC-020/027–031/033. |
+| W06 — process failure matrix | W04/W05 | Separate-process contention and commit-boundary faults, canonical recovery/fencing/cancellation observations; AC-011–019 and AC-007/010/021/031/032. |
+| W07 — deployment and transition | W05/W06 | Same-artifact recipes, grants/resources, fresh-store handoff and rollback; AC-022/025. |
+| W08 — evidence and release | W00–W07 | Gate U/0 and 33-criterion ledger, final-wheel hosted matrix, no skipped required cases; AC-023/024 and every release row. |
 
-Update the evidence checker series map and expected criterion count together;
-its current 0.5 mappings do not validate 0.6. Do not create placeholder PASS
-records while implementing these packages.
+Update the evidence checker series map, Gate U bindings, expected criterion count
+(33), approved requirement text and release script together during implementation.
+Do not create placeholder PASS records or rewrite historical release evidence.
 
 ## Explicit non-goals and stop conditions
 
-- No ShuETL schedule calculator, worker engine, lease/fencing implementation,
-  retry policy, migration, or ETLantic HTTP route copy.
-- No anonymous or development-static production role, host token reuse by
-  workers, implicit runner, memory/file fallback, or successful no-op execution.
-- No multi-region, disaster recovery, unbounded capacity, formal SLA, forced
-  process termination, or exactly-once external-effect claim. Backup/restore,
-  rolling upgrades, broad role-to-role diagnostics, and capacity qualification
-  remain Phase 0.7 work.
-- Stop the 0.6 release if the selected published `0.56.0` train cannot provide
-  a real runner, cross-process PostgreSQL coordination, safe drain/fencing, or a
-  reproducible installed-artifact reference topology. A green unit suite or
-  configured workflow alone does not satisfy this contract.
+- No ShuETL schedule calculator, semantic graph factory, lease/fencing/retry engine,
+  run state machine, schema inspector over provider tables, migration implementation,
+  canonical capability catalog or ETLantic domain route copy.
+- No HTTP request/context factory in runtime bindings, demo production identity,
+  copied host tokens, implicit runner, memory/file fallback or successful no-op work.
+- No broader HA, multi-region, disaster recovery, capacity/SLA, forced-stop or
+  exactly-once external-effect claim. Broader operational qualification stays in 0.7.
+- Stop standard-path implementation at an unmet Gate U contract. Stop release if
+  Gate 0, any required acceptance row or final-artifact gate fails. Upstream issue
+  closure, green unit tests or configured CI alone are insufficient.

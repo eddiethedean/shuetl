@@ -8,6 +8,8 @@ import json
 import re
 import sys
 import tomllib
+import xml.etree.ElementTree as ET
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,8 +23,11 @@ PLAN_BY_SERIES = {
     "0.3": ROOT / "docs/plans/PHASE_0_3_EXECUTION.md",
     "0.4": ROOT / "docs/plans/PHASE_0_4_EXECUTION.md",
     "0.5": ROOT / "docs/plans/PHASE_0_5_EXECUTION.md",
+    "0.6": ROOT / "docs/plans/PHASE_0_6_EXECUTION.md",
 }
-CRITERION_COUNTS = {"0.2": 36, "0.3": 42, "0.4": 38, "0.5": 34}
+CRITERION_COUNTS = {"0.2": 36, "0.3": 42, "0.4": 38, "0.5": 34, "0.6": 33}
+AUDITED_SERIES = {"0.4", "0.5", "0.6"}
+PLACEHOLDERS = {"pending", "open", "tbd", "todo", "unknown", "-"}
 REDACTION_PATTERNS = (
     r"/Users/",
     r"/Volumes/",
@@ -117,7 +122,10 @@ def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str,
     for criterion, proof in data.items():
         fields = ("command", "artifact", "requirement", "provenance", "limitation")
         if not isinstance(proof, dict) or not all(
-            isinstance(proof.get(field), str) and proof[field] for field in fields
+            isinstance(proof.get(field), str)
+            and proof[field].strip()
+            and proof[field].strip().lower() not in PLACEHOLDERS
+            for field in fields
         ):
             errors.append(f"malformed current proof binding: {criterion}")
             continue
@@ -168,6 +176,182 @@ def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str,
     return result
 
 
+def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
+    """Require executed upstream acceptance and PostgreSQL role evidence."""
+    coverage = evidence_dir / "coverage-acceptance.md"
+    if not coverage.is_file():
+        errors.append("missing Phase 0.6 upstream coverage acceptance")
+    else:
+        decisions = [
+            [cell.strip() for cell in line.strip("|").split("|")]
+            for line in coverage.read_text(encoding="utf-8").splitlines()
+            if re.match(r"\| U\d\d\b", line)
+        ]
+        identifiers = [row[0].split()[0] for row in decisions]
+        if (
+            set(identifiers) != {f"U{number:02d}" for number in range(1, 6)}
+            or len(identifiers) != 5
+            or any(row[-1] != "PASS" for row in decisions)
+        ):
+            errors.append("Phase 0.6 requires exactly five PASS decisions U01–U05")
+    for name in ("gate-u.xml", "gate-u-provider.xml"):
+        try:
+            root = ET.parse(evidence_dir / name).getroot()
+            cases = list(root.iter("testcase"))
+            suites = list(root.iter("testsuite"))
+            if (
+                not cases
+                or any(
+                    case.find(tag) is not None
+                    for case in cases
+                    for tag in ("failure", "error", "skipped")
+                )
+                or any(
+                    int(suite.get(field, "0")) != 0
+                    for suite in suites
+                    for field in ("failures", "errors", "skipped")
+                )
+            ):
+                errors.append(f"required Phase 0.6 results are incomplete: {name}")
+        except (OSError, ET.ParseError, ValueError):
+            errors.append(f"cannot read required Phase 0.6 results: {name}")
+    try:
+        gate0 = json.loads(
+            (evidence_dir / "postgresql-gate0.json").read_text(encoding="utf-8")
+        )
+        roles = gate0.get("roles", []) if isinstance(gate0, dict) else []
+        role_rows = roles if isinstance(roles, list) else []
+        role_map = {
+            role.get("started"): role
+            for role in role_rows
+            if isinstance(role, dict) and isinstance(role.get("started"), str)
+        }
+        expected_roles = {"gateway", "scheduler", "run-worker", "action-worker"}
+        gate0_good = isinstance(gate0, dict) and (
+            gate0.get("schema") == "shuetl.phase06.gate0/1"
+            and gate0.get("result") == "PASS"
+            and len(role_rows) == 4
+            and set(role_map) == expected_roles
+            and str(gate0.get("postgresql_version", "")).startswith("18.6")
+            and gate0.get("schema_head")
+            == "014_cp1_complete_principal_idempotency_0_56"
+            and gate0.get("grants")
+            == {
+                "schema_create": False,
+                "migration_membership": False,
+                "owned_objects": 0,
+            }
+            and re.fullmatch(r"[0-9a-f]{64}", str(gate0.get("shuetl_wheel_sha256", "")))
+            and re.fullmatch(
+                r"[0-9a-f]{64}", str(gate0.get("reference_wheel_sha256", ""))
+            )
+            and bool(re.fullmatch(r"[0-9a-f]{40}", str(gate0.get("source_commit", ""))))
+        )
+        if not gate0_good:
+            errors.append("Phase 0.6 PostgreSQL Gate 0 evidence is not qualified")
+        else:
+            pids = [row.get("pid") for row in role_rows]
+            if any(not isinstance(pid, int) for pid in pids) or len(set(pids)) != 4:
+                errors.append(
+                    "Phase 0.6 Gate 0 roles must have four distinct process IDs"
+                )
+            for name, role in role_map.items():
+                versions = role.get("versions")
+                if (
+                    role.get("http_imported") is not (name == "gateway")
+                    or role.get("execution_imported") is not (name == "run-worker")
+                    or not isinstance(versions, dict)
+                    or versions
+                    != {
+                        "etlantic": "0.57.0",
+                        "etlantic-sqlmodel": "0.57.0",
+                        "etlantic-sql": "0.57.0",
+                    }
+                    or "site-packages" not in role.get("origin", "")
+                    or "site-packages" not in role.get("reference_origin", "")
+                ):
+                    errors.append(
+                        f"Phase 0.6 Gate 0 role provenance/isolation is invalid: {name}"
+                    )
+    except (OSError, ValueError):
+        errors.append("cannot read Phase 0.6 PostgreSQL Gate 0 evidence")
+    try:
+        cli = json.loads(
+            (evidence_dir / "cli-postgresql.json").read_text(encoding="utf-8")
+        )
+        expected_roles = {"gateway", "scheduler", "run_worker", "action_worker"}
+        cli_roles = cli.get("roles", []) if isinstance(cli, dict) else []
+        role_imports = cli.get("role_imports", []) if isinstance(cli, dict) else []
+        cli_shutdown = cli.get("shutdown", []) if isinstance(cli, dict) else []
+        source_commit = cli.get("source_commit") if isinstance(cli, dict) else None
+        source_record = re.search(
+            r"\| ShuETL source commit \| `?([0-9a-f]{40})`? \|",
+            (evidence_dir / "README.md").read_text(encoding="utf-8"),
+        )
+        wheel = next(iter(sorted(DIST.glob(f"shuetl-{PROJECT_VERSION}-*.whl"))), None)
+        wheel_digest = hashlib.sha256(wheel.read_bytes()).hexdigest() if wheel else None
+        cli_pids = [row.get("pid") for row in cli_roles if isinstance(row, dict)]
+        import_pids = [
+            item.get("pid") for item in role_imports if isinstance(item, dict)
+        ]
+        gate0 = json.loads(
+            (evidence_dir / "postgresql-gate0.json").read_text(encoding="utf-8")
+        )
+        if (
+            not isinstance(cli, dict)
+            or cli.get("schema") != "shuetl.phase06.cli-gate/1"
+            or cli.get("result") != "PASS"
+            or not str(cli.get("postgresql_version", "")).startswith("18.6")
+            or cli.get("shuetl_version") != PROJECT_VERSION
+            or cli.get("etlantic_version") != "0.57.0"
+            or cli.get("etlantic_sql_version") != "0.57.0"
+            or cli.get("etlantic_sqlmodel_version") != "0.57.0"
+            or len(cli_roles) != 4
+            or len(role_imports) != 4
+            or any(not isinstance(pid, int) for pid in import_pids)
+            or set(import_pids) != set(cli_pids)
+            or {item.get("role") for item in role_imports if isinstance(item, dict)}
+            != {"gateway", "scheduler", "worker-runs", "worker-actions"}
+            or any(
+                item.get("fastapi_imported") is not (item.get("role") == "gateway")
+                or item.get("etlantic_fastapi_imported")
+                is not (item.get("role") == "gateway")
+                for item in role_imports
+                if isinstance(item, dict)
+            )
+            or {row.get("role") for row in cli_roles if isinstance(row, dict)}
+            != expected_roles
+            or any(not isinstance(pid, int) for pid in cli_pids)
+            or len(set(cli_pids)) != 4
+            or any(
+                row.get("ready", {}).get("ready") is not True
+                or row.get("live", {}).get("live") is not True
+                or row.get("ready", {}).get("process_state") != "running"
+                for row in cli_roles
+                if isinstance(row, dict)
+            )
+            or len(cli_shutdown) != 4
+            or any(
+                not isinstance(row, dict) or row.get("exit_code") != 0
+                for row in cli_shutdown
+            )
+            or "site-packages" not in cli.get("shuetl_origin", "")
+            or "site-packages" not in cli.get("reference_host_origin", "")
+            or cli.get("shuetl_wheel_sha256") != wheel_digest
+            or cli.get("shuetl_wheel_sha256") != gate0.get("shuetl_wheel_sha256")
+            or cli.get("reference_wheel_sha256") != gate0.get("reference_wheel_sha256")
+            or source_commit != gate0.get("source_commit")
+            or not re.fullmatch(r"[0-9a-f]{64}", cli.get("reference_wheel_sha256", ""))
+            or not source_record
+            or source_commit != source_record.group(1)
+        ):
+            errors.append(
+                "Phase 0.6 installed CLI/PostgreSQL evidence is not artifact-qualified"
+            )
+    except (OSError, ValueError, AttributeError, TypeError):
+        errors.append("cannot read Phase 0.6 installed CLI/PostgreSQL evidence")
+
+
 def check(evidence: Path | None = None) -> list[str]:
     errors: list[str] = []
     evidence_dir = evidence or EVIDENCE
@@ -182,7 +366,7 @@ def check(evidence: Path | None = None) -> list[str]:
     text = index.read_text(encoding="utf-8")
     registry = (
         proof_registry(evidence_dir, errors)
-        if evidence_dir.name in {"0.4", "0.5"}
+        if evidence_dir.name in AUDITED_SERIES
         else {}
     )
     required_fields = (
@@ -201,6 +385,8 @@ def check(evidence: Path | None = None) -> list[str]:
         "Pydantic import origin",
         "HTTPX import origin",
     )
+    if evidence_dir.name == "0.6":
+        required_fields += ("ShuETL source commit",)
     for field in required_fields:
         if field not in text:
             errors.append(f"evidence index omits required field: {field}")
@@ -245,7 +431,7 @@ def check(evidence: Path | None = None) -> list[str]:
             proofs[criterion] = " ".join(cells[1:4]).lower()
             if status != "PASS":
                 errors.append(f"acceptance criterion is not PASS: {criterion}")
-            if evidence_dir.name in {"0.4", "0.5"}:
+            if evidence_dir.name in AUDITED_SERIES:
                 command, artifact = cells[2], cells[3]
                 if not command:
                     errors.append(
@@ -276,10 +462,24 @@ def check(evidence: Path | None = None) -> list[str]:
                     errors.append(
                         f"acceptance evidence does not match audited proof: {criterion}"
                     )
+            if evidence_dir.name == "0.6":
+                if len(cells) != 8 or any(
+                    not cell.strip("`").strip()
+                    or cell.strip("`").strip().lower() in PLACEHOLDERS
+                    for cell in cells[1:]
+                ):
+                    errors.append(f"incomplete Phase 0.6 acceptance row: {criterion}")
+                else:
+                    try:
+                        date.fromisoformat(cells[-1])
+                    except ValueError:
+                        errors.append(f"invalid acceptance review date: {criterion}")
         missing = sorted(expected - seen.keys())
         if missing:
             errors.append(f"acceptance evidence omits criteria: {missing}")
-        if evidence_dir.name in {"0.4", "0.5"} and registry.keys() != expected:
+        if evidence_dir.name == "0.6" and seen.keys() != expected:
+            errors.append("Phase 0.6 acceptance must cover exactly AC-001–AC-033")
+        if evidence_dir.name in AUDITED_SERIES and registry.keys() != expected:
             errors.append(
                 "current proof registry must cover exactly "
                 f"AC-001–AC-{CRITERION_COUNTS[evidence_dir.name]:03d}"
@@ -294,14 +494,19 @@ def check(evidence: Path | None = None) -> list[str]:
                     )
     else:
         errors.append("evidence index is missing the acceptance results section")
-    for gate in ("Gate A", "Gate B", "Gate C"):
-        gate_rows = [
-            line for line in text.splitlines() if line.startswith(f"| {gate} |")
-        ]
+    gates = ("Gate A", "Gate B", "Gate C")
+    if evidence_dir.name == "0.6":
+        gates = ("Gate U", "Gate 0", *gates)
+        phase06_prerequisites(evidence_dir, errors)
+    for gate in gates:
+        gate_rows = [line for line in text.splitlines() if line.startswith(f"| {gate}")]
         if not gate_rows:
             errors.append(f"evidence index does not record {gate}")
+        elif len(gate_rows) != 1:
+            errors.append(f"evidence index must record exactly one {gate}")
         elif gate_rows[0].strip("|").split("|")[-1].strip() != "PASS":
-            errors.append(f"{gate} is not PASS")
+            status = gate_rows[0].strip("|").split("|")[-1].strip()
+            errors.append(f"{gate} is {status}; release requires PASS")
     if evidence_dir.name == "0.3" and not re.search(
         r"\| uv version \| \d+\.\d+\.\d+", text
     ):
@@ -335,9 +540,9 @@ def check(evidence: Path | None = None) -> list[str]:
     outcomes = (
         (outcome, "blocked-on-upstream", "merge-into-etlantic-fastapi")
         if outcome
-        else ("blocked-on-upstream", "merge-into-etlantic-fastapi")
+        else ()
     )
-    if sum(text.count(outcome) for outcome in outcomes) != 1:
+    if outcomes and sum(text.count(outcome) for outcome in outcomes) != 1:
         errors.append("evidence index must record exactly one boundary outcome")
     if "| PASS |" not in text:
         errors.append("evidence index must contain PASS results before release")
@@ -362,9 +567,10 @@ def check(evidence: Path | None = None) -> list[str]:
             "contributed to `etlantic-fastapi`",
             "materially easier",
         )
-    for answer in boundary_answers:
-        if answer not in text:
-            errors.append(f"boundary review omits answer: {answer}")
+    if evidence_dir.name in {"0.2", "0.3", "0.4", "0.5"}:
+        for answer in boundary_answers:
+            if answer not in text:
+                errors.append(f"boundary review omits answer: {answer}")
     if evidence_dir.name == "0.5":
         inventory = evidence_dir / "route_inventory.json"
         try:
@@ -419,7 +625,7 @@ def check(evidence: Path | None = None) -> list[str]:
                         "mutation route inventory must record authorization, "
                         f"403 denial, and zero provider calls: {key}"
                     )
-    if evidence_dir.name == "0.5":
+    if evidence_dir.name in {"0.5", "0.6"}:
         for name in (
             "proofs.json",
             "qualification.md",
@@ -428,9 +634,11 @@ def check(evidence: Path | None = None) -> list[str]:
         ):
             path = evidence_dir / name
             if not path.is_file():
-                errors.append(f"missing Phase 0.5 evidence artifact: {name}")
+                errors.append(
+                    f"missing Phase {evidence_dir.name} evidence artifact: {name}"
+                )
     redaction_files = [index, contracts, ownership]
-    if evidence_dir.name in {"0.4", "0.5"}:
+    if evidence_dir.name in AUDITED_SERIES:
         redaction_files.extend(
             path
             for path in (
@@ -439,6 +647,7 @@ def check(evidence: Path | None = None) -> list[str]:
                 evidence_dir / "ci.md",
                 evidence_dir / "route_inventory.json",
                 evidence_dir / "upstream-artifact-qualification.md",
+                evidence_dir / "coverage-acceptance.md",
             )
             if path.is_file()
         )

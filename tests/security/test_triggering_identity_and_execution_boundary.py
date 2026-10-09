@@ -94,6 +94,13 @@ def test_durable_submission_persists_only_trigger_identity_and_no_credentials() 
     api = _api_and_context(adapter, durable)
     app = ShuETL(api=api).create_app(prefix="/etl")
     with TestClient(app) as client:
+        rejected = client.post(
+            "/etl/v1/definitions/identity-definition/runs",
+            headers={"Idempotency-Key": "forged-snapshot"},
+            json={"payload": {"input_snapshot": "caller-created-snapshot"}},
+        )
+        assert rejected.status_code == 400
+        assert durable.dump()["submissions"] == {}
         response = client.post(
             "/etl/v1/definitions/identity-definition/runs",
             headers={
@@ -101,7 +108,7 @@ def test_durable_submission_persists_only_trigger_identity_and_no_credentials() 
                 "Cookie": f"session={COOKIE_SENTINEL}",
                 "Idempotency-Key": "identity-persistence-key",
             },
-            json={"payload": {"input_snapshot": "safe-reference"}},
+            json={"payload": {}},
         )
 
     assert response.status_code == 202
@@ -187,7 +194,7 @@ def test_validate_plan_and_submit_never_resolve_secrets_or_execute(
                 "Authorization": f"Bearer {BEARER_SENTINEL}",
                 "Cookie": f"session={COOKIE_SENTINEL}",
             },
-            json={"payload": {"input_snapshot": "safe-reference"}},
+            json={"payload": {}},
         )
         scheduled = client.post(
             "/v1/definitions/identity-definition/schedules",

@@ -1,4 +1,4 @@
-"""Run the complete local Phase 0.5 release gate."""
+"""Run the complete local Phase 0.6 release gate."""
 
 from __future__ import annotations
 
@@ -47,6 +47,8 @@ def main(argv: list[str] | None = None) -> int:
             "sqlite",
             "--extra",
             "postgresql",
+            "--extra",
+            "server",
         ],
     )
     run_step("format", [*uv_run, "ruff", "format", "--check", "."])

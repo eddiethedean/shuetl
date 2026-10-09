@@ -15,36 +15,24 @@ from .compatibility import validate_postgresql
 from .errors import ProviderReadinessError
 from .settings import ShuETLSettings
 
-POSTGRESQL_HEAD = "005_cp1_reference"
-POSTGRESQL_MIGRATION_VERSIONS = (
-    "001_registry_cp2",
-    "002_durable_cp3",
-    "003_cp4_governance",
-    "004_schedules_0_47",
-    POSTGRESQL_HEAD,
-)
+# The selected provider contract, not a downstream migration implementation.
+POSTGRESQL_HEAD = "014_cp1_complete_principal_idempotency_0_56"
+POSTGRESQL_MIGRATION_VERSIONS: tuple[str, ...]
+POSTGRESQL_REQUIRED_TABLES: frozenset[str]
 
-POSTGRESQL_REQUIRED_TABLES = frozenset(
-    {
-        "etlantic_sqlmodel_schema_version",
-        "cp_cp4_governance_snapshot",
-        "cp_definitions",
-        "cp_durable_outbox_entity",
-        "cp_durable_snapshot",
-        "cp_durable_submission_entity",
-        "cp_events",
-        "cp_registry_aliases",
-        "cp_registry_environments",
-        "cp_registry_logical",
-        "cp_registry_promotions",
-        "cp_registry_revisions",
-        "cp_registry_security_domains",
-        "cp_registry_tenants",
-        "cp_registry_workspaces",
-        "cp_schedule_snapshot",
-        "cp_submissions",
-    }
-)
+
+def __getattr__(name: str) -> Any:
+    """Keep legacy inventories available through optional provider metadata."""
+    if name == "POSTGRESQL_MIGRATION_VERSIONS":
+        from etlantic_sqlmodel.migrations import VERSIONS
+
+        return tuple(VERSIONS)
+    if name == "POSTGRESQL_REQUIRED_TABLES":
+        from etlantic_sqlmodel import schema_requirements
+
+        return frozenset(item.name for item in schema_requirements().objects)
+    raise AttributeError(name)
+
 
 SchemaState = Literal[
     "fresh",
@@ -98,7 +86,7 @@ def inspect_postgresql_engine(
     """Inspect server and migration state without issuing any DDL or commit."""
 
     try:
-        from sqlalchemy import inspect as sqlalchemy_inspect
+        from etlantic_sqlmodel import inspect_schema
 
         with engine.connect() as connection:
             connection.exec_driver_sql("SET TRANSACTION READ ONLY")
@@ -107,29 +95,21 @@ def inspect_postgresql_engine(
             if server_version != expected_server:
                 return PostgreSQLSchemaStatus("wrong-server", None, server_version)
 
-            tables = set(sqlalchemy_inspect(connection).get_table_names())
-            version_table = "etlantic_sqlmodel_schema_version"
-            if version_table not in tables:
-                return PostgreSQLSchemaStatus("fresh", None, server_version)
-
-            rows = connection.exec_driver_sql(
-                "SELECT id, version FROM etlantic_sqlmodel_schema_version ORDER BY id"
-            ).fetchall()
-            if len(rows) != 1 or rows[0][0] != 1 or not rows[0][1]:
-                return PostgreSQLSchemaStatus("corrupt", None, server_version)
-            version = str(rows[0][1])
-            if version not in POSTGRESQL_MIGRATION_VERSIONS:
-                return PostgreSQLSchemaStatus(
-                    "ahead_or_unknown", version, server_version
-                )
-            if version != POSTGRESQL_HEAD:
-                return PostgreSQLSchemaStatus("behind", version, server_version)
-            missing = tuple(sorted(POSTGRESQL_REQUIRED_TABLES - tables))
-            if missing:
-                return PostgreSQLSchemaStatus(
-                    "corrupt", version, server_version, missing
-                )
-            return PostgreSQLSchemaStatus("head", version, server_version)
+        status = inspect_schema(engine)
+        states: dict[str, SchemaState] = {
+            "fresh": "fresh",
+            "behind": "behind",
+            "compatible": "head",
+            "unknown_or_ahead": "ahead_or_unknown",
+            "partial_or_corrupt": "corrupt",
+            "unreachable": "unreachable",
+        }
+        return PostgreSQLSchemaStatus(
+            states[status.compatibility.value],
+            status.observed_version,
+            server_version,
+            status.missing_objects,
+        )
     except Exception:
         return PostgreSQLSchemaStatus("unreachable", None, None)
 

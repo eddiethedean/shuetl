@@ -18,7 +18,7 @@ from pydantic_settings import (
 )
 
 from ._secrets import _database_url_value
-from .integration import _validate_prefix
+from .routing import validate_prefix as _validate_prefix
 
 
 def _redact_database_url_input(value: Any) -> Any:
@@ -58,10 +58,12 @@ class ShuETLSettings(BaseSettings):
         secrets_dir=None,
     )
 
-    profile: Literal["local", "postgresql-pilot"] = Field(
+    profile: Literal["local", "postgresql-pilot", "postgresql-preview"] = Field(
         validation_alias="SHUETL_PROFILE"
     )
-    role: Literal["gateway"] = Field(validation_alias="SHUETL_ROLE")
+    role: Literal["gateway", "scheduler", "worker"] = Field(
+        validation_alias="SHUETL_ROLE"
+    )
     provider: Literal["memory", "sqlite", "postgresql"] = Field(
         validation_alias="SHUETL_PROVIDER"
     )
@@ -69,6 +71,24 @@ class ShuETLSettings(BaseSettings):
         validation_alias="SHUETL_IDENTITY"
     )
     api_prefix: str = Field("/etl", validation_alias="SHUETL_API_PREFIX")
+    worker_kind: Literal["runs", "actions"] = Field(
+        "runs", validation_alias="SHUETL_WORKER_KIND"
+    )
+    bindings_factory: str | None = Field(
+        None, validation_alias="SHUETL_BINDINGS_FACTORY"
+    )
+    tenant_id: str | None = Field(None, validation_alias="SHUETL_TENANT_ID")
+    workspace_id: str | None = Field(None, validation_alias="SHUETL_WORKSPACE_ID")
+    environment: str | None = Field(None, validation_alias="SHUETL_ENVIRONMENT")
+    security_domain: str | None = Field(None, validation_alias="SHUETL_SECURITY_DOMAIN")
+    store_id: str = Field("default", validation_alias="SHUETL_STORE_ID")
+    probe_port: int = Field(8090, ge=1, le=65535, validation_alias="SHUETL_PROBE_PORT")
+    shutdown_grace_seconds: float = Field(
+        30.0, ge=0.1, le=3600.0, validation_alias="SHUETL_SHUTDOWN_GRACE_SECONDS"
+    )
+    dispatch_interval_seconds: float = Field(
+        1.0, ge=0.05, le=60.0, validation_alias="SHUETL_DISPATCH_INTERVAL_SECONDS"
+    )
     route_preset: Literal["complete"] = Field(
         "complete", validation_alias="SHUETL_ROUTE_PRESET"
     )
@@ -92,8 +112,37 @@ class ShuETLSettings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_provider_url(self) -> ShuETLSettings:
+        runtime_profile = self.profile == "postgresql-preview"
+        if self.role != "worker" and self.worker_kind != "runs":
+            raise ValueError("SHUETL_WORKER_KIND applies only to worker roles")
+        if self.role != "gateway":
+            if not runtime_profile or self.provider != "postgresql":
+                raise ValueError(
+                    "scheduler and worker roles require the postgresql-preview profile"
+                )
+            if self.identity != "host":
+                raise ValueError("runtime roles require host-trusted bindings")
+        if runtime_profile:
+            if self.provider != "postgresql" or self.database_url is None:
+                raise ValueError(
+                    "postgresql-preview requires a PostgreSQL database_url"
+                )
+            if not self.bindings_factory:
+                raise ValueError("postgresql-preview requires SHUETL_BINDINGS_FACTORY")
+            for name in ("tenant_id", "workspace_id", "environment", "security_domain"):
+                value = getattr(self, name)
+                if not isinstance(value, str) or not value.strip():
+                    raise ValueError(
+                        f"postgresql-preview requires SHUETL_{name.upper()}"
+                    )
+            if self.profile == "postgresql-preview" and self.identity != "host":
+                raise ValueError("postgresql-preview requires host identity")
         if self.identity == "development-static" and self.profile != "local":
             raise ValueError("development-static identity requires the local profile")
+        if self.bindings_factory is not None and not _valid_factory_path(
+            self.bindings_factory
+        ):
+            raise ValueError("bindings_factory must be package.module:callable")
         if self.provider == "memory" and self.database_url is not None:
             raise ValueError("database_url is only valid for sqlite or postgresql")
         if self.provider == "sqlite":
@@ -107,7 +156,7 @@ class ShuETLSettings(BaseSettings):
             if self.postgresql_sslmode != "verify-full":
                 raise ValueError("postgresql_sslmode is only valid for postgresql")
         elif self.provider == "postgresql":
-            if self.profile != "postgresql-pilot":
+            if self.profile not in {"postgresql-pilot", "postgresql-preview"}:
                 raise ValueError(
                     "postgresql provider requires the postgresql-pilot profile"
                 )
@@ -200,3 +249,9 @@ def _validate_postgresql_url(value: str) -> None:
 
 
 __all__ = ["ShuETLSettings"]
+
+
+def _valid_factory_path(value: str) -> bool:
+    import re
+
+    return bool(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.]*:[A-Za-z_][A-Za-z0-9_]*", value))

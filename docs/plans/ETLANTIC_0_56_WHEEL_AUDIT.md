@@ -1,5 +1,13 @@
 # ETLantic 0.56.0 Wheel Audit for ShuETL 0.6
 
+Historical audit of exact 0.56.0 artifacts. As of 2026-10-08,
+[ADR-0015](../adr/0015-backend-and-deployment-ownership.md) supersedes the adoption
+disposition and DDL exception below. The [dependency register](ETLANTIC_0_56_DEPENDENCIES.md)
+records the 0.56.2 fixes, accepted 0.57.0 train and Gate U/0 evidence.
+Original observations and hashes
+are retained; they do not select the final 0.6 artifacts.
+
+
 Audit date: 2026-10-07
 Scope: exact PyPI wheels and their fit against ShuETL's Phase 0.6 Gate 0 and
 the ETLantic 0.56 dependency findings.

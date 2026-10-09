@@ -89,8 +89,9 @@ credential. Recheck permission and revocation when the resource is used.
 Headless calls receive trusted context per operation. Concurrent requests,
 threads and callbacks must not share mutable principal state. No synthetic
 HTTP request is required for authentication or resource authorization. The
-0.5 pilot proves these boundaries with fake resource providers; live executor
-isolation and credential resolution are 0.6 qualification work.
+released 0.5 identity/gateway baseline does not establish the complete headless
+resource path. Gate U and 0.6 must qualify canonical context validation, live
+executor isolation and credential resolution through public upstream contracts.
 
 ## AuthMate
 

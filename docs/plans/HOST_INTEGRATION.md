@@ -4,8 +4,9 @@
 
 This is a target contract. The [delivery matrix](CAPABILITY_DELIVERY.md) assigns
 capabilities to releases and distinguishes required from conditional features.
-The next implementation step is the [0.5 contract pilot](PHASE_0_5_EXECUTION.md);
-live provider execution is qualified in 0.6 and later.
+Released 0.5 is the guarded identity/gateway baseline. The next implementation is
+[Phase 0.6](PHASE_0_6_EXECUTION.md), gated on upstream contracts and live deployment
+qualification under [ADR-0015](../adr/0015-backend-and-deployment-ownership.md).
 
 The [specification contract](SPECIFICATION_CONTRACT.md) governs the app-facing
 boundary: an app controls every supported ETL specification, while the backend
@@ -37,8 +38,8 @@ Host application (for example, Data Mover)
              │ depends on a supported ShuETL release
              ▼
 ShuETL
-  owns the supported backend experience, standard profiles/commands,
-  ETLantic composition, compatibility/readiness, and role configuration
+  owns qualified deployment profiles/commands, host integration, upstream
+  factory selection, supervision, compatibility and process readiness
              │ depends on public ETLantic contracts and provider packages
              ▼
 ETLantic and its providers
@@ -88,8 +89,8 @@ codes, authorization ordering, idempotency, events, and readiness behavior.
 ShuETL must support a host application that needs ETLantic capabilities from
 Python without opening a listening socket or making loopback HTTP requests to
 itself. Its standard interface accepts canonical specifications and backend
-commands and returns canonical results. ShuETL assembles the supported provider
-graph from deployment configuration; the app does not construct it. FastAPI
+commands and returns canonical results. ShuETL configures an upstream-complete backend factory from deployment settings;
+neither the app nor ShuETL reconstructs its semantic service graph. FastAPI
 mounting is optional in this mode.
 
 The headless surface is a composition handle over public upstream services, not

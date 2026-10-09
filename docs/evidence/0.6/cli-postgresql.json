@@ -1,0 +1,116 @@
+{
+  "schema": "shuetl.phase06.cli-gate/1",
+  "result": "PASS",
+  "python": "3.13.9",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "shuetl_version": "0.6.0",
+  "shuetl_origin": "/private/tmp/shuetl-phase06-venv/lib/python3.13/site-packages/shuetl/__init__.py",
+  "reference_host_origin": "/private/tmp/shuetl-phase06-venv/lib/python3.13/site-packages/phase06_host/bindings.py",
+  "etlantic_sql_version": "0.57.0",
+  "roles": [
+    {
+      "role": "gateway",
+      "pid": 90724,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "gateway"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "gateway"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": 52134
+    },
+    {
+      "role": "scheduler",
+      "pid": 90735,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "scheduler"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "scheduler"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    },
+    {
+      "role": "run_worker",
+      "pid": 90737,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "run_worker"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "run_worker"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    },
+    {
+      "role": "action_worker",
+      "pid": 90748,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "action_worker"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "action_worker"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    }
+  ],
+  "postgresql_version": "18.6 (Debian 18.6-1.pgdg12+2)",
+  "runtime_grants": {
+    "public_schema_create": false,
+    "sink_schema_create": false,
+    "migration_role_membership": false,
+    "owned_objects": 0
+  },
+  "construction_preflight": "PASS",
+  "shutdown": [
+    {
+      "role": "action_worker",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    },
+    {
+      "role": "run_worker",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    },
+    {
+      "role": "scheduler",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    },
+    {
+      "role": "gateway",
+      "signal": "SIGTERM",
+      "exit_code": 0
+    }
+  ],
+  "credential_sentinels_absent": true,
+  "cleanup_errors": []
+}

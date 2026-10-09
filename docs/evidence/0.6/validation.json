@@ -1,0 +1,44 @@
+{
+  "schema": "shuetl.phase06.validation/1",
+  "result": "PASS",
+  "release_gates": "OPEN",
+  "regression": {
+    "passed": 208,
+    "skipped": 6,
+    "skipped_cases": [
+      "five PostgreSQL integration cases were covered separately against the disposable 18.6 service",
+      "one release-only artifact hash check remains intentionally open until release gates close"
+    ],
+    "artifact_hash_test": "intentionally deferred until final candidate evidence is recorded",
+    "postgresql_passed": 5
+  },
+  "ruff": "PASS",
+  "pyright": {
+    "errors": 0,
+    "warnings": 0,
+    "command": ".venv/bin/pyright --pythonpath .venv/bin/python"
+  },
+  "lock_check": "PASS",
+  "artifact_check": "PASS",
+  "clean_wheel": {
+    "3.11.14": "PASS",
+    "3.12.13": "PASS",
+    "3.13.9": "PASS"
+  },
+  "gate0": {
+    "3.11.14": "PASS",
+    "3.12.13": "PASS",
+    "3.13.9": "PASS"
+  },
+  "installed_cli_postgresql": {
+    "3.11.14": "PASS",
+    "3.12.13": "PASS",
+    "3.13.9": "PASS"
+  },
+  "release_gate": {
+    "quality_build_artifact_openapi_clean_wheel": "PASS",
+    "evidence_acceptance": "OPEN: AC-001–033 and Gates A–C remain open by decision"
+  },
+  "os": "macOS-26.6.2-arm64-arm-64bit",
+  "uv": "uv 0.11.3 (Homebrew 2026-04-01 aarch64-apple-darwin)"
+}

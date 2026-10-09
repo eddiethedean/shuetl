@@ -20,7 +20,7 @@ from spikes.phase_0_1_memory_mount import build_graph
 from shuetl import ShuETL
 
 ROOT = Path(__file__).resolve().parents[2]
-INVENTORY = ROOT / "docs/evidence/0.5/route_inventory.json"
+INVENTORY = ROOT / "docs/evidence/0.6/route_inventory.json"
 MUTATION_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 _PATH_PARAMETER = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 

@@ -1,12 +1,14 @@
 # ShuETL Initial Design Decisions
 
 These decisions define ShuETL's integration boundary. Material changes require
-an ADR.
+an ADR. [ADR-0015](../adr/0015-backend-and-deployment-ownership.md) governs the
+revised 0.6 boundary, including headless use and upstream-complete role factories.
 
 ## D1 — ShuETL is an ETLantic + FastAPI integration product
 
 ShuETL exists to make ETLantic straightforward to configure, mount, deploy, and
-operate in FastAPI applications.
+operate in host applications and supervised deployments; FastAPI is an optional
+host surface for the target headless backend.
 
 ## D2 — ETLantic is authoritative
 
@@ -21,9 +23,10 @@ schemas, operation IDs, errors, idempotency behavior, or SSE protocol.
 
 ## D4 — ShuETL owns composition
 
-ShuETL owns settings, provider wiring, FastAPI integration, deployment-role
-configuration, compatibility checks, readiness diagnostics, optional ecosystem
-adapters, and operator documentation.
+ShuETL owns settings, qualified upstream factory selection, FastAPI integration,
+deployment-role configuration, process supervision/probes, compatibility checks,
+optional ecosystem adapters and operator documentation. Correctness-preserving
+backend/role assembly and schema inspection belong upstream.
 
 ## D5 — No shadow domain models
 
@@ -33,8 +36,8 @@ Event, Report, Artifact, Executor, retry, or authorization models.
 ## D6 — Upstream-first gaps
 
 Missing semantic behavior belongs in ETLantic or an ETLantic provider package.
-A temporary ShuETL adapter requires an ADR, explicit version bounds, and a
-removal plan.
+A composition-only compatibility adapter requires an ADR, explicit version
+bounds and removal plan; it cannot supply missing semantics or close Gate U.
 
 ## D7 — No ShuETL control-plane schema in the MVP
 
@@ -147,24 +150,24 @@ CI, and the tag-triggered release workflow published ShuETL 0.5.0.
 
 ### Required before Phase 0.6 implementation
 
-The [Phase 0.6 execution contract](PHASE_0_6_EXECUTION.md) records the
-selected published ETLantic `0.56.0` train and the acceptance boundary.
-The [proposed ADR-0014](../adr/0014-role-separated-managed-runtime.md) specifies:
+The [Phase 0.6 execution contract](PHASE_0_6_EXECUTION.md) reopens artifact
+selection behind Gate U under accepted
+[ADR-0015](../adr/0015-backend-and-deployment-ownership.md). ETLantic issues
+[#278–282](ETLANTIC_0_56_DEPENDENCIES.md) track the required public contracts.
+The [revised ADR-0014](../adr/0014-role-separated-managed-runtime.md) specifies:
 
-1. the ShuETL process supervisor invoking the published managed backend,
-   public scheduler ticks and managed execution host;
-2. typed trusted host bindings, scoped scheduler/worker service identity and
-   context, and ShuETL-owned construction of the managed worker;
-3. role-local readiness transport and drain behavior, including a worker
-   probe that does not assume an upstream `ready()` method;
-4. the fresh 0.56 store transition and narrow non-mutating constructor DDL
-   exception, with read-only preflight and health inspection.
+1. transport-independent upstream backend and complete role factories selected
+   and configured by ShuETL;
+2. separate gateway/runtime bindings without HTTP inputs in runtime roles;
+3. upstream runtime status/stop facts combined with ShuETL process supervision,
+   operational probes, freshness and cleanup;
+4. provider-owned read-only schema compatibility, no constructor DDL exception,
+   and fresh-store handoff with the retained 0.5/0.55 deployment for rollback.
 
-Dependency selection is complete; these composition choices must be qualified
-before `shuetl serve --role gateway|scheduler|worker` can make a
-production-preview claim. Freeze the ADR's public signatures and qualify its
-installed-wheel Gate 0 fixture before accepting it. The
-[verification plan](PHASE_0_6_VERIFICATION.md) maps all 33 release criteria.
+Select exact published artifacts only after Gate U qualification. Freeze public
+signatures and prove installed-artifact Gate 0 before standard role implementation.
+The [verification plan](PHASE_0_6_VERIFICATION.md) maps all 33 release criteria,
+upstream conformance and ShuETL deployment evidence separately.
 The existing `complete` route preset remains the baseline; add a different
 production preset only if route inventory demonstrates a need and
 an ADR preserves upstream route ownership.

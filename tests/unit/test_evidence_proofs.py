@@ -13,8 +13,8 @@ from scripts import check_evidence
 
 
 def _copy(tmp_path: Path) -> Path:
-    evidence = tmp_path / check_evidence.EVIDENCE.name
-    shutil.copytree(check_evidence.EVIDENCE, evidence)
+    evidence = tmp_path / "0.5"
+    shutil.copytree((check_evidence.ROOT / "docs/evidence/0.5"), evidence)
     return evidence
 
 

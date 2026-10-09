@@ -1,5 +1,9 @@
 # ADR-0012: One-Way Host Integration and Headless Composition
 
+Current 0.6 ownership is governed by [ADR-0015](0015-backend-and-deployment-ownership.md).
+Earlier release decisions below remain historical; no 0.6 capability is implied.
+
+
 - Status: Accepted
 - Date: 2026-09-29
 
@@ -78,6 +82,11 @@ advanced surface. One backend command owns preparation and submission.
   compatibility contract.
 
 ## Validation
+
+The [released 0.5 contract evidence](../evidence/0.5/contracts.md) and
+[ownership baseline](../evidence/0.5/ownership.md) are regression inputs, not
+proof of the target headless/backend capabilities. Revised qualification is
+assigned by ADR-0015 and the Phase 0.6 execution/verification plans.
 
 See [HOST_INTEGRATION.md](../plans/HOST_INTEGRATION.md) and the 0.5–0.9 host
 integration gates in [ROADMAP.md](../plans/ROADMAP.md). ShuETL's generic

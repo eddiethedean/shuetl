@@ -1,0 +1,79 @@
+{
+  "schema": "shuetl.etlantic_0_57.contract_probe/1",
+  "status": "passed",
+  "observed_at": "2026-10-09T15:28:04.166844+00:00",
+  "mode": "gateway",
+  "python": "3.13.9 (main, Nov 19 2025, 23:39:32) [Clang 21.1.4 ]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "etlantic": "0.57.0",
+    "etlantic-sqlmodel": "0.57.0",
+    "etlantic-fastapi": "0.57.0",
+    "fastapi": "0.141.1",
+    "pydantic": "2.13.5",
+    "sqlalchemy": "2.0.52"
+  },
+  "module_origins": {
+    "etlantic": "/tmp/shuetl-057-audit.CjjECZ/gateway/lib/python3.13/site-packages/etlantic/__init__.py",
+    "etlantic_sqlmodel": "/tmp/shuetl-057-audit.CjjECZ/gateway/lib/python3.13/site-packages/etlantic_sqlmodel/__init__.py"
+  },
+  "observations": {
+    "fastapi_installed": true,
+    "fresh_schema": {
+      "schema": "etlantic_sqlmodel.schema_requirements/2",
+      "compatibility": "fresh",
+      "compatible": false,
+      "required_version": "014_cp1_complete_principal_idempotency_0_56",
+      "observed_version": null,
+      "reason_code": "schema_not_initialized",
+      "missing_objects": [],
+      "missing_columns": [],
+      "missing_constraints": [],
+      "incompatible_columns": []
+    },
+    "compatible_schema": {
+      "schema": "etlantic_sqlmodel.schema_requirements/2",
+      "compatibility": "compatible",
+      "compatible": true,
+      "required_version": "014_cp1_complete_principal_idempotency_0_56",
+      "observed_version": "014_cp1_complete_principal_idempotency_0_56",
+      "reason_code": "schema_compatible",
+      "missing_objects": [],
+      "missing_columns": [],
+      "missing_constraints": [],
+      "incompatible_columns": []
+    },
+    "inspection_and_construction_no_writes_or_commits": true,
+    "neutral_backend": true,
+    "shared_authorized_schedule_commands": true,
+    "borrowed_engine_preserved": true,
+    "http_headless_shared_records": true,
+    "gateway_execution_imports_absent": true,
+    "partial_schema": {
+      "schema": "etlantic_sqlmodel.schema_requirements/2",
+      "compatibility": "partial_or_corrupt",
+      "compatible": false,
+      "required_version": "014_cp1_complete_principal_idempotency_0_56",
+      "observed_version": "014_cp1_complete_principal_idempotency_0_56",
+      "reason_code": "required_schema_object_missing",
+      "missing_objects": [
+        "cp_definitions"
+      ],
+      "missing_columns": [],
+      "missing_constraints": [],
+      "incompatible_columns": []
+    }
+  },
+  "signatures": {
+    "create_managed_backend": "(config: 'SQLModelBackendConfig', *, authorizer: 'Authorizer', planning_context_factory: 'Callable[[Any, Any], PlanningContext] | None' = None, engine: 'Any' = None) -> 'ManagedBackend'",
+    "create_scheduler": "(*, owner_id: 'str', ttl_seconds: 'int' = 30, clock: 'Any' = None, wake: 'Any' = None) -> 'Any'",
+    "create_execution_host": "(*, owner_id: 'str' = 'managed-worker', ttl_seconds: 'int' = 30) -> 'Any'",
+    "create_action_execution_host": "(*, worker_id: 'str' = 'action-worker-1') -> 'Any'",
+    "adapt_managed_backend": "(core_backend: 'Any', *, context_factory: 'ContextFactory', principal_dependency: 'PrincipalDependency | None' = None, input_upload_ttl_seconds: 'int' = 3600, title: 'str' = 'ETLantic Control Plane', version: 'str | None' = None) -> 'ManagedBackend'"
+  },
+  "limitations": [
+    "SQLite in-process checks only",
+    "No real ETL effects, active drain, crash recovery or PostgreSQL grants qualification",
+    "Not a ShuETL Gate 0 or release PASS"
+  ]
+}

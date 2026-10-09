@@ -106,16 +106,39 @@ for name in modules:
     origins[name] = pathlib.Path(spec.origin).resolve()
 assert all(path.is_relative_to(purelib) for path in origins.values()), origins
 assert metadata.version("shuetl") == "{VERSION}"
-assert metadata.version("etlantic") == "0.55.0"
-assert metadata.version("etlantic-fastapi") == "0.55.0"
+assert metadata.version("etlantic") == "0.57.0"
+assert metadata.version("etlantic-fastapi") == "0.57.0"
 print(origins)
 """,
                 ],
                 cwd=work_dir,
                 env=env,
             )
+            _run(
+                [
+                    str(python),
+                    "-c",
+                    "import sys, shuetl; "
+                    "assert 'fastapi' not in sys.modules; "
+                    "assert 'etlantic_fastapi' not in sys.modules; "
+                    "assert 'etlantic_sqlmodel' not in sys.modules",
+                ],
+                cwd=work_dir,
+                env=env,
+            )
             for example_path in example_paths:
                 _run([str(python), str(example_path)], cwd=work_dir, env=env)
+            if name == "server":
+                _run(
+                    [
+                        str(python),
+                        "-c",
+                        "import importlib.metadata as m; "
+                        "assert m.version('uvicorn') == '0.46.0'",
+                    ],
+                    cwd=work_dir,
+                    env=env,
+                )
             if name == "postgresql":
                 _run(
                     [
@@ -129,10 +152,23 @@ print(origins)
                     cwd=work_dir,
                     env=env,
                 )
+                _run(
+                    [
+                        str(python),
+                        "-c",
+                        "import sys, shuetl.runtime; "
+                        "assert 'fastapi' not in sys.modules; "
+                        "assert 'etlantic_fastapi' not in sys.modules; "
+                        "assert 'uvicorn' not in sys.modules",
+                    ],
+                    cwd=work_dir,
+                    env=env,
+                )
 
         verify_environment("core", isolated_examples["core"], "")
         verify_environment("sqlite", isolated_examples["sqlite"], "sqlite")
         verify_environment("postgresql", [], "postgresql")
+        verify_environment("server", [], "server")
 
 
 def main(argv: list[str] | None = None) -> int:

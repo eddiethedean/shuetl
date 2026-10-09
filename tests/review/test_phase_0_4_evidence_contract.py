@@ -11,10 +11,12 @@ from scripts import check_evidence
 def test_sol_010_evidence_rejects_a_pass_without_command_or_artifact(
     tmp_path: Path,
 ) -> None:
-    evidence = tmp_path / check_evidence.EVIDENCE.name
+    evidence = tmp_path / "0.5"
     evidence.mkdir()
     for name in ("README.md", "contracts.md", "ownership.md"):
-        shutil.copy2(check_evidence.EVIDENCE / name, evidence / name)
+        shutil.copy2(
+            (check_evidence.ROOT / "docs/evidence/0.5") / name, evidence / name
+        )
     index = evidence / "README.md"
     rows = index.read_text().splitlines()
     for position, row in enumerate(rows):

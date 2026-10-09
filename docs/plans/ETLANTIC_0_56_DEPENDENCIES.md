@@ -1,49 +1,81 @@
-# ETLantic 0.56 Backend Dependencies
+# ETLantic Backend Dependencies for ShuETL 0.6
 
-## Audited upstream baseline
+## Current dependency decision — 2026-10-09
 
-The 2026-09-29 review examined ETLantic main commit
-[`fb0dd748860cdbafceea473f315ed8934a329b27`](https://github.com/eddiethedean/etlantic/commit/fb0dd748860cdbafceea473f315ed8934a329b27),
-the merged 0.55 release candidate. The newest tag at review time was 0.54.0.
-That review is historical source evidence. On 2026-10-07 ETLantic 0.56.0 and
-the lockstep FastAPI, SQLModel, SQL, and Foundry wheels appeared on PyPI. The
-wheel hashes for all five packages match the upstream 0.56 qualification
-manifest. Upstream's 0.56 release index records all 44 acceptance criteria as
-passed, including managed execution and provider matrices.
+[ADR-0015](../adr/0015-backend-and-deployment-ownership.md) and the revised
+[execution contract](PHASE_0_6_EXECUTION.md) supersede selection of 0.56.0 as-is.
+ETLantic `0.57.0` core/FastAPI/SQLModel is the **accepted exact development
+train**. [Coverage acceptance](../evidence/0.6/coverage-acceptance.md) closes
+U01–U05 with guarantee-specific consumer and provider evidence, supplementing
+[the artifact audit](../reviews/ETLANTIC_0_57_CANDIDATE_AUDIT.md).
+Metadata, lock and compatibility checks now agree. Non-ETLantic runtime pins
+remain unchanged. PostgreSQL role feasibility is qualified in
+[Gate 0 evidence](../evidence/0.6/README.md); release gates remain OPEN.
 
-The [ShuETL wheel audit](ETLANTIC_0_56_WHEEL_AUDIT.md) checked the exact
-published artifacts and the Gate 0 contract. It found that the 0.56 tag still
-labels the release an unpublished candidate, and the PyPI page says the upload
-was not Trusted Publishing. Phase 0.6 now selects the exact published `0.56.0`
-train as its implementation baseline. The release wording remains an audit
-finding, not a dependency-adoption gate. ShuETL still must qualify its role
-composition and PostgreSQL 18.6 process behavior. The execution plan selects
-a fresh 0.56 store and records the constructor's non-mutating version-table
-statement as a narrow startup exception. ShuETL 0.5.0 currently pins ETLantic
-0.55.0; updating package pins and the lock is 0.6 implementation work.
+| Gate | Upstream issue | Required delivery | Status |
+| --- | --- | --- | --- |
+| U01 | [#278 — Neutral backend](https://github.com/eddiethedean/etlantic/issues/278) | Transport-independent services/role contracts, provider-owned SQL graph, explicit cleanup; separate HTTP adapter | PASS — 0.57.0 coverage accepted 2026-10-09 |
+| U02 | [#279 — Schedule commands](https://github.com/eddiethedean/etlantic/issues/279) | Authorized public schedule command/query services with HTTP/headless parity | PASS — 0.57.0 coverage accepted 2026-10-09 |
+| U03 | [#280 — Managed scheduler](https://github.com/eddiethedean/etlantic/issues/280) | Complete schedule-store/factory construction and explicit preparation/submission/recovery contract | PASS — 0.57.0 coverage accepted 2026-10-09 |
+| U04 | [#281 — Provider inspection](https://github.com/eddiethedean/etlantic/issues/281) | Public provider-owned read-only schema compatibility/status, including partial/corrupt stores | PASS — 0.57.0 coverage accepted 2026-10-09 |
+| U05 | [#282 — Runtime lifecycle](https://github.com/eddiethedean/etlantic/issues/282) | Public role-specific status and cooperative-stop guarantees for all role kinds | PASS — 0.57.0 coverage accepted 2026-10-09 |
 
-ETLantic's canonical definitions, RunRequest controls, portable transforms,
-quality, connector SDK and CP1–CP4 provide substantial foundations. The
-historical 0.55 candidate review found the integration and provider gaps
-listed below; upstream's 0.56 release evidence records their closure. ShuETL
-qualifies the published services in its own composition. The scheduler's
-public submission callback is wiring to those services and must not contain
-copied admission, scheduling or ETL semantics.
+The GitHub trackers still report OPEN on 2026-10-09. Track administrative issue
+closure separately from delivered API surfaces and ShuETL's acceptance decision.
 
-The published upstream baseline is **0.56 — Complete Application ETL Backend**:
+These five issues were opened from the
+[responsibility review](../reviews/PHASE_0_6_RESPONSIBILITY_REVIEW.md). Canonical
+capability schemas, plugin trust, handler loading, context validity and conformance
+remain upstream; ShuETL qualifies its deployment combinations and public adapters.
 
-- [Source findings and evidence](https://github.com/eddiethedean/etlantic/blob/v0.56.0/docs/11_DEVELOPMENT/FINDINGS_0_56.md)
-- [Implementation contract and 44 acceptance criteria](https://github.com/eddiethedean/etlantic/blob/v0.56.0/docs/11_DEVELOPMENT/IMPLEMENTATION_PLAN_0_56.md)
-- [Execution sequence and release gates](https://github.com/eddiethedean/etlantic/blob/v0.56.0/docs/11_DEVELOPMENT/EXECUTION_PLAN_0_56.md)
+## Inspected published artifacts
 
-Existing ETLantic brownfield, console, broader provider and modeling phases move
-to 0.57–0.60. This renumbering does not change ShuETL's independent version train.
+On 2026-10-09, independent isolated installations verified `0.57.0` neutral
+backend construction, shared authorized schedule services, complete runtime
+factories/status/drain and provider-owned read-only inspection. Gateway checks
+also pass with ShuETL's current FastAPI/Pydantic/SQLAlchemy pins. Upstream CI
+acceptance records 160 passing cases with no failures/errors/skips, including
+PostgreSQL; its core/provider wheel hashes match PyPI. Exact signatures, hashes,
+results and reproducible environments are in the
+[candidate audit](../reviews/ETLANTIC_0_57_CANDIDATE_AUDIT.md).
+
+The provider head remains `014_cp1_complete_principal_idempotency_0_56` with no
+new 0.56-to-0.57 migration. This does not qualify a direct transition from the
+retained 0.5/0.55 store. The initial SQLite probes are supplemented by PostgreSQL Gate 0.
+Neither establishes process signal/grace qualification or final release evidence.
+
+### Historical 0.56 observations
+
+The original [0.56.0 wheel audit](ETLANTIC_0_56_WHEEL_AUDIT.md) remains historical
+artifact evidence. Its hashes and upstream 44/44 result do not qualify the revised
+Gate U or ShuETL 0.6 deployment.
+
+On 2026-10-08, the review additionally installed exact core/FastAPI/SQLModel
+`0.56.2` distributions in isolation and inspected the
+[v0.56.2 release](https://github.com/eddiethedean/etlantic/releases/tag/v0.56.2).
+[Issue #273](https://github.com/eddiethedean/etlantic/issues/273) is closed and
+0.56.2 contains gateway import-isolation and read-only migration-version changes.
+A disposable SQLite probe confirmed no CREATE in version inspection on a fresh
+or migrated store. The former constructor-DDL exception is removed from 0.6.
+Actual PostgreSQL runtime grants and full construction still require qualification.
+
+That 0.56.2 probe confirmed its standard backend requires an HTTP context
+factory and has no configured schedule store or scheduler factory. Wrapping a
+submission callback still loses automatic preparer/recoverer discovery. Source
+inspection found schedule command orchestration in HTTP handlers and incomplete
+role status/stop contracts. U04 additionally requires schema integrity/required
+objects behind a provider API; it does not re-file the fixed DDL defect.
+
+Version 0.56.2 is historical inspected evidence; its remaining gaps above are
+addressed by the 0.57.0 candidate. The development target is now ShuETL 0.6.0 with exact 0.57.0 pins;
+the published 0.5/0.55 deployment remains the retained rollback baseline. Pin optional SQL/Foundry or other
+providers only when enabled and compatible with the selected backend; retain
+upstream conformance and separate live integration rows.
 
 ## Historical findings and 0.56 qualification map
 
-These rows retain the original requirements for traceability. They are not
-open prerequisites for selecting a future upstream version; downstream
-capability claims still require the corresponding ShuETL evidence.
+These rows retain the original requirements for traceability. Their historical closure does not close the newly identified Gate U
+requirements above; downstream claims still require ShuETL evidence.
 
 | Upstream finding | Required completion | ShuETL capabilities |
 |---|---|---|
@@ -73,21 +105,15 @@ modes. Packages stay generic and independently installable without Data Mover.
 
 ## Effect on ShuETL delivery
 
-- [ShuETL Phase 0.6 Gate 0](PHASE_0_6_EXECUTION.md) qualifies composition on
-  the selected published `0.56.0` artifacts. See the
-  [wheel audit](ETLANTIC_0_56_WHEEL_AUDIT.md) for hashes, installed backend
-  smoke and remaining role/provider evidence.
-- Adopt exact `0.56.0` core/FastAPI/SQLModel pins during implementation;
-  enabled SQL/Foundry packages use the same train. Qualify the managed backend,
-  scheduler callback, worker lifecycle and fresh-store setup as published.
-- Implementation proceeds against this baseline. Missing ShuETL acceptance
-  evidence blocks its release claim, not dependency selection. Optional
-  features stay unavailable until qualified; an advertised feature must meet
-  its gate. Actual semantic defects found during qualification remain upstream
-  defects and cannot be hidden by ShuETL replacements.
-- ShuETL 0.6 still qualifies live process/provider composition and 0.7 still
-  proves the downstream operating/cutover envelope. Upstream 0.56 evidence does
-  not automatically establish either claim.
-- The full [developer-control contract](DEVELOPER_CONTROL.md) remains in force.
-  Reference transfers and baseline profiles cannot become a ceiling on existing
-  qualified transforms, engines, run settings, commands or private extensions.
+- W00 reviews/accepts the published 0.57.0 candidate for U01–U05 using exact signatures and upstream
+  conformance plus isolated-install checks. No semantic workaround in ShuETL.
+- W01 pins the accepted compatible package train, hashes and public provider
+  schema contract. Start with exact 0.57.0 candidates; do not automatically float.
+- W02/Gate 0 proves isolated PostgreSQL role construction, actual runtime grants,
+  manual/native-scheduled effects and authorized HTTP/headless command parity.
+- W03/W04 implement ShuETL configuration, host bindings, upstream factory selection,
+  process supervision and probes; ETL graphs and correctness remain upstream.
+- Preserve a fresh separate store and the retained 0.5/0.55 deployment for rollback.
+  No constructor DDL, old durable-store conversion or cross-store replay.
+- Final installed-artifact acceptance covers all 33 criteria plus Gates U/0/A–C.
+  Phase 0.7 retains the broader downstream operating/cutover qualification.

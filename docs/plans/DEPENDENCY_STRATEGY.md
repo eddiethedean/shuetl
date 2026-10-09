@@ -26,18 +26,26 @@ etlantic-fastapi
 ```
 
 The released 0.5 package and lock pin ETLantic core/FastAPI/SQLModel to 0.55.0.
-Phase 0.6 selects exact `0.56.0` pins for those packages and for SQL/Foundry
-providers when enabled. Implementation updates the lock, compatibility checks,
-and provider metadata together. Use the published artifacts as supplied;
-upstream documentation cleanup or a newer release is not a prerequisite.
+Phase 0.6 reopens upstream selection under Gate U and
+[ADR-0015](../adr/0015-backend-and-deployment-ownership.md). Version 0.57.0 is the
+published candidate delivering the #278–282 public surfaces; the
+[candidate audit](../reviews/ETLANTIC_0_57_CANDIDATE_AUDIT.md) records matching
+upstream evidence and independent headless/gateway checks. [Coverage acceptance](../evidence/0.6/coverage-acceptance.md) closes Gate U.
+Development metadata/lock use exact 0.57.0 pins and public schema inspection;
+[PostgreSQL role feasibility](../evidence/0.6/README.md) passes on Python 3.11–3.13.
+ShuETL role implementation and release qualification remain open.
+Select exact published compatible versions only after upstream qualification;
+update lock, compatibility checks and provider contract metadata together.
+No patched wheels, floating versions or assumed future release number.
 
 The [0.56 dependency map](ETLANTIC_0_56_DEPENDENCIES.md) and
 [wheel audit](ETLANTIC_0_56_WHEEL_AUDIT.md) record the artifact evidence and
 published API boundaries. The [0.6 execution contract](PHASE_0_6_EXECUTION.md)
-requires ShuETL service, OpenAPI, PostgreSQL process and installed-artifact
-qualification before release. It selects a fresh 0.56 store at migration 014
-and documents the narrow non-mutating constructor DDL exception; the 0.55
-store remains with the retained 0.5 application for rollback.
+requires upstream contracts followed by ShuETL service, OpenAPI, PostgreSQL
+process and installed-artifact qualification before release. The selected
+provider owns the required schema/status contract. Provision a fresh store;
+retain 0.5/0.55 separately for rollback. Inspection and normal construction issue
+no DDL or explicit commits; there is no constructor exception.
 
 A package used in ShuETL imports should be declared directly even if it is also
 transitive.

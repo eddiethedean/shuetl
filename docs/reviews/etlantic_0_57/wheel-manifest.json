@@ -1,0 +1,20 @@
+[
+  {
+    "package": "etlantic",
+    "filename": "etlantic-0.57.0-py3-none-any.whl",
+    "sha256": "ff7939f9134a07c0ef1513d45b76623154e12931c935a01aedfceabcb93ab7b4",
+    "url": "https://files.pythonhosted.org/packages/4e/77/3016e31d787dcd0c36da281ddff7b39c6096b9223349c4e41c121c913c75/etlantic-0.57.0-py3-none-any.whl"
+  },
+  {
+    "package": "etlantic-fastapi",
+    "filename": "etlantic_fastapi-0.57.0-py3-none-any.whl",
+    "sha256": "4545131b0e7d3a9cfc9972a0f46374d136b755807c47216b27a8156bf83b0c27",
+    "url": "https://files.pythonhosted.org/packages/12/e3/e720928734691d754cf46b051e68ef50ab7e8f7a935ec3a35c1e64de49cb/etlantic_fastapi-0.57.0-py3-none-any.whl"
+  },
+  {
+    "package": "etlantic-sqlmodel",
+    "filename": "etlantic_sqlmodel-0.57.0-py3-none-any.whl",
+    "sha256": "28641b7bfefb888b83bfc00f172f4293913e74717b747ed7a0289737a2d7051f",
+    "url": "https://files.pythonhosted.org/packages/04/b2/9d0531f9a3b36a8982141a23b44b36668b210d966d0e1b589bd8c8c1bc02/etlantic_sqlmodel-0.57.0-py3-none-any.whl"
+  }
+]

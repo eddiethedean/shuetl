@@ -1,27 +1,45 @@
 # ShuETL
 
+Development target: **0.6.0**, with exact ETLantic **0.57.0** dependencies.
+The published baseline remains 0.5.0. Contract acceptance and PostgreSQL role
+feasibility pass; the 0.6 release gates remain open. See
+[development evidence](docs/evidence/0.6/README.md).
+
 [![PyPI version](https://img.shields.io/pypi/v/shuetl.svg)](https://pypi.org/project/shuetl/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/shuetl.svg)](https://pypi.org/project/shuetl/)
 [![CI](https://github.com/eddiethedean/shuetl/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/shuetl/actions/workflows/ci.yml)
 [![License](https://img.shields.io/pypi/l/shuetl.svg)](https://github.com/eddiethedean/shuetl/blob/main/LICENSE)
 
-**ShuETL** *(pronounced “shuttle”)* is the opinionated FastAPI integration and
-deployment package for ETLantic.
+**ShuETL** *(pronounced “shuttle”)* is the host integration and deployment
+package for ETLantic, with a FastAPI gateway and separate runtime roles.
 
 > **ShuETL composes ETLantic into a durable, schedulable FastAPI service.**
 
-ShuETL does not reimplement ETLantic's pipeline or control-plane semantics.
-Instead, it assembles ETLantic's public packages, contracts, stores, and runtime
-roles into a coherent application-facing experience.
+ShuETL does not reimplement ETLantic's pipeline or control-plane semantics. It
+selects qualified upstream factories, connects host identity and resources, and
+supervises the processes that expose and execute ETLantic services.
 
-- **ETLantic** owns canonical pipeline definitions and revisions, planning,
-  execution semantics, durable submission, run and attempt state, scheduling,
-  reports, events, artifacts, idempotency, recovery, and provider protocols.
+- **ETLantic and its providers** own canonical definitions and revisions,
+  planning, execution, durable submission, scheduling, reports, events,
+  artifacts, idempotency, recovery, connectors, persistence and schema.
 - **`etlantic-fastapi`** is ETLantic's low-level HTTP adapter and authoritative
   source of ETLantic request, response, route, SSE, and error semantics.
-- **ShuETL** owns opinionated composition: configuration, provider wiring,
-  FastAPI mounting, lifecycle integration, deployment profiles, compatibility
-  pins, optional ecosystem adapters, and operator-focused documentation.
+- **ShuETL** owns host identity integration, backend selection, configuration,
+  the gateway process, scheduler/run/action process supervision, readiness and
+  liveness, compatibility pins, and deployment guidance. It does not assemble
+  ETL semantics or implement stores, schedules, claims, leases or recovery.
+
+Phase 0.6 adds the source implementation for `shuetl serve --role gateway`,
+`scheduler`, and `worker --kind runs|actions`. The runtime loads one explicitly
+trusted host binding factory, then passes canonical profiles, authorizers and
+service contexts to ETLantic. The gateway alone loads the FastAPI adapter and
+host identity integration; scheduler and workers remain headless. See the
+[Phase 0.6 implementation plan](docs/plans/PHASE_0_6_IMPLEMENTATION.md) and
+[current qualification status](docs/evidence/0.6/README.md). Release gates remain
+open; 0.6.0 is not published.
+The provisional [role runtime guide](docs/PHASE_0_6_RUNTIME.md) describes the
+host binding interface and process configuration; it does not replace deployment
+qualification.
 
 If a required semantic capability is absent from ETLantic, the default response
 is to add it to ETLantic or one of its provider packages. ShuETL must not create

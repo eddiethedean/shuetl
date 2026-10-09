@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass
-from re import fullmatch
-from typing import Any, Final
+from typing import Any
 
 from etlantic.control_plane import ControlPlaneError
 from etlantic.plugin_trust import is_production_profile
@@ -23,14 +22,11 @@ from starlette.routing import Mount, Route, WebSocketRoute
 
 from .compatibility import validate_core
 from .errors import (
-    InvalidPrefixError,
     MountConflictError,
     ProviderReadinessError,
 )
 from .identity import is_host_guard_pair, validate_authorizer
-
-_PREFIX_SEGMENT: Final = r"[A-Za-z0-9._~-]+"
-_PREFIX_PATTERN: Final = rf"/(?:{_PREFIX_SEGMENT})(?:/(?:{_PREFIX_SEGMENT}))*"
+from .routing import validate_prefix as _validate_prefix
 
 
 @dataclass(slots=True)
@@ -45,25 +41,6 @@ class _MountRecord:
 
 def _state_contains(app: FastAPI, key: str) -> bool:
     return key in app.state._state
-
-
-def _validate_prefix(prefix: str) -> str:
-    if not isinstance(prefix, str):
-        raise InvalidPrefixError(
-            f"invalid mount prefix: expected str, got {type(prefix).__name__}"
-        )
-    if prefix == "":
-        return prefix
-    if not fullmatch(_PREFIX_PATTERN, prefix):
-        raise InvalidPrefixError(
-            f"invalid mount prefix {prefix!r}: use '' or slash-prefixed "
-            "ASCII URL-unreserved path segments without a trailing slash"
-        )
-    if any(segment in {".", ".."} for segment in prefix.split("/")[1:]):
-        raise InvalidPrefixError(
-            f"invalid mount prefix {prefix!r}: dot path segments are not allowed"
-        )
-    return prefix
 
 
 def _route_operation_id(route: Any) -> str | None:

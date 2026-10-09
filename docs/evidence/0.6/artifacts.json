@@ -1,0 +1,16 @@
+{
+  "schema": "shuetl.phase06.artifacts/1",
+  "purpose": "development qualification, not release",
+  "artifacts": [
+    {
+      "filename": "shuetl-0.6.0-py3-none-any.whl",
+      "sha256": "350aa189602feb219867bd57f041bb39b5574e8493488f14ef8494a22d7d336c"
+    },
+    {
+      "filename": "shuetl_phase06_reference-0.0.1-py3-none-any.whl",
+      "sha256": "7e0b2d1faf373e8d2006ac7b1b9dded1144cddc06e451f49efe9f0ce3bf97d39"
+    }
+  ],
+  "etlantic_manifest": "docs/reviews/etlantic_0_57/wheel-manifest.json",
+  "source_date_epoch": 1580601600
+}

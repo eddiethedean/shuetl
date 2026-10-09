@@ -11,8 +11,8 @@ from scripts import check_evidence
 def test_phase_0_5_evidence_rejects_package_metadata_as_concurrent_identity_proof(
     tmp_path: Path,
 ) -> None:
-    evidence = tmp_path / check_evidence.EVIDENCE.name
-    shutil.copytree(check_evidence.EVIDENCE, evidence)
+    evidence = tmp_path / "0.5"
+    shutil.copytree((check_evidence.ROOT / "docs/evidence/0.5"), evidence)
     index = evidence / "README.md"
     rows = index.read_text().splitlines()
     for position, row in enumerate(rows):

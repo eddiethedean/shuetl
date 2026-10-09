@@ -8,7 +8,7 @@ import shuetl
 
 
 def test_package_metadata_and_minimal_surface() -> None:
-    assert metadata.version("shuetl") == "0.5.0"
+    assert metadata.version("shuetl") == "0.6.0"
     assert shuetl.__all__ == (
         "ShuETL",
         "ShuETLSettings",
@@ -23,11 +23,17 @@ def test_package_metadata_and_minimal_surface() -> None:
         "CapabilityError",
         "ProviderReadinessError",
         "HostIdentityAdapter",
+        "HostBindings",
+        "GatewayBindings",
+        "RuntimeBindings",
     )
     assert shuetl.ShuETL
     assert shuetl.ShuETLError
     assert shuetl.InvalidPrefixError
     assert shuetl.MountConflictError
     assert shuetl.HostIdentityAdapter
+    assert shuetl.HostBindings
+    assert shuetl.GatewayBindings
+    assert shuetl.RuntimeBindings
     for provisional_name in ("ProviderBundle", "create_app", "mount"):
         assert not hasattr(shuetl, provisional_name)

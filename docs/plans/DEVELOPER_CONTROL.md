@@ -189,7 +189,8 @@ advertised controls.
 - Preserve complete authorized records and artifact access through canonical
   service calls when convenience presentation omits detail.
 
-The 0.5 pilot proves the contract with controlled providers; 0.6 adds live run
-and extension evidence, 0.7 checks downstream control parity, and 0.8 qualifies
+The released 0.5 identity/gateway baseline does not prove this whole contract.
+Gate U and 0.6 qualify the public services, live runs and extensions; 0.7 checks
+downstream control parity, and 0.8 qualifies
 additional graph/engine/lifecycle profiles. Missing upstream support is visible
 release work, not a permanent restriction imposed on application developers.

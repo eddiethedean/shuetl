@@ -29,6 +29,8 @@ from etlantic_fastapi import (
 )
 from fastapi import Depends, Request
 
+from ._contracts import is_async_or_generator_callable
+
 _DEMO_DEPENDENCY_CODE = make_principal_from_header().__code__
 _GUARDED_CALLABLES: WeakKeyDictionary[Any, tuple[object, str]] = WeakKeyDictionary()
 
@@ -119,7 +121,7 @@ def _is_upstream_header_demo(value: object) -> bool:
 def _context_factory_shape_is_valid(value: object) -> bool:
     if not callable(value):
         return False
-    if _is_async_or_generator_callable(value):
+    if is_async_or_generator_callable(value):
         return False
     try:
         inspect.signature(value).bind(object(), object())
@@ -128,27 +130,13 @@ def _context_factory_shape_is_valid(value: object) -> bool:
     return True
 
 
-def _is_async_or_generator_callable(value: object) -> bool:
-    candidate = value
-    while isinstance(candidate, partial):
-        candidate = candidate.func
-    functions = (candidate, type(candidate).__call__)
-    return any(
-        inspect.iscoroutinefunction(function)
-        or inspect.isasyncgenfunction(function)
-        or inspect.isgeneratorfunction(function)
-        for function in functions
-        if function is not None
-    )
-
-
 def validate_authorizer(authorizer: object) -> Authorizer:
     """Validate the synchronous upstream authorizer seam without calling it."""
 
     if not isinstance(authorizer, Authorizer):
         raise TypeError("authorizer must implement the ETLantic Authorizer protocol")
     method = getattr(authorizer, "authorize", None)
-    if not callable(method) or _is_async_or_generator_callable(method):
+    if not callable(method) or is_async_or_generator_callable(method):
         raise TypeError("authorizer.authorize must be a synchronous callable")
     try:
         inspect.signature(method).bind(object(), "action", "resource")

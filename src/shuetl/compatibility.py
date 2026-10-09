@@ -7,17 +7,18 @@ from importlib.metadata import PackageNotFoundError, distributions, version
 from .errors import CapabilityError, CompatibilityError
 
 CORE_REQUIREMENTS = {
-    "shuetl": "0.5.0",
-    "etlantic": "0.55.0",
-    "etlantic-fastapi": "0.55.0",
+    "shuetl": "0.6.0",
+    "etlantic": "0.57.0",
+    "etlantic-fastapi": "0.57.0",
     "fastapi": "0.141.1",
     "pydantic": "2.13.5",
     "pydantic-settings": "2.15.0",
 }
 SQLITE_REQUIREMENTS = {
-    "etlantic-sqlmodel": "0.55.0",
+    "etlantic-sqlmodel": "0.57.0",
     "sqlalchemy": "2.0.52",
 }
+SERVER_REQUIREMENTS = {"uvicorn": "0.46.0"}
 POSTGRESQL_REQUIREMENTS = {
     **SQLITE_REQUIREMENTS,
     "psycopg": "3.3.5",
@@ -64,9 +65,11 @@ def validate_core() -> dict[str, str | None]:
         if (
             name.startswith("etlantic-")
             and installed is not None
-            and installed.split(".")[:2] != ["0", "55"]
+            and installed != CORE_REQUIREMENTS["etlantic"]
         ):
-            mismatches.append(f"{name}={installed} (requires the ETLantic 0.55 train)")
+            mismatches.append(
+                f"{name}={installed} (requires the ETLantic 0.57.0 train)"
+            )
     if mismatches:
         raise CompatibilityError(
             "incompatible ShuETL runtime packages: " + "; ".join(sorted(mismatches))
@@ -86,7 +89,7 @@ def validate_sqlite() -> dict[str, str | None]:
     if missing:
         raise CapabilityError(
             "SQLite capability is unavailable; install "
-            '`pip install "shuetl[sqlite]==0.5.0"`: ' + ", ".join(missing)
+            '`pip install "shuetl[sqlite]==0.6.0"`: ' + ", ".join(missing)
         )
     return versions
 
@@ -103,6 +106,24 @@ def validate_postgresql() -> dict[str, str | None]:
     if missing:
         raise CapabilityError(
             "PostgreSQL capability is unavailable; install "
-            '`pip install "shuetl[postgresql]==0.5.0"`: ' + ", ".join(missing)
+            '`pip install "shuetl[postgresql]==0.6.0"`: ' + ", ".join(missing)
         )
     return versions
+
+
+def validate_gateway_server() -> dict[str, str]:
+    """Require the pinned optional ASGI server before gateway initialization."""
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        installed = version("uvicorn")
+    except PackageNotFoundError:
+        installed = None
+    required = SERVER_REQUIREMENTS["uvicorn"]
+    if installed != required:
+        raise CapabilityError(
+            f"gateway server requires the pinned extra: install "
+            f'"shuetl[server]==0.6.0" (uvicorn=={required})'
+        )
+    assert installed is not None
+    return {"uvicorn": installed}

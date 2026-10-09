@@ -167,7 +167,7 @@ def test_restart_idempotency_events_schedules_and_firings(
     first_firing, created = bundle.schedules.claim_firing(
         ctx,
         schedule_id=schedule.schedule_id,
-        revision_id="revision-1",
+        revision_id=schedule.revision_id,
         nominal_fire_time="2026-09-13T00:00:00Z",
         owner_id="owner-1",
         fencing_token=1,
@@ -177,7 +177,7 @@ def test_restart_idempotency_events_schedules_and_firings(
     duplicate_firing, duplicate = bundle.schedules.claim_firing(
         ctx,
         schedule_id=schedule.schedule_id,
-        revision_id="revision-1",
+        revision_id=schedule.revision_id,
         nominal_fire_time="2026-09-13T00:00:00Z",
         owner_id="owner-1",
         fencing_token=1,
@@ -241,7 +241,7 @@ def test_triggering_identity_is_persisted_without_host_credentials(
                 "Cookie": f"session={cookie}",
                 "Idempotency-Key": "phase-0-5-trigger-identity",
             },
-            json={"payload": {"input_snapshot": "safe-input-reference"}},
+            json={"payload": {}},
         )
     assert response.status_code == 202
     submission_id = response.json()["submission_id"]
@@ -294,7 +294,9 @@ def test_workspace_firing_and_durable_identity_survive_restart(
         return provider.schedules.claim_firing(
             ctx,
             schedule_id="workspace-shared-schedule",
-            revision_id="workspace-shared-revision",
+            revision_id=provider.schedules.get(
+                ctx, "workspace-shared-schedule"
+            ).revision_id,
             nominal_fire_time="2026-09-13T00:00:00Z",
             owner_id="scope-scheduler",
             fencing_token=lease.fencing_token,

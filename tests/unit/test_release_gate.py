@@ -29,5 +29,7 @@ def test_release_gate_bootstraps_locked_test_environment(monkeypatch) -> None:
             "sqlite",
             "--extra",
             "postgresql",
+            "--extra",
+            "server",
         ],
     )

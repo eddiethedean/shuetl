@@ -18,6 +18,7 @@ ALLOWED_WHEEL_FILES = {
     f"shuetl-{VERSION}.dist-info/licenses/LICENSE",
     f"shuetl-{VERSION}.dist-info/entry_points.txt",
     "shuetl/__init__.py",
+    "shuetl/_contracts.py",
     "shuetl/errors.py",
     "shuetl/integration.py",
     "shuetl/identity.py",
@@ -28,6 +29,12 @@ ALLOWED_WHEEL_FILES = {
     "shuetl/postgresql.py",
     "shuetl/diagnostics.py",
     "shuetl/cli.py",
+    "shuetl/routing.py",
+    "shuetl/bindings.py",
+    "shuetl/factory.py",
+    "shuetl/backend.py",
+    "shuetl/probes.py",
+    "shuetl/runtime.py",
     "shuetl/py.typed",
 }
 
@@ -56,8 +63,8 @@ def check_wheel(path: Path) -> None:
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
         expected = {
-            "etlantic==0.55.0",
-            "etlantic-fastapi==0.55.0",
+            "etlantic==0.57.0",
+            "etlantic-fastapi==0.57.0",
             "fastapi==0.141.1",
             "pydantic==2.13.5",
             "pydantic-settings==2.15.0",
@@ -69,6 +76,18 @@ def check_wheel(path: Path) -> None:
             raise ValueError(
                 f"runtime dependencies missing: {sorted(expected - actual)}"
             )
+        server_train = {
+            line.removeprefix("Requires-Dist: ").strip()
+            for line in requires_dist
+            if "extra == 'server'" in line or 'extra == "server"' in line
+        }
+        if (
+            "uvicorn==0.46.0; extra == 'server'" not in server_train
+            and 'uvicorn==0.46.0; extra == "server"' not in server_train
+        ):
+            raise ValueError(
+                f"pinned gateway server extra missing: {sorted(server_train)}"
+            )
         optional_train = {
             line.removeprefix("Requires-Dist: ").strip()
             for line in requires_dist
@@ -78,10 +97,10 @@ def check_wheel(path: Path) -> None:
             or 'extra == "postgresql"' in line
         }
         if not any(
-            line.startswith("etlantic-sqlmodel==0.55.0") for line in optional_train
+            line.startswith("etlantic-sqlmodel==0.57.0") for line in optional_train
         ):
             raise ValueError(
-                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.55.0"
+                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.57.0"
             )
         forbidden_auth_dependencies = {
             "authlib",

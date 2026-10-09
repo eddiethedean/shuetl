@@ -533,8 +533,15 @@ def test_postgresql_scheduler_signal_drains_active_claim(
             runtime.close()
 
 
-def test_postgresql_scheduler_provider_outage_recovers(
-    settings: ShuETLSettings, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("role", "worker_kind"),
+    [("scheduler", "runs"), ("worker", "runs"), ("worker", "actions")],
+)
+def test_postgresql_runtime_role_provider_outage_recovers(
+    settings: ShuETLSettings,
+    monkeypatch: pytest.MonkeyPatch,
+    role: str,
+    worker_kind: str,
 ) -> None:
     engine = create_postgresql_engine(settings)
     try:
@@ -550,7 +557,8 @@ def test_postgresql_scheduler_provider_outage_recovers(
             probe_port = probe_listener.getsockname()[1]
         runtime = create_backend_runtime(
             _preview_settings(
-                role="scheduler",
+                role=role,
+                worker_kind=worker_kind,
                 store_id=f"pg-outage-{uuid.uuid4().hex[:10]}",
                 database_url=database_url.set(
                     host="127.0.0.1", port=proxy.port
@@ -594,7 +602,7 @@ def test_postgresql_scheduler_provider_outage_recovers(
             deadline = time.monotonic() + 8
             while time.monotonic() < deadline and (not handlers or not states):
                 time.sleep(0.01)
-            assert handlers and states, "PostgreSQL scheduler supervisor did not start"
+            assert handlers and states, f"PostgreSQL {role}/{worker_kind} did not start"
             deadline = time.monotonic() + 8
             while time.monotonic() < deadline and states[0].payload(False)[0] != 200:
                 time.sleep(0.01)

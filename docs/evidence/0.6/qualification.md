@@ -61,13 +61,15 @@ termination, or multiple competing processes.
 A supervisor regression injects an `unreachable` provider inspection followed
 by a healthy result. It verifies the role reports `provider_unavailable`, keeps
 liveness healthy, then restores readiness and usable upstream prerequisites.
-This covers status mapping. A separate PostgreSQL integration test now interrupts
-all runtime database connections through a local TCP fault proxy, observes
-`/ready` fail with `provider_unavailable` while `/live` remains healthy, restores
-connectivity, and observes readiness recover before SIGTERM shutdown. The new
-case passed locally on PostgreSQL 18.6 and in hosted CI on Python 3.11–3.13
-with no skips. It does not cover force termination or competing process
-recovery.
+This covers status mapping. A PostgreSQL integration test interrupts all runtime
+database connections through a local TCP fault proxy, observes `/ready` fail
+with `provider_unavailable` while `/live` remains healthy, restores connectivity,
+and observes readiness recover before SIGTERM shutdown. The test now covers
+scheduler, run-worker and action-worker roles. The full dedicated PostgreSQL
+18.6 integration file passed locally (9 passed, 0 skipped). Hosted run
+37984396221 qualifies the earlier scheduler-only case; hosted qualification of
+the two worker-role cases awaits CI for the current source. These tests do not
+cover force termination or competing process recovery.
 
 ## Limitations and release status
 

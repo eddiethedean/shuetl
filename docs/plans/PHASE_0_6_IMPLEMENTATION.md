@@ -246,6 +246,13 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
   connectivity, and verify readiness recovers before orderly shutdown. The
   disposable PostgreSQL test passed locally and in hosted Python 3.11–3.13 CI
   run 37984396221 with zero skips.
+- [x] Extend the TCP fault-proxy test to scheduler, run-worker and action-worker
+  roles. The full dedicated PostgreSQL 18.6 integration file passes locally
+  (9 passed, 0 skipped), including readiness loss, continued liveness and
+  recovery for all three roles. The earlier hosted run covers the scheduler
+  case; the two worker cases await this change's hosted matrix.
+- [ ] Pass the expanded outage/recovery cases in hosted PostgreSQL 18.6 CI on
+  Python 3.11–3.13 with zero skipped cases.
 - [x] Qualify exact cleanup order/count across all four installed CLI roles.
   The disposable PostgreSQL harness records one owned-engine disposal followed
   by one host-binding close after SIGTERM for gateway, scheduler, run worker and
@@ -255,10 +262,11 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
   leases, repairs work or writes terminal results.
 
 Exit: source implementation supports all four kinds. Installed startup and basic
-signal shutdown pass locally. PostgreSQL scheduler drain and connection outage/
-recovery pass locally and in hosted CI. Exact cleanup order/count passes locally
-for all four CLI roles; other-role active drain and external termination remain
-open pending hosted verification and additional failure cases.
+signal shutdown pass locally. PostgreSQL scheduler drain and scheduler outage/
+recovery pass locally and in hosted CI. Run-worker and action-worker outage/
+recovery pass locally and await hosted verification. Exact cleanup order/count
+passes locally for all four CLI roles; other-role active drain and external
+termination remain open pending hosted verification and additional failure cases.
 
 ## W05 — Qualify advertised live capabilities
 
@@ -447,8 +455,8 @@ or qualified with an exact command/artifact reference. No inferred PASS from
 issue closure. Use the dependency register for upstream state and the 0.6 ledger
 for executed qualification; do not create a second acceptance vocabulary.
 
-The next actions are W04 active-work/outage qualification and W05 capability
-scope/effect evidence. W06 process-failure injection, W07 transition rehearsal
-and W08 final-artifact/hosted acceptance remain release prerequisites. Do not
-close Gates A–C based on source implementation, Gate 0 feasibility or the basic
-hosted CLI smoke test.
+The next actions are hosted W04 outage qualification, W04 active-work/forced-
+termination qualification, and W05 capability scope/effect evidence. W06
+process-failure injection, W07 transition rehearsal and W08 final-artifact/
+hosted acceptance remain release prerequisites. Do not close Gates A–C based on
+source implementation, Gate 0 feasibility or the basic hosted CLI smoke test.

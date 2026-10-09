@@ -16,7 +16,7 @@ The installed Gate 0 reference workload has been expanded to execute a local
 CSV-to-PostgreSQL transfer with typed normalization, filtering, quality
 accept/reject outputs, and independent sink assertions. Its local PostgreSQL
 18.6 run passes. The required hosted Python 3.11–3.13 Gate 0 matrix and
-installed-role CLI matrix pass on source commit `e125817`; the exact CI records
+installed-role CLI matrix pass on source commit `5baafe1`; the exact CI records
 and wheel hashes are stored under `docs/evidence/0.6/hosted-gate0/` and
 `hosted-cli/`. This qualifies the development installed baseline only; final
 artifact qualification and the broader acceptance matrix remain open.
@@ -334,8 +334,8 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
 - [x] Add a separate hosted PostgreSQL 18.6 Gate 0 matrix job that builds and
   installs ShuETL and the independent reference workload outside the checkout,
   runs canonical manual/native-scheduled transfer, and uploads sink-backed
-  evidence on Python 3.11–3.13. CI run 37979518647 passed all three versions;
-  checked-in records bind the runs to source commit `e125817` and exact wheel
+  evidence on Python 3.11–3.13. CI run 37980178783 passed all three versions;
+  checked-in records bind the runs to source commit `5baafe1` and exact wheel
   hashes. This does not close final-wheel acceptance.
 - [x] Locally and in hosted CI, build/install the development wheel and reference
   host outside the checkout, verify origins, and run all role kinds against

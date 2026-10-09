@@ -23,7 +23,7 @@ interpreter checks, not additional distinct coverage.
 | Python version | 3.11.14, 3.12.13, 3.13.9 |
 | uv version | Exact executable version in validation.json |
 | ETLantic source revision | Release tag d1f4e5a4d013e37f8adc54b4644ea9b2be66f801 |
-| ShuETL source commit | `e1258176213307b862104cc8e6455abde1b76d60` |
+| ShuETL source commit | `5baafe1b488352ccddad3c3a56a58e93929505e5` |
 | ShuETL import origin | Isolated wheel site-packages/shuetl/__init__.py |
 | ETLantic import origin | Isolated wheel site-packages/etlantic/__init__.py |
 | etlantic-fastapi import origin | Isolated wheel site-packages/etlantic_fastapi/__init__.py |
@@ -66,8 +66,8 @@ performs typed CSV normalization, filtering, quality acceptance/rejection, and
 writes to independent PostgreSQL accepted/rejected sinks; the harness asserts
 exact sink rows and effect receipts. Local and hosted PostgreSQL 18.6 installed-
 wheel runs pass on Python 3.11–3.13. The committed [hosted Gate 0 records](hosted-gate0/)
-and [installed CLI records](hosted-cli/) come from [CI run 37979518647](https://github.com/eddiethedean/shuetl/actions/runs/37979518647)
-and are bound to source commit `e1258176213307b862104cc8e6455abde1b76d60`.
+and [installed CLI records](hosted-cli/) come from [CI run 37980178783](https://github.com/eddiethedean/shuetl/actions/runs/37980178783)
+and are bound to source commit `5baafe1b488352ccddad3c3a56a58e93929505e5`.
 The ShuETL wheel SHA-256 is
 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`;
 Gate 0 reference workload SHA-256 is
@@ -130,8 +130,8 @@ action worker each reach `/ready` and `/live`, receive SIGTERM, exit successfull
 and leave no seeded credential sentinels in captured logs. The runtime role has
 no schema CREATE rights, migration-role membership or owned objects. The same
 qualification passes in hosted CI on Python 3.11–3.13 for source commit
-`e1258176213307b862104cc8e6455abde1b76d60`; the redacted per-interpreter records
-are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37979518647)
+`5baafe1b488352ccddad3c3a56a58e93929505e5`; the redacted per-interpreter records
+are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37980178783)
 binds those results to ShuETL wheel SHA-256
 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` and
 reference-host wheel SHA-256

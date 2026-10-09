@@ -10,7 +10,7 @@
         "job_fencing"
       ],
       "in_flight": 0,
-      "observed_at": "2026-10-09T19:20:44.671185Z",
+      "observed_at": "2026-10-09T19:26:30.805022Z",
       "prerequisites": "usable",
       "reason_code": null,
       "role": "action_worker"
@@ -30,17 +30,17 @@
   },
   "firings": [
     {
-      "created_at": "2026-10-09T19:20:45.106449Z",
-      "firing_id": "fire-7a565b1d9e27457c",
-      "logical_key": "sch-e717753ed6654dfd:rev-3de65e5e48d3:2026-10-09T00:01:00Z",
+      "created_at": "2026-10-09T19:26:31.427995Z",
+      "firing_id": "fire-5dc238d143c946b0",
+      "logical_key": "sch-46a67c110cd84283:rev-39aac4dd7353:2026-10-09T00:01:00Z",
       "metadata": {
         "admission": "managed",
-        "definition_revision_id": "defrev-0b28db4fc2df44cc",
+        "definition_revision_id": "defrev-6ae2902bb7304b8a",
         "parameter_fingerprint": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
         "plan_fingerprint": "34e4825126ab78845218f1ed678839f71a08d652a2db1fc482a8a60d220fd53c",
-        "policy_fingerprint": "65060036bcec138df259448c91b67116e38005fc3498740439dd3cd8d088a72f",
+        "policy_fingerprint": "925c78b8039d0b69a0b43f13e36ac6939aca8a8a9731b4c14580f51a08e5a569",
         "reference_fingerprint": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
-        "selected_definition_revision_id": "defrev-0b28db4fc2df44cc",
+        "selected_definition_revision_id": "defrev-6ae2902bb7304b8a",
         "trigger_principal": {
           "issuer": "reference-host",
           "kind": "service",
@@ -48,11 +48,11 @@
         }
       },
       "nominal_fire_time": "2026-10-09T00:01:00Z",
-      "revision_id": "rev-3de65e5e48d3",
-      "schedule_id": "sch-e717753ed6654dfd",
+      "revision_id": "rev-39aac4dd7353",
+      "schedule_id": "sch-46a67c110cd84283",
       "schema": "etlantic.firing/1",
       "status": "accepted",
-      "submission_id": "sub-c93fe739ecd24d5b",
+      "submission_id": "sub-b8ff844c129e4292",
       "tenant_id": "gate0",
       "workspace_id": "qualification"
     }
@@ -66,17 +66,17 @@
     "body": {
       "firings": [
         {
-          "created_at": "2026-10-09T19:20:45.106449Z",
-          "firing_id": "fire-7a565b1d9e27457c",
-          "logical_key": "sch-e717753ed6654dfd:rev-3de65e5e48d3:2026-10-09T00:01:00Z",
+          "created_at": "2026-10-09T19:26:31.427995Z",
+          "firing_id": "fire-5dc238d143c946b0",
+          "logical_key": "sch-46a67c110cd84283:rev-39aac4dd7353:2026-10-09T00:01:00Z",
           "metadata": {
             "admission": "managed",
-            "definition_revision_id": "defrev-0b28db4fc2df44cc",
+            "definition_revision_id": "defrev-6ae2902bb7304b8a",
             "parameter_fingerprint": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
             "plan_fingerprint": "34e4825126ab78845218f1ed678839f71a08d652a2db1fc482a8a60d220fd53c",
-            "policy_fingerprint": "65060036bcec138df259448c91b67116e38005fc3498740439dd3cd8d088a72f",
+            "policy_fingerprint": "925c78b8039d0b69a0b43f13e36ac6939aca8a8a9731b4c14580f51a08e5a569",
             "reference_fingerprint": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
-            "selected_definition_revision_id": "defrev-0b28db4fc2df44cc",
+            "selected_definition_revision_id": "defrev-6ae2902bb7304b8a",
             "trigger_principal": {
               "issuer": "reference-host",
               "kind": "service",
@@ -84,11 +84,11 @@
             }
           },
           "nominal_fire_time": "2026-10-09T00:01:00Z",
-          "revision_id": "rev-3de65e5e48d3",
-          "schedule_id": "sch-e717753ed6654dfd",
+          "revision_id": "rev-39aac4dd7353",
+          "schedule_id": "sch-46a67c110cd84283",
           "schema": "etlantic.firing/1",
           "status": "accepted",
-          "submission_id": "sub-c93fe739ecd24d5b",
+          "submission_id": "sub-b8ff844c129e4292",
           "tenant_id": "gate0",
           "workspace_id": "qualification"
         }
@@ -100,30 +100,30 @@
   "manual_preparation": {
     "body": {
       "action": "run.prepare",
-      "action_id": "act-6eb78f9b6afd400daeaed5e4",
+      "action_id": "act-8567d468e90449efaf005347",
       "attempt": 1,
-      "completed_at": "2026-10-09T19:20:44.663471Z",
-      "created_at": "2026-10-09T19:20:44.453649Z",
-      "deadline_at": "2026-10-09T19:25:44.451811Z",
+      "completed_at": "2026-10-09T19:26:30.794316Z",
+      "created_at": "2026-10-09T19:26:30.456636Z",
+      "deadline_at": "2026-10-09T19:31:30.454134Z",
       "error_code": null,
-      "operation_id": "act-6eb78f9b6afd400daeaed5e4",
+      "operation_id": "act-8567d468e90449efaf005347",
       "result": {
-        "acceptance_id": "acc-c417878b0e794ed2",
-        "created_at": "2026-10-09T19:20:44.619555Z",
+        "acceptance_id": "acc-bc152bf33d1148d6",
+        "created_at": "2026-10-09T19:26:30.733678Z",
         "events_url": null,
-        "idempotency_key": "preparation-act-6eb78f9b6afd400daeaed5e4",
-        "resource_id": "run-6256f95350cba1c3846f0cb1",
+        "idempotency_key": "preparation-act-8567d468e90449efaf005347",
+        "resource_id": "run-9a8d03a828fe07b6ad4fbfb1",
         "resource_type": "run",
         "schema": "etlantic.control_plane.accept_receipt/1",
         "status": "accepted",
         "status_url": null,
-        "submission_id": "sub-919e4e4537e348d7",
+        "submission_id": "sub-580bfc56a76c446e",
         "tenant_id": "gate0",
         "workspace_id": "qualification"
       },
       "result_expires_at": null,
       "schema": "etlantic.control_plane.preparation_operation/1",
-      "started_at": "2026-10-09T19:20:44.473979Z",
+      "started_at": "2026-10-09T19:26:30.487463Z",
       "status": "succeeded",
       "tenant_id": "gate0",
       "workspace_id": "qualification"
@@ -133,7 +133,7 @@
   "manual_report": {
     "artifacts": [
       {
-        "identity": "artifact:default/default/default/gate0/run-6256f95350cba1c3846f0cb1/__main___Transfer/source.result",
+        "identity": "artifact:default/default/default/gate0/run-9a8d03a828fe07b6ad4fbfb1/__main___Transfer/source.result",
         "logical_output": "source.result",
         "metadata": {},
         "record_count": null,
@@ -141,7 +141,7 @@
         "strategy": "external"
       },
       {
-        "identity": "artifact:default/default/default/gate0/run-6256f95350cba1c3846f0cb1/__main___Transfer/normalized.result",
+        "identity": "artifact:default/default/default/gate0/run-9a8d03a828fe07b6ad4fbfb1/__main___Transfer/normalized.result",
         "logical_output": "normalized.result",
         "metadata": {},
         "record_count": null,
@@ -149,7 +149,7 @@
         "strategy": "lazy"
       },
       {
-        "identity": "artifact:default/default/default/gate0/run-6256f95350cba1c3846f0cb1/__main___Transfer/quality.result",
+        "identity": "artifact:default/default/default/gate0/run-9a8d03a828fe07b6ad4fbfb1/__main___Transfer/quality.result",
         "logical_output": "quality.result",
         "metadata": {},
         "record_count": null,
@@ -157,7 +157,7 @@
         "strategy": "durable"
       },
       {
-        "identity": "artifact:default/default/default/gate0/run-6256f95350cba1c3846f0cb1/__main___Transfer/quality.rejected",
+        "identity": "artifact:default/default/default/gate0/run-9a8d03a828fe07b6ad4fbfb1/__main___Transfer/quality.rejected",
         "logical_output": "quality.rejected",
         "metadata": {},
         "record_count": null,
@@ -167,8 +167,8 @@
     ],
     "backend_runs": [],
     "diagnostics": [],
-    "duration_seconds": 0.080815,
-    "ended_at": "2026-10-09T19:20:44.978910+00:00",
+    "duration_seconds": 0.11557,
+    "ended_at": "2026-10-09T19:26:31.244759+00:00",
     "intent": "standard",
     "lineage": [
       {
@@ -190,19 +190,19 @@
     ],
     "metadata": {
       "etlantic.cleanup_obligations": [],
-      "etlantic.control_plane.artifact_storage_run_id": "run-6256f95350cba1c3846f0cb1",
+      "etlantic.control_plane.artifact_storage_run_id": "run-9a8d03a828fe07b6ad4fbfb1",
       "etlantic.control_plane.execution": {
         "attempt_history": [
           {
-            "attempt_id": "att-4a464682c8e34abf",
+            "attempt_id": "att-e70c22cfbff94a0a",
             "role": "executed"
           }
         ],
-        "attempt_id": "att-4a464682c8e34abf",
-        "canonical_intent_fingerprint": "63c1450de6fff97df50048c9ee91c97699d8916df650e360e5a07a89c61102cc",
+        "attempt_id": "att-e70c22cfbff94a0a",
+        "canonical_intent_fingerprint": "ce138cd0cc7aa415f04480a6a0ba997face08e3eca948d01a9dd02b5497a182f",
         "no_write": false,
         "plan_fingerprint": "34e4825126ab78845218f1ed678839f71a08d652a2db1fc482a8a60d220fd53c",
-        "submission_id": "sub-919e4e4537e348d7"
+        "submission_id": "sub-580bfc56a76c446e"
       },
       "etlantic.observability": {
         "delivery": "best_effort",
@@ -230,15 +230,15 @@
       "etlantic.publication_receipts": [
         {
           "provider": "postgresql",
-          "publication_id": "pgpub-621d50aba291c49303995ab1195db1a4b8b708091023df28d5394c28b99d4b06",
+          "publication_id": "pgpub-872ed44c87dda864ed2238614bc9f21ce7e0dcd19ee04f4d698a7317739afe9b",
           "status": "committed",
-          "unit_id": "rejected"
+          "unit_id": "sink"
         },
         {
           "provider": "postgresql",
-          "publication_id": "pgpub-8e32338dfe5e658ab407c034409e5a5ea9623c0e2187a04219eb3f0467b35d4c",
+          "publication_id": "pgpub-76ebe4f80714f4ae81e0c5e19a599281e5b6d844c02571713d6961f3e7687110",
           "status": "committed",
-          "unit_id": "sink"
+          "unit_id": "rejected"
         }
       ],
       "etlantic.scheduler": "local",
@@ -251,7 +251,7 @@
     "plan_id": "plan:34e4825126ab7884",
     "profile": "gate0",
     "recommendations": [],
-    "run_id": "run-6256f95350cba1c3846f0cb1",
+    "run_id": "run-9a8d03a828fe07b6ad4fbfb1",
     "schema": "etlantic.run_report/1",
     "schema_observations": [
       {
@@ -290,81 +290,81 @@
         "subject_id": "rejected"
       }
     ],
-    "started_at": "2026-10-09T19:20:44.898095+00:00",
+    "started_at": "2026-10-09T19:26:31.129189+00:00",
     "state_transitions": [],
     "status": "succeeded",
     "steps": [
       {
         "attempts": 1,
-        "duration_seconds": 0.003612,
-        "ended_at": "2026-10-09T19:20:44.902101+00:00",
+        "duration_seconds": 0.004992,
+        "ended_at": "2026-10-09T19:26:31.134665+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": null,
         "metadata": {},
         "records_in": null,
         "records_out": 3,
-        "started_at": "2026-10-09T19:20:44.898489+00:00",
+        "started_at": "2026-10-09T19:26:31.129673+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/source",
         "step_name": "source"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.000891,
-        "ended_at": "2026-10-09T19:20:44.903164+00:00",
+        "duration_seconds": 0.00124,
+        "ended_at": "2026-10-09T19:26:31.136172+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": "__main__:NormalizeRows/local",
         "metadata": {},
         "records_in": 3,
         "records_out": 2,
-        "started_at": "2026-10-09T19:20:44.902273+00:00",
+        "started_at": "2026-10-09T19:26:31.134932+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/normalized",
         "step_name": "normalized"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.002851,
-        "ended_at": "2026-10-09T19:20:44.906145+00:00",
+        "duration_seconds": 0.004869,
+        "ended_at": "2026-10-09T19:26:31.141232+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": "etlantic.quality.gate:ReferenceQualityGate/local",
         "metadata": {},
         "records_in": 2,
         "records_out": 2,
-        "started_at": "2026-10-09T19:20:44.903294+00:00",
+        "started_at": "2026-10-09T19:26:31.136363+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/quality",
         "step_name": "quality"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.071801,
-        "ended_at": "2026-10-09T19:20:44.978104+00:00",
+        "duration_seconds": 0.100213,
+        "ended_at": "2026-10-09T19:26:31.241707+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": null,
         "metadata": {},
         "records_in": 1,
         "records_out": 1,
-        "started_at": "2026-10-09T19:20:44.906303+00:00",
+        "started_at": "2026-10-09T19:26:31.141494+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/sink",
         "step_name": "sink"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.070156,
-        "ended_at": "2026-10-09T19:20:44.977020+00:00",
+        "duration_seconds": 0.101634,
+        "ended_at": "2026-10-09T19:26:31.244008+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": null,
         "metadata": {},
         "records_in": 1,
         "records_out": 1,
-        "started_at": "2026-10-09T19:20:44.906864+00:00",
+        "started_at": "2026-10-09T19:26:31.142374+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/rejected",
         "step_name": "rejected"
@@ -466,7 +466,7 @@
         "lease_fencing"
       ],
       "in_flight": 0,
-      "observed_at": "2026-10-09T19:20:45.010997Z",
+      "observed_at": "2026-10-09T19:26:31.292804Z",
       "prerequisites": "usable",
       "reason_code": null,
       "role": "run_worker"
@@ -1080,7 +1080,7 @@
         "rejected"
       ]
     },
-    "revision_id": "defrev-0b28db4fc2df44cc"
+    "revision_id": "defrev-6ae2902bb7304b8a"
   },
   "postgresql_version": "18.6 (Debian 18.6-1.pgdg12+2)",
   "reference_wheel_sha256": "777e0e45bf6c351df92e5340cb3a490f093f3daf6e4e116d28abc42f18bb9e52",
@@ -1107,7 +1107,7 @@
       "execution_imported": false,
       "http_imported": true,
       "origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/etlantic_sqlmodel/__init__.py",
-      "pid": 2673,
+      "pid": 2857,
       "reference_origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/phase06_reference/__main__.py",
       "started": "gateway",
       "startup_sql": [
@@ -1241,7 +1241,7 @@
       "execution_imported": false,
       "http_imported": false,
       "origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/etlantic_sqlmodel/__init__.py",
-      "pid": 2698,
+      "pid": 2880,
       "reference_origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/phase06_reference/__main__.py",
       "started": "scheduler",
       "startup_sql": [
@@ -1375,7 +1375,7 @@
       "execution_imported": true,
       "http_imported": false,
       "origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/etlantic_sqlmodel/__init__.py",
-      "pid": 2700,
+      "pid": 2882,
       "reference_origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/phase06_reference/__main__.py",
       "started": "run-worker",
       "startup_sql": [
@@ -1509,7 +1509,7 @@
       "execution_imported": false,
       "http_imported": false,
       "origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/etlantic_sqlmodel/__init__.py",
-      "pid": 2703,
+      "pid": 2885,
       "reference_origin": "/home/runner/work/_temp/gate0-venv/lib/python3.11/site-packages/phase06_reference/__main__.py",
       "started": "action-worker",
       "startup_sql": [
@@ -1657,7 +1657,7 @@
   "scheduled_report": {
     "artifacts": [
       {
-        "identity": "artifact:default/default/default/gate0/run-ff15ca215ca8bac0e3abb5f7/__main___Transfer/source.result",
+        "identity": "artifact:default/default/default/gate0/run-ded7d3668ec3aee8290dc59d/__main___Transfer/source.result",
         "logical_output": "source.result",
         "metadata": {},
         "record_count": null,
@@ -1665,7 +1665,7 @@
         "strategy": "external"
       },
       {
-        "identity": "artifact:default/default/default/gate0/run-ff15ca215ca8bac0e3abb5f7/__main___Transfer/normalized.result",
+        "identity": "artifact:default/default/default/gate0/run-ded7d3668ec3aee8290dc59d/__main___Transfer/normalized.result",
         "logical_output": "normalized.result",
         "metadata": {},
         "record_count": null,
@@ -1673,7 +1673,7 @@
         "strategy": "lazy"
       },
       {
-        "identity": "artifact:default/default/default/gate0/run-ff15ca215ca8bac0e3abb5f7/__main___Transfer/quality.result",
+        "identity": "artifact:default/default/default/gate0/run-ded7d3668ec3aee8290dc59d/__main___Transfer/quality.result",
         "logical_output": "quality.result",
         "metadata": {},
         "record_count": null,
@@ -1681,7 +1681,7 @@
         "strategy": "durable"
       },
       {
-        "identity": "artifact:default/default/default/gate0/run-ff15ca215ca8bac0e3abb5f7/__main___Transfer/quality.rejected",
+        "identity": "artifact:default/default/default/gate0/run-ded7d3668ec3aee8290dc59d/__main___Transfer/quality.rejected",
         "logical_output": "quality.rejected",
         "metadata": {},
         "record_count": null,
@@ -1691,8 +1691,8 @@
     ],
     "backend_runs": [],
     "diagnostics": [],
-    "duration_seconds": 0.077034,
-    "ended_at": "2026-10-09T19:20:45.466873+00:00",
+    "duration_seconds": 0.110694,
+    "ended_at": "2026-10-09T19:26:31.937617+00:00",
     "intent": "standard",
     "lineage": [
       {
@@ -1714,19 +1714,19 @@
     ],
     "metadata": {
       "etlantic.cleanup_obligations": [],
-      "etlantic.control_plane.artifact_storage_run_id": "run-ff15ca215ca8bac0e3abb5f7",
+      "etlantic.control_plane.artifact_storage_run_id": "run-ded7d3668ec3aee8290dc59d",
       "etlantic.control_plane.execution": {
         "attempt_history": [
           {
-            "attempt_id": "att-a40ae4bf22214637",
+            "attempt_id": "att-5f9a8447fcb04a0c",
             "role": "executed"
           }
         ],
-        "attempt_id": "att-a40ae4bf22214637",
-        "canonical_intent_fingerprint": "63c1450de6fff97df50048c9ee91c97699d8916df650e360e5a07a89c61102cc",
+        "attempt_id": "att-5f9a8447fcb04a0c",
+        "canonical_intent_fingerprint": "ce138cd0cc7aa415f04480a6a0ba997face08e3eca948d01a9dd02b5497a182f",
         "no_write": false,
         "plan_fingerprint": "34e4825126ab78845218f1ed678839f71a08d652a2db1fc482a8a60d220fd53c",
-        "submission_id": "sub-c93fe739ecd24d5b"
+        "submission_id": "sub-b8ff844c129e4292"
       },
       "etlantic.observability": {
         "delivery": "best_effort",
@@ -1754,15 +1754,15 @@
       "etlantic.publication_receipts": [
         {
           "provider": "postgresql",
-          "publication_id": "pgpub-38670840219f24c7d43eff7e45a5b01361de3f1701f3da1aeefadb58a8aff74e",
+          "publication_id": "pgpub-384e222dc5edf35d7c7ed02d041fed25787e80ac6539502e8e566405ada625bf",
           "status": "committed",
-          "unit_id": "rejected"
+          "unit_id": "sink"
         },
         {
           "provider": "postgresql",
-          "publication_id": "pgpub-6d133a22fc36f2a4cc863d17a9fc63452cde995bb07a033f731b4470fa1c60c7",
+          "publication_id": "pgpub-bd6656c28e7e05e51cbfee6b3ce0f905fdd6210cda94931c74d2e9ff78f288a0",
           "status": "committed",
-          "unit_id": "sink"
+          "unit_id": "rejected"
         }
       ],
       "etlantic.scheduler": "local",
@@ -1775,7 +1775,7 @@
     "plan_id": "plan:34e4825126ab7884",
     "profile": "gate0",
     "recommendations": [],
-    "run_id": "run-ff15ca215ca8bac0e3abb5f7",
+    "run_id": "run-ded7d3668ec3aee8290dc59d",
     "schema": "etlantic.run_report/1",
     "schema_observations": [
       {
@@ -1814,81 +1814,81 @@
         "subject_id": "rejected"
       }
     ],
-    "started_at": "2026-10-09T19:20:45.389839+00:00",
+    "started_at": "2026-10-09T19:26:31.826923+00:00",
     "state_transitions": [],
     "status": "succeeded",
     "steps": [
       {
         "attempts": 1,
-        "duration_seconds": 0.001217,
-        "ended_at": "2026-10-09T19:20:45.391371+00:00",
+        "duration_seconds": 0.001572,
+        "ended_at": "2026-10-09T19:26:31.828847+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": null,
         "metadata": {},
         "records_in": null,
         "records_out": 3,
-        "started_at": "2026-10-09T19:20:45.390154+00:00",
+        "started_at": "2026-10-09T19:26:31.827275+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/source",
         "step_name": "source"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.000877,
-        "ended_at": "2026-10-09T19:20:45.392384+00:00",
+        "duration_seconds": 0.001122,
+        "ended_at": "2026-10-09T19:26:31.830150+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": "__main__:NormalizeRows/local",
         "metadata": {},
         "records_in": 3,
         "records_out": 2,
-        "started_at": "2026-10-09T19:20:45.391507+00:00",
+        "started_at": "2026-10-09T19:26:31.829028+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/normalized",
         "step_name": "normalized"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.002096,
-        "ended_at": "2026-10-09T19:20:45.394595+00:00",
+        "duration_seconds": 0.002647,
+        "ended_at": "2026-10-09T19:26:31.832945+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": "etlantic.quality.gate:ReferenceQualityGate/local",
         "metadata": {},
         "records_in": 2,
         "records_out": 2,
-        "started_at": "2026-10-09T19:20:45.392499+00:00",
+        "started_at": "2026-10-09T19:26:31.830298+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/quality",
         "step_name": "quality"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.071587,
-        "ended_at": "2026-10-09T19:20:45.466317+00:00",
+        "duration_seconds": 0.102486,
+        "ended_at": "2026-10-09T19:26:31.935651+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": null,
         "metadata": {},
         "records_in": 1,
         "records_out": 1,
-        "started_at": "2026-10-09T19:20:45.394730+00:00",
+        "started_at": "2026-10-09T19:26:31.833165+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/sink",
         "step_name": "sink"
       },
       {
         "attempts": 1,
-        "duration_seconds": 0.069608,
-        "ended_at": "2026-10-09T19:20:45.464860+00:00",
+        "duration_seconds": 0.102929,
+        "ended_at": "2026-10-09T19:26:31.936886+00:00",
         "error_message": null,
         "failure_stage": null,
         "implementation": null,
         "metadata": {},
         "records_in": 1,
         "records_out": 1,
-        "started_at": "2026-10-09T19:20:45.395252+00:00",
+        "started_at": "2026-10-09T19:26:31.833957+00:00",
         "status": "succeeded",
         "step_id": "__main__:Transfer/rejected",
         "step_name": "rejected"
@@ -1979,7 +1979,7 @@
       }
     ]
   },
-  "scheduled_submission_id": "sub-c93fe739ecd24d5b",
+  "scheduled_submission_id": "sub-b8ff844c129e4292",
   "scheduled_tick": {
     "count": 1,
     "status": {
@@ -1991,7 +1991,7 @@
         "lease_fencing"
       ],
       "in_flight": 0,
-      "observed_at": "2026-10-09T19:20:45.498442Z",
+      "observed_at": "2026-10-09T19:26:31.982265Z",
       "prerequisites": "usable",
       "reason_code": null,
       "role": "run_worker"
@@ -2009,7 +2009,7 @@
         "managed_occurrence_recovery"
       ],
       "in_flight": 0,
-      "observed_at": "2026-10-09T19:20:45.302608Z",
+      "observed_at": "2026-10-09T19:26:31.702678Z",
       "prerequisites": "usable",
       "reason_code": null,
       "role": "scheduler"
@@ -2020,33 +2020,33 @@
   "shuetl_wheel_sha256": "b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15",
   "sink_effects": [
     [
-      "pgfx-38670840219f24c7d43eff7e45a5b01361de3f1701f3da1aeefadb58a8aff74e",
-      "pgpub-38670840219f24c7d43eff7e45a5b01361de3f1701f3da1aeefadb58a8aff74e",
+      "pgfx-384e222dc5edf35d7c7ed02d041fed25787e80ac6539502e8e566405ada625bf",
+      "pgpub-384e222dc5edf35d7c7ed02d041fed25787e80ac6539502e8e566405ada625bf",
       1
     ],
     [
-      "pgfx-621d50aba291c49303995ab1195db1a4b8b708091023df28d5394c28b99d4b06",
-      "pgpub-621d50aba291c49303995ab1195db1a4b8b708091023df28d5394c28b99d4b06",
+      "pgfx-76ebe4f80714f4ae81e0c5e19a599281e5b6d844c02571713d6961f3e7687110",
+      "pgpub-76ebe4f80714f4ae81e0c5e19a599281e5b6d844c02571713d6961f3e7687110",
       1
     ],
     [
-      "pgfx-6d133a22fc36f2a4cc863d17a9fc63452cde995bb07a033f731b4470fa1c60c7",
-      "pgpub-6d133a22fc36f2a4cc863d17a9fc63452cde995bb07a033f731b4470fa1c60c7",
+      "pgfx-872ed44c87dda864ed2238614bc9f21ce7e0dcd19ee04f4d698a7317739afe9b",
+      "pgpub-872ed44c87dda864ed2238614bc9f21ce7e0dcd19ee04f4d698a7317739afe9b",
       1
     ],
     [
-      "pgfx-8e32338dfe5e658ab407c034409e5a5ea9623c0e2187a04219eb3f0467b35d4c",
-      "pgpub-8e32338dfe5e658ab407c034409e5a5ea9623c0e2187a04219eb3f0467b35d4c",
+      "pgfx-bd6656c28e7e05e51cbfee6b3ce0f905fdd6210cda94931c74d2e9ff78f288a0",
+      "pgpub-bd6656c28e7e05e51cbfee6b3ce0f905fdd6210cda94931c74d2e9ff78f288a0",
       1
     ],
     [
-      "pgfx-c99d4c2a2d82bc76d93609f8ff32e5fb4abc6a80e97ec3cd2c39aee02187c650",
-      "pgpub-c99d4c2a2d82bc76d93609f8ff32e5fb4abc6a80e97ec3cd2c39aee02187c650",
+      "pgfx-bdc0c892d0fc0240ee961829911b4c5a512e3921e2b84543767131583b739d5f",
+      "pgpub-bdc0c892d0fc0240ee961829911b4c5a512e3921e2b84543767131583b739d5f",
       1
     ],
     [
-      "pgfx-e867b3675ed6bb90683788bc5624254e28f7214df68a0f56318d7f0e8045fd60",
-      "pgpub-e867b3675ed6bb90683788bc5624254e28f7214df68a0f56318d7f0e8045fd60",
+      "pgfx-cea353b3dda71c1af465ed4b217ae95b908cc670ae5dab0cb23bad8d3703fd61",
+      "pgpub-cea353b3dda71c1af465ed4b217ae95b908cc670ae5dab0cb23bad8d3703fd61",
       1
     ]
   ],
@@ -2067,5 +2067,5 @@
       6
     ]
   ],
-  "source_commit": "e1258176213307b862104cc8e6455abde1b76d60"
+  "source_commit": "5baafe1b488352ccddad3c3a56a58e93929505e5"
 }

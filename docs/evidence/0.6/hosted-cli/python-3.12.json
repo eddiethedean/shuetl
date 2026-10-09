@@ -9,13 +9,13 @@
   "etlantic_sql_version": "0.57.0",
   "etlantic_version": "0.57.0",
   "etlantic_sqlmodel_version": "0.57.0",
-  "source_commit": "5baafe1b488352ccddad3c3a56a58e93929505e5",
+  "source_commit": "0e6673b96bee3a5a603d2b55662f4f9ba5c54c6b",
   "shuetl_wheel_sha256": "b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15",
   "reference_wheel_sha256": "1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769",
   "roles": [
     {
       "role": "gateway",
-      "pid": 2648,
+      "pid": 2641,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -29,11 +29,11 @@
         "role": "gateway"
       },
       "probe_host": "127.0.0.1",
-      "gateway_port": 54885
+      "gateway_port": 35009
     },
     {
       "role": "scheduler",
-      "pid": 2662,
+      "pid": 2676,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -51,7 +51,7 @@
     },
     {
       "role": "run_worker",
-      "pid": 2677,
+      "pid": 2689,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -69,7 +69,7 @@
     },
     {
       "role": "action_worker",
-      "pid": 2711,
+      "pid": 2702,
       "ready": {
         "process_state": "running",
         "ready": true,
@@ -98,25 +98,25 @@
     {
       "etlantic_fastapi_imported": true,
       "fastapi_imported": true,
-      "pid": 2648,
+      "pid": 2641,
       "role": "gateway"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 2662,
+      "pid": 2676,
       "role": "scheduler"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 2677,
+      "pid": 2689,
       "role": "worker-runs"
     },
     {
       "etlantic_fastapi_imported": false,
       "fastapi_imported": false,
-      "pid": 2711,
+      "pid": 2702,
       "role": "worker-actions"
     }
   ],

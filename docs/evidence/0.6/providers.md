@@ -3,9 +3,9 @@
 Status: qualification inventory, not a final support promise. The ETLantic SQL
 provider is marked **Experimental** in version 0.57.0. The rows below record
 observed combinations and keep untested modes out of the release claim until
-the full AC-028–033 review is complete. The CSV and PostgreSQL snapshot append
-rows passed the hosted installed-artifact matrix. The PostgreSQL upsert row
-currently has local evidence only.
+the full AC-028–033 review is complete. CSV append, PostgreSQL snapshot append,
+and one primary-key upsert case passed the hosted installed-artifact matrix on
+Python 3.11–3.13.
 
 ## Ownership boundary
 
@@ -27,7 +27,7 @@ The adopting host owns identity/resource enrollment and any application policy.
 | --- | --- | --- | --- | --- | --- |
 | `local-files` CSV landing snapshot | PostgreSQL `sink.target` and `sink.rejected` | PostgreSQL append | Manual HTTP preparation, native scheduler, duplicate trigger | Exact accepted/rejected rows and six independent sink effect receipts; hosted Python 3.11–3.13 records in [Gate 0](hosted-gate0/) | Installed baseline passes; does not qualify immutable-resource ownership or all provider options |
 | PostgreSQL `input.source_rows` repeatable snapshot | PostgreSQL `sink.postgres_target` and `sink.postgres_rejected` | PostgreSQL append | Manual HTTP preparation through action worker; run worker executes accepted receipt | Hosted PostgreSQL 18.6 records on Python 3.11–3.13 produced `[[10, "ok", 4]]` and `[[11, "no", 120]]`; input was read-only for the runtime principal | Installed baseline passes; does not qualify all provider options |
-| Same PostgreSQL repeatable snapshot | PostgreSQL `sink.upsert_target` keyed by primary key `id`; rejected rows append | PostgreSQL upsert | Two distinct manual submissions with a source-row update between runs | Local installed run changed key `10` from `[[10, "ok", 4]]` to `[[10, "ok", 10]]`, kept one target row, and observed two distinct run IDs | Local pass; hosted matrix pending |
+| Same PostgreSQL repeatable snapshot | PostgreSQL `sink.upsert_target` keyed by primary key `id`; rejected rows append | PostgreSQL upsert | Two distinct manual submissions with a source-row update between runs | Hosted Python 3.11–3.13 runs changed key `10` from `[[10, "ok", 4]]` to `[[10, "ok", 10]]`, kept one target row, and observed two distinct run IDs per interpreter | Installed case passes; only this declared primary-key case is observed |
 
 Both paths execute a transformation implementation packaged outside ShuETL,
 then ETLantic quality acceptance/rejection, and publish through ETLantic's
@@ -67,6 +67,6 @@ The local PostgreSQL 18.6 run used Python 3.13.9, the installed ShuETL wheel
 SHA-256 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`,
 and updated reference workload wheel SHA-256
 `5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2`. Hosted
-records for the append rows are from [CI run 37981202502](https://github.com/eddiethedean/shuetl/actions/runs/37981202502),
-source commit `32a8ecab6e8fdf4d920d7f9b2b39d87cc83e83a0`; the updated upsert row
-awaits hosted qualification.
+records for all three rows are from [CI run 37981721063](https://github.com/eddiethedean/shuetl/actions/runs/37981721063),
+source commit `0e6673b96bee3a5a603d2b55662f4f9ba5c54c6b`; hosted evidence is
+stored per interpreter under [hosted-gate0/](hosted-gate0/).

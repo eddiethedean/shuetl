@@ -11,11 +11,12 @@ Runtime controls and failure ordering have received follow-up source
 corrections. W04 PostgreSQL fault qualification, most W05 capability coverage,
 W06–W08, and hosted final-artifact acceptance remain open.
 
-The installed Gate 0 reference workload has been expanded to execute a local
-CSV-to-PostgreSQL transfer with typed normalization, filtering, quality
-accept/reject outputs, and independent sink assertions. Its local PostgreSQL
-18.6 run passes. The required hosted Python 3.11–3.13 Gate 0 matrix and
-installed-role CLI matrix pass on source commit `32a8eca`; the exact CI records
+The installed Gate 0 reference workload executes CSV-to-PostgreSQL append,
+PostgreSQL snapshot-to-PostgreSQL append, and a keyed PostgreSQL upsert with
+typed normalization, filtering, quality accept/reject outputs, and independent
+sink assertions. Local PostgreSQL 18.6 runs pass. The required hosted Python
+3.11–3.13 Gate 0 matrix and
+installed-role CLI matrix pass on source commit `0e6673b`; the exact CI records
 and wheel hashes are stored under `docs/evidence/0.6/hosted-gate0/` and
 `hosted-cli/`. This qualifies the development installed baseline only; final
 artifact qualification and the broader acceptance matrix remain open.
@@ -258,10 +259,10 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
   Optional Foundry, preview and provisioning require separate supported rows.
 - [x] Record the observed baseline and current exclusions in
   [`docs/evidence/0.6/providers.md`](../evidence/0.6/providers.md). It documents
-  both CSV and PostgreSQL snapshot sources to PostgreSQL append sinks, including
-  exact local sink observations and the current experimental-provider limit.
-  Both rows pass the hosted matrix; this inventory is not the final advertised
-  support contract.
+  CSV and PostgreSQL snapshot sources to PostgreSQL append sinks, plus one
+  PostgreSQL primary-key upsert, including exact sink observations and the
+  current experimental-provider limit. All three rows pass the hosted matrix;
+  this inventory is not the final advertised support contract.
 - [ ] Verify exact sink values, canonical reports, bounded transforms and quality
   success/failure, effective overrides, disabled-writer policy, aliases/upsert
   keys, schema drift, retry versus new-run identity and extension execution.
@@ -277,8 +278,8 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
 - [x] Add a distinct PostgreSQL upsert fixture with a declared primary-key
   conflict key. Two separate accepted runs update the same destination key after
   a source snapshot change, preserving one row and recording independent effects.
-  The local PostgreSQL 18.6 installed-wheel run passes; hosted qualification is
-  pending.
+  Local and hosted PostgreSQL 18.6 installed-wheel runs pass on Python 3.11–3.13;
+  each hosted record binds two distinct run IDs and the single updated target row.
 - [ ] Change specifications while reference host runtime code remains unchanged.
   Verify HTTP/headless canonical records and command/control parity.
 - [ ] Exercise action workers for connection/catalog/schema/preflight; test
@@ -350,14 +351,15 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
 - [x] Add a separate hosted PostgreSQL 18.6 Gate 0 matrix job that builds and
   installs ShuETL and the independent reference workload outside the checkout,
   runs canonical manual/native-scheduled transfer, and uploads sink-backed
-  evidence on Python 3.11–3.13, including the PostgreSQL snapshot-source fixture.
-  CI run 37981202502 passed all three versions; checked-in records bind the runs
-  to source commit `32a8eca` and exact wheel
+  evidence on Python 3.11–3.13, including PostgreSQL snapshot-source append and
+  keyed-upsert fixtures.
+  CI run 37981721063 passed all three versions, including the keyed-upsert case;
+  checked-in records bind the runs to source commit `0e6673b` and exact wheel
   hashes. This does not close final-wheel acceptance.
 - [x] Locally and in hosted CI, build/install the development wheel and reference
   host outside the checkout, verify origins, and run all role kinds against
   PostgreSQL 18.6. Hosted startup/readiness/SIGTERM and transfer evidence is
-  recorded for Python 3.11–3.13 under run 37981202502; fault-integration remains
+  recorded for Python 3.11–3.13 under run 37981721063; fault-integration remains
   open.
 - [ ] Create `docs/evidence/0.6/` with all verification-plan records. Record the
   exact commit, upstream artifacts, schema contract, environments, commands,

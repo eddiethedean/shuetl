@@ -23,7 +23,7 @@ interpreter checks, not additional distinct coverage.
 | Python version | 3.11.14, 3.12.13, 3.13.9 |
 | uv version | Exact executable version in validation.json |
 | ETLantic source revision | Release tag d1f4e5a4d013e37f8adc54b4644ea9b2be66f801 |
-| ShuETL source commit | `5baafe1b488352ccddad3c3a56a58e93929505e5` |
+| ShuETL source commit | `0e6673b96bee3a5a603d2b55662f4f9ba5c54c6b` |
 | ShuETL import origin | Isolated wheel site-packages/shuetl/__init__.py |
 | ETLantic import origin | Isolated wheel site-packages/etlantic/__init__.py |
 | etlantic-fastapi import origin | Isolated wheel site-packages/etlantic_fastapi/__init__.py |
@@ -62,20 +62,25 @@ revisions; adapted fixtures use canonical inputs and explicitly assert rejection
 Harness: [phase_0_6_gate_0.py](../../../spikes/phase_0_6_gate_0.py).
 Reference workload: [separately built package](../../../tests/reference_phase06/pyproject.toml).
 The harness is not a supported role CLI or a replacement runtime. Its workload
-performs typed CSV normalization, filtering, quality acceptance/rejection, and
-writes to independent PostgreSQL accepted/rejected sinks; the harness asserts
-exact sink rows and effect receipts. Local and hosted PostgreSQL 18.6 installed-
-wheel runs pass on Python 3.11–3.13. The committed [hosted Gate 0 records](hosted-gate0/)
-and [installed CLI records](hosted-cli/) come from [CI run 37980178783](https://github.com/eddiethedean/shuetl/actions/runs/37980178783)
-and are bound to source commit `5baafe1b488352ccddad3c3a56a58e93929505e5`.
+performs typed CSV and PostgreSQL-source normalization, filtering, quality
+acceptance/rejection, and writes to independent PostgreSQL sinks. It verifies
+append behavior and a primary-key upsert across two distinct runs, along with
+exact sink rows, input read-only grants and effect receipts. Local and hosted
+PostgreSQL 18.6 installed-wheel runs pass on Python 3.11–3.13. The committed
+[hosted Gate 0 records](hosted-gate0/) and [installed CLI records](hosted-cli/)
+come from [CI run 37981721063](https://github.com/eddiethedean/shuetl/actions/runs/37981721063)
+and are bound to source commit `0e6673b96bee3a5a603d2b55662f4f9ba5c54c6b`.
 The ShuETL wheel SHA-256 is
 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15`;
 Gate 0 reference workload SHA-256 is
-`777e0e45bf6c351df92e5340cb3a490f093f3daf6e4e116d28abc42f18bb9e52`; CLI
+`5eeb1756e0dce0b1f022adad94953a4680e01806f35b15df2679266be16062e2`; CLI
 reference host SHA-256 is
 `1c3773dd72daa9c34080d7249aba9bf759866167ad5062737399acb176f64769`.
 These development artifacts close only the installed baseline qualification;
 the final release candidate and broader acceptance gates remain open.
+The [provider matrix](providers.md), [partial qualification record](qualification.md),
+and [hosted CI record](ci.md) identify the demonstrated combinations and current
+limitations.
 
 ```sh
 python spikes/phase_0_6_gate_0.py \
@@ -86,8 +91,9 @@ python spikes/phase_0_6_gate_0.py \
 
 The administrator URL must point to disposable PostgreSQL 18.6 infrastructure.
 The harness creates its own database and two non-superuser roles, delegates
-migrations to the operator connection, preprovisions independent sink fixtures,
-and grants runtime DML/sequence usage without schema CREATE, owned objects or
+migrations to the operator connection, preprovisions independent source/sink
+fixtures, and grants the runtime role read-only access to the PostgreSQL source
+table and required sink DML/sequence access without schema CREATE, owned objects or
 membership in the migration role. Cleanup stops children and drops only those
 fixtures. No pre-existing application store is accepted or reset.
 
@@ -130,8 +136,8 @@ action worker each reach `/ready` and `/live`, receive SIGTERM, exit successfull
 and leave no seeded credential sentinels in captured logs. The runtime role has
 no schema CREATE rights, migration-role membership or owned objects. The same
 qualification passes in hosted CI on Python 3.11–3.13 for source commit
-`5baafe1b488352ccddad3c3a56a58e93929505e5`; the redacted per-interpreter records
-are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37980178783)
+`0e6673b96bee3a5a603d2b55662f4f9ba5c54c6b`; the redacted per-interpreter records
+are in [hosted-cli/](hosted-cli/), and the [CI run](https://github.com/eddiethedean/shuetl/actions/runs/37981721063)
 binds those results to ShuETL wheel SHA-256
 `b39057130779cab9975b9820e0fe565581375007f2854525fa42fa6b4a9c8b15` and
 reference-host wheel SHA-256

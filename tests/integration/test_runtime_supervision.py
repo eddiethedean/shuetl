@@ -67,7 +67,7 @@ def supervisor(monkeypatch):
         wait_for(lambda: (handlers and states) or outcomes)
         assert not outcomes or not isinstance(outcomes[0], BaseException), outcomes
         try:
-            yield states[0], outcomes
+            yield states[0], outcomes, lambda: handlers[0](15, None)
         finally:
             handlers[0](15, None)
             thread.join(timeout=8)
@@ -113,7 +113,7 @@ def test_gateway_is_unready_until_lifespan_and_listener_start(supervisor):
     port = free_port()
     with supervisor(
         lambda: runtime_module._serve_gateway(gateway(app), host="127.0.0.1", port=port)
-    ) as (state, outcomes):
+    ) as (state, outcomes, _stop):
         try:
             assert entered.wait(5)
             assert state.payload(False)[0] == 503
@@ -156,7 +156,7 @@ def test_gateway_startup_failures_exit_nonzero(supervisor, failure, monkeypatch)
             lambda: runtime_module._serve_gateway(
                 gateway(app), host="127.0.0.1", port=port
             )
-        ) as (state, outcomes):
+        ) as (state, outcomes, _stop):
             wait_for(lambda: outcomes)
             assert state.payload(False)[0] == 503
         assert outcomes == [1]
@@ -216,10 +216,48 @@ def test_scheduler_recovers_after_transient_failure(supervisor, sql_runtime, fai
         store.acquire_leader_lease = intermittent
     else:
         role.tick = intermittent
-    with supervisor(lambda: runtime_module._serve_worker(runtime)) as (state, outcomes):
+    with supervisor(lambda: runtime_module._serve_worker(runtime)) as (
+        state,
+        outcomes,
+        _stop,
+    ):
         wait_for(lambda: len(calls) >= 2 and state.payload(False)[0] == 200)
         assert role.status().prerequisites == "usable"
     assert outcomes == [0]
+
+
+def test_worker_signal_waits_for_active_claim_before_cleanup(supervisor, sql_runtime):
+    runtime = sql_runtime()
+    role = runtime.role_handle
+    store = runtime.backend.schedule_store
+    original = store.acquire_leader_lease
+    entered = threading.Event()
+    release = threading.Event()
+
+    def blocked(*args, **kwargs):
+        entered.set()
+        assert release.wait(5), "active provider operation was not released"
+        return original(*args, **kwargs)
+
+    store.acquire_leader_lease = blocked
+
+    def serve_and_cleanup():
+        result = runtime_module._serve_worker(runtime)
+        return result if runtime_module._close_when_drained(runtime) else 1
+
+    with supervisor(serve_and_cleanup) as (state, outcomes, stop):
+        assert entered.wait(5), "worker did not begin its active claim"
+        assert role.status().in_flight > 0
+        stop()
+        wait_for(lambda: state.payload(False)[1]["reason_code"] == "grace_expired")
+        assert state.payload(False)[0] == 503
+        assert role.status().in_flight > 0
+        assert not runtime.closed
+        assert not outcomes
+        release.set()
+    assert outcomes == [0]
+    assert runtime.closed
+    assert role.status().in_flight == 0
 
 
 def test_active_upstream_close_retains_host_resources(sql_runtime):

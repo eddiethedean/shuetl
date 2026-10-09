@@ -319,6 +319,7 @@ def main():
                 assert len({r.startup["pid"] for r in roles}) == 4
                 assert all(not r.startup["http_imported"] for r in roles[1:])
                 assert not gateway.startup["execution_imported"]
+                evidence["portable_conformance"] = gateway.call("portable-conformance")
                 gateway.call("definition")
                 evidence["plan"] = gateway.call("plan")
                 prep = gateway.call(
@@ -655,6 +656,7 @@ def main():
                     "accepted_and_rejected_outputs_independently_observed": True,
                     "postgresql_snapshot_source": True,
                     "postgresql_upsert_updates_by_key": True,
+                    **evidence["portable_conformance"]["capability_results"],
                 }
                 for role in reversed(roles):
                     role.close()

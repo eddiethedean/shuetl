@@ -240,9 +240,74 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             "accepted_and_rejected_outputs_independently_observed",
             "postgresql_snapshot_source",
             "postgresql_upsert_updates_by_key",
+            "portable_plan_select",
+            "portable_plan_drop",
+            "portable_plan_rename",
+            "portable_plan_filter",
+            "portable_plan_scalar_lowercase",
+            "portable_plan_contains_sort_before_deduplicate",
+            "portable_output_schema",
+            "portable_quality_required_value",
+            "portable_quality_range",
+            "portable_quality_set_membership",
+            "portable_quality_uniqueness",
+            "portable_quality_keeps_rejections_separate",
         }
         capabilities = (
             gate0.get("capability_results", {}) if isinstance(gate0, dict) else {}
+        )
+        portable = (
+            gate0.get("portable_conformance", {}) if isinstance(gate0, dict) else {}
+        )
+        portable_good = isinstance(portable, dict) and (
+            portable.get("plan_identity") == "dtcs.transform-plan/2"
+            and portable.get("actions")
+            == [
+                "dtcs:drop_fields",
+                "dtcs:project",
+                "dtcs:rename_fields",
+                "dtcs:project",
+                "dtcs:filter",
+                "dtcs:sort",
+                "dtcs:deduplicate",
+            ]
+            and isinstance(portable.get("compiler"), dict)
+            and portable["compiler"].get("name") == "etlantic-local"
+            and portable["compiler"].get("version") == "0.50.0"
+            and portable["compiler"].get("engine") == "local"
+            and portable["compiler"].get("implementation") == "python-records/1"
+            and portable.get("normalized_rows")
+            == [
+                {"id": 1, "payload": "ok", "quantity": 4},
+                {"id": 2, "payload": "no", "quantity": 60},
+                {"id": 3, "payload": None, "quantity": 4},
+                {"id": 4, "payload": "ok", "quantity": 120},
+            ]
+            and portable.get("accepted_rows")
+            == [{"id": 1, "payload": "ok", "quantity": 4}]
+            and portable.get("rejected_rows")
+            == [
+                {"id": 2, "payload": "no", "quantity": 60},
+                {"id": 3, "payload": None, "quantity": 4},
+                {"id": 4, "payload": "ok", "quantity": 120},
+            ]
+            and portable.get("duplicate_quality_rejections")
+            == [{"id": 8, "payload": "ok", "quantity": 9}]
+            and portable.get("reversed_rows")
+            == [
+                {"id": 1, "payload": "ok", "quantity": 3},
+                {"id": 2, "payload": "no", "quantity": 60},
+                {"id": 3, "payload": None, "quantity": 4},
+                {"id": 4, "payload": "ok", "quantity": 120},
+            ]
+            and portable.get("sort_deduplicate_order_observation")
+            == {
+                "deterministic": False,
+                "forward_key_quantity": 4,
+                "reversed_key_quantity": 3,
+            }
+            and portable.get("unqualified_capabilities")
+            == ["deterministic_sort_before_deduplicate"]
         )
         gate0_good = isinstance(gate0, dict) and (
             gate0.get("schema") == "shuetl.phase06.gate0/1"
@@ -261,6 +326,7 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             and isinstance(capabilities, dict)
             and set(capabilities) == expected_capabilities
             and all(value is True for value in capabilities.values())
+            and portable_good
             and gate0.get("sink_rows") == [[1, "ok", 6]] * 3
             and gate0.get("rejected_rows") == [[2, "no", 120]] * 3
             and gate0.get("postgresql_source_rows") == [[10, "ok", 4]]

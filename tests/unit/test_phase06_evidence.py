@@ -88,6 +88,49 @@ def ledger(tmp_path, monkeypatch):
         upsert_rows=[[10, "ok", 10]],
         upsert_rejected_rows=[[11, "no", 120]] * 2,
         upsert_run_ids=["run-upsert-initial", "run-upsert-updated"],
+        portable_conformance={
+            "plan_identity": "dtcs.transform-plan/2",
+            "actions": [
+                "dtcs:drop_fields",
+                "dtcs:project",
+                "dtcs:rename_fields",
+                "dtcs:project",
+                "dtcs:filter",
+                "dtcs:sort",
+                "dtcs:deduplicate",
+            ],
+            "compiler": {
+                "name": "etlantic-local",
+                "version": "0.50.0",
+                "engine": "local",
+                "implementation": "python-records/1",
+            },
+            "normalized_rows": [
+                {"id": 1, "payload": "ok", "quantity": 4},
+                {"id": 2, "payload": "no", "quantity": 60},
+                {"id": 3, "payload": None, "quantity": 4},
+                {"id": 4, "payload": "ok", "quantity": 120},
+            ],
+            "accepted_rows": [{"id": 1, "payload": "ok", "quantity": 4}],
+            "rejected_rows": [
+                {"id": 2, "payload": "no", "quantity": 60},
+                {"id": 3, "payload": None, "quantity": 4},
+                {"id": 4, "payload": "ok", "quantity": 120},
+            ],
+            "duplicate_quality_rejections": [{"id": 8, "payload": "ok", "quantity": 9}],
+            "reversed_rows": [
+                {"id": 1, "payload": "ok", "quantity": 3},
+                {"id": 2, "payload": "no", "quantity": 60},
+                {"id": 3, "payload": None, "quantity": 4},
+                {"id": 4, "payload": "ok", "quantity": 120},
+            ],
+            "sort_deduplicate_order_observation": {
+                "deterministic": False,
+                "forward_key_quantity": 4,
+                "reversed_key_quantity": 3,
+            },
+            "unqualified_capabilities": ["deterministic_sort_before_deduplicate"],
+        },
         connector_grants={
             "input_select": True,
             "input_insert": False,
@@ -110,6 +153,18 @@ def ledger(tmp_path, monkeypatch):
             "accepted_and_rejected_outputs_independently_observed": True,
             "postgresql_snapshot_source": True,
             "postgresql_upsert_updates_by_key": True,
+            "portable_plan_select": True,
+            "portable_plan_drop": True,
+            "portable_plan_rename": True,
+            "portable_plan_filter": True,
+            "portable_plan_scalar_lowercase": True,
+            "portable_plan_contains_sort_before_deduplicate": True,
+            "portable_output_schema": True,
+            "portable_quality_required_value": True,
+            "portable_quality_range": True,
+            "portable_quality_set_membership": True,
+            "portable_quality_uniqueness": True,
+            "portable_quality_keeps_rejections_separate": True,
         },
     )
     gate0_path.write_text(json.dumps(gate0))
@@ -218,6 +273,14 @@ def test_phase06_gate0_requires_live_transform_and_quality_observations(ledger):
     path = ledger / "postgresql-gate0.json"
     data = json.loads(path.read_text())
     data["capability_results"]["quality_range_accept_and_reject"] = False
+    path.write_text(json.dumps(data))
+    assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
+
+
+def test_phase06_gate0_requires_portable_transform_qualification(ledger):
+    path = ledger / "postgresql-gate0.json"
+    data = json.loads(path.read_text())
+    data["capability_results"]["portable_plan_contains_sort_before_deduplicate"] = False
     path.write_text(json.dumps(data))
     assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
 

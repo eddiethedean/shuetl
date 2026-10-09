@@ -273,9 +273,20 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
   PostgreSQL primary-key upsert, including exact sink observations and the
   current experimental-provider limit. All three rows pass the hosted matrix;
   this inventory is not the final advertised support contract.
-- [ ] Verify exact sink values, canonical reports, bounded transforms and quality
-  success/failure, effective overrides, disabled-writer policy, aliases/upsert
-  keys, schema drift, retry versus new-run identity and extension execution.
+- [x] Verify exact sink values, canonical reports, and a pinned ETLantic local
+  portable plan for select/drop/rename, filtering, scalar lowercase, output
+  schema, and required/range/set/uniqueness quality acceptance and rejection.
+  The portable plan runs on the independent installed reference host; live
+  PostgreSQL connector runs remain a separate provider observation and do not
+  claim portable-plan pushdown.
+- [ ] Qualify deterministic keyed deduplication. The canonical plan emits a sort
+  before deduplication, but ETLantic 0.57.0's local compiler ignores the field
+  expression and retains the first input row. This is tracked upstream in
+  [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283); do not
+  advertise deterministic deduplication until the installed compiler passes an
+  order-reversal conformance case.
+- [ ] Verify effective overrides, disabled-writer policy, aliases/upsert keys,
+  schema drift, retry versus new-run identity, and broader extension execution.
 - [x] Add a concrete CSV/PostgreSQL-to-PostgreSQL fixture to Gate 0. It verifies
   integer normalization, lowercase, scalar arithmetic, filtering, projection,
   not-null/range/membership quality rules, accepted/rejected rows and independent

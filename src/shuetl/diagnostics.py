@@ -195,14 +195,14 @@ class DoctorReport(BaseModel):
                 id="compatibility.etlantic_train",
                 status="pass" if train_ok else "fail",
                 summary=(
-                    "Installed ETLantic extensions share the exact 0.57.0 train."
+                    "Installed ETLantic extensions share the exact 0.57.2 train."
                     if train_ok
-                    else "An ETLantic extension is outside the exact 0.57.0 train."
+                    else "An ETLantic extension is outside the exact 0.57.2 train."
                 ),
                 remediation=(
                     None
                     if train_ok
-                    else "Align every installed etlantic-* package to 0.57.0."
+                    else "Align every installed etlantic-* package to 0.57.2."
                 ),
             )
         )

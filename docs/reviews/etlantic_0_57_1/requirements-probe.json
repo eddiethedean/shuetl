@@ -1,0 +1,166 @@
+{
+  "packages": {
+    "etlantic": "0.57.1",
+    "etlantic-sql": "0.57.1",
+    "etlantic-sqlmodel": "0.57.1"
+  },
+  "local_compiler": {
+    "name": "etlantic-local",
+    "version": "0.50.0",
+    "engine": "local",
+    "compiler_protocol": "etlantic.transform-compiler/1",
+    "dtcs_plan_versions": [
+      "dtcs.transform-plan/2",
+      "dtcs.transform-plan/1"
+    ],
+    "capabilities": {
+      "profiles": [
+        "dtcs:profile/portable-relational-kernel/1",
+        "dtcs:profile/portable-relational/1"
+      ],
+      "partial_profiles": [],
+      "actions": [
+        "dtcs:aggregate",
+        "dtcs:deduplicate",
+        "dtcs:distinct",
+        "dtcs:drop_fields",
+        "dtcs:filter",
+        "dtcs:join",
+        "dtcs:limit",
+        "dtcs:project",
+        "dtcs:rename_fields",
+        "dtcs:sort",
+        "dtcs:union",
+        "dtcs:with_fields"
+      ],
+      "functions": [
+        "dtcs:abs",
+        "dtcs:average",
+        "dtcs:case_when",
+        "dtcs:ceil",
+        "dtcs:coalesce",
+        "dtcs:concat",
+        "dtcs:concat_ws",
+        "dtcs:contains",
+        "dtcs:count",
+        "dtcs:count_all",
+        "dtcs:count_distinct",
+        "dtcs:ends_with",
+        "dtcs:floor",
+        "dtcs:greatest",
+        "dtcs:if_null",
+        "dtcs:is_null",
+        "dtcs:least",
+        "dtcs:length",
+        "dtcs:lower",
+        "dtcs:max",
+        "dtcs:min",
+        "dtcs:null_if",
+        "dtcs:power",
+        "dtcs:replace",
+        "dtcs:round",
+        "dtcs:sqrt",
+        "dtcs:starts_with",
+        "dtcs:substr",
+        "dtcs:sum",
+        "dtcs:upper"
+      ],
+      "operators": [
+        "add",
+        "and",
+        "divide",
+        "eq",
+        "gt",
+        "gte",
+        "in",
+        "lt",
+        "lte",
+        "modulo",
+        "multiply",
+        "negate",
+        "not",
+        "not_eq",
+        "null_safe_eq",
+        "or",
+        "subtract"
+      ],
+      "types": [
+        "boolean",
+        "decimal",
+        "integer",
+        "invalid",
+        "missing",
+        "null",
+        "string"
+      ],
+      "semantic_modes": [],
+      "join_modes": [
+        "anti",
+        "cross",
+        "full",
+        "inner",
+        "left",
+        "right",
+        "semi"
+      ],
+      "union_modes": [
+        "byName",
+        "byPosition"
+      ],
+      "collision_policies": [
+        "fail"
+      ],
+      "lazy": false,
+      "eager": true,
+      "max_plan_nodes": null
+    },
+    "evidence_fingerprint": "154ad8932ded49f640099376aab4bdd467da19bd1e4eb3855a60ee392567d0e0",
+    "implementation": "python-records/1",
+    "package": "etlantic"
+  },
+  "sort_dedup": {
+    "forward": [
+      {
+        "id": 1,
+        "quantity": 4
+      }
+    ],
+    "reversed": [
+      {
+        "id": 1,
+        "quantity": 3
+      }
+    ],
+    "deterministic": false
+  },
+  "sql_handler_names": [
+    "connector.catalog.postgresql",
+    "connector.provision",
+    "connector.provision.cleanup"
+  ],
+  "worker_handler_names": [
+    "connector.catalog",
+    "connector.catalog.postgresql",
+    "connector.provision",
+    "connector.provision.cleanup",
+    "run.prepare"
+  ],
+  "action_results": {
+    "connector.test": {
+      "status": "failed",
+      "error_code": "handler_unavailable",
+      "result": null
+    },
+    "connector.schema.inspect": {
+      "status": "failed",
+      "error_code": "handler_unavailable",
+      "result": null
+    },
+    "connector.preflight": {
+      "status": "failed",
+      "error_code": "handler_unavailable",
+      "result": null
+    }
+  },
+  "resolver_calls": []
+}

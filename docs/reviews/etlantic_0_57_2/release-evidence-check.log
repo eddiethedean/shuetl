@@ -1,0 +1,142 @@
+cannot read current proof registry: [Errno 2] No such file or directory: 'docs/evidence/0.6/proofs.json'
+acceptance criterion is not PASS: AC-001
+acceptance evidence artifact does not exist: AC-001 (pending)
+acceptance evidence does not match audited proof: AC-001
+incomplete Phase 0.6 acceptance row: AC-001
+acceptance criterion is not PASS: AC-002
+acceptance evidence artifact does not exist: AC-002 (pending)
+acceptance evidence does not match audited proof: AC-002
+incomplete Phase 0.6 acceptance row: AC-002
+acceptance criterion is not PASS: AC-003
+acceptance evidence artifact does not exist: AC-003 (pending)
+acceptance evidence does not match audited proof: AC-003
+incomplete Phase 0.6 acceptance row: AC-003
+acceptance criterion is not PASS: AC-004
+acceptance evidence artifact does not exist: AC-004 (pending)
+acceptance evidence does not match audited proof: AC-004
+incomplete Phase 0.6 acceptance row: AC-004
+acceptance criterion is not PASS: AC-005
+acceptance evidence artifact does not exist: AC-005 (pending)
+acceptance evidence does not match audited proof: AC-005
+incomplete Phase 0.6 acceptance row: AC-005
+acceptance criterion is not PASS: AC-006
+acceptance evidence artifact does not exist: AC-006 (pending)
+acceptance evidence does not match audited proof: AC-006
+incomplete Phase 0.6 acceptance row: AC-006
+acceptance criterion is not PASS: AC-007
+acceptance evidence artifact does not exist: AC-007 (pending)
+acceptance evidence does not match audited proof: AC-007
+incomplete Phase 0.6 acceptance row: AC-007
+acceptance criterion is not PASS: AC-008
+acceptance evidence artifact does not exist: AC-008 (pending)
+acceptance evidence does not match audited proof: AC-008
+incomplete Phase 0.6 acceptance row: AC-008
+acceptance criterion is not PASS: AC-009
+acceptance evidence artifact does not exist: AC-009 (pending)
+acceptance evidence does not match audited proof: AC-009
+incomplete Phase 0.6 acceptance row: AC-009
+acceptance criterion is not PASS: AC-010
+acceptance evidence artifact does not exist: AC-010 (pending)
+acceptance evidence does not match audited proof: AC-010
+incomplete Phase 0.6 acceptance row: AC-010
+acceptance criterion is not PASS: AC-011
+acceptance evidence artifact does not exist: AC-011 (pending)
+acceptance evidence does not match audited proof: AC-011
+incomplete Phase 0.6 acceptance row: AC-011
+acceptance criterion is not PASS: AC-012
+acceptance evidence artifact does not exist: AC-012 (pending)
+acceptance evidence does not match audited proof: AC-012
+incomplete Phase 0.6 acceptance row: AC-012
+acceptance criterion is not PASS: AC-013
+acceptance evidence artifact does not exist: AC-013 (pending)
+acceptance evidence does not match audited proof: AC-013
+incomplete Phase 0.6 acceptance row: AC-013
+acceptance criterion is not PASS: AC-014
+acceptance evidence artifact does not exist: AC-014 (pending)
+acceptance evidence does not match audited proof: AC-014
+incomplete Phase 0.6 acceptance row: AC-014
+acceptance criterion is not PASS: AC-015
+acceptance evidence artifact does not exist: AC-015 (pending)
+acceptance evidence does not match audited proof: AC-015
+incomplete Phase 0.6 acceptance row: AC-015
+acceptance criterion is not PASS: AC-016
+acceptance evidence artifact does not exist: AC-016 (pending)
+acceptance evidence does not match audited proof: AC-016
+incomplete Phase 0.6 acceptance row: AC-016
+acceptance criterion is not PASS: AC-017
+acceptance evidence artifact does not exist: AC-017 (pending)
+acceptance evidence does not match audited proof: AC-017
+incomplete Phase 0.6 acceptance row: AC-017
+acceptance criterion is not PASS: AC-018
+acceptance evidence artifact does not exist: AC-018 (pending)
+acceptance evidence does not match audited proof: AC-018
+incomplete Phase 0.6 acceptance row: AC-018
+acceptance criterion is not PASS: AC-019
+acceptance evidence artifact does not exist: AC-019 (pending)
+acceptance evidence does not match audited proof: AC-019
+incomplete Phase 0.6 acceptance row: AC-019
+acceptance criterion is not PASS: AC-020
+acceptance evidence artifact does not exist: AC-020 (pending)
+acceptance evidence does not match audited proof: AC-020
+incomplete Phase 0.6 acceptance row: AC-020
+acceptance criterion is not PASS: AC-021
+acceptance evidence artifact does not exist: AC-021 (pending)
+acceptance evidence does not match audited proof: AC-021
+incomplete Phase 0.6 acceptance row: AC-021
+acceptance criterion is not PASS: AC-022
+acceptance evidence artifact does not exist: AC-022 (pending)
+acceptance evidence does not match audited proof: AC-022
+incomplete Phase 0.6 acceptance row: AC-022
+acceptance criterion is not PASS: AC-023
+acceptance evidence artifact does not exist: AC-023 (pending)
+acceptance evidence does not match audited proof: AC-023
+incomplete Phase 0.6 acceptance row: AC-023
+acceptance criterion is not PASS: AC-024
+acceptance evidence artifact does not exist: AC-024 (pending)
+acceptance evidence does not match audited proof: AC-024
+incomplete Phase 0.6 acceptance row: AC-024
+acceptance criterion is not PASS: AC-025
+acceptance evidence artifact does not exist: AC-025 (pending)
+acceptance evidence does not match audited proof: AC-025
+incomplete Phase 0.6 acceptance row: AC-025
+acceptance criterion is not PASS: AC-026
+acceptance evidence artifact does not exist: AC-026 (pending)
+acceptance evidence does not match audited proof: AC-026
+incomplete Phase 0.6 acceptance row: AC-026
+acceptance criterion is not PASS: AC-027
+acceptance evidence artifact does not exist: AC-027 (pending)
+acceptance evidence does not match audited proof: AC-027
+incomplete Phase 0.6 acceptance row: AC-027
+acceptance criterion is not PASS: AC-028
+acceptance evidence artifact does not exist: AC-028 (pending)
+acceptance evidence does not match audited proof: AC-028
+incomplete Phase 0.6 acceptance row: AC-028
+acceptance criterion is not PASS: AC-029
+acceptance evidence artifact does not exist: AC-029 (pending)
+acceptance evidence does not match audited proof: AC-029
+incomplete Phase 0.6 acceptance row: AC-029
+acceptance criterion is not PASS: AC-030
+acceptance evidence artifact does not exist: AC-030 (pending)
+acceptance evidence does not match audited proof: AC-030
+incomplete Phase 0.6 acceptance row: AC-030
+acceptance criterion is not PASS: AC-031
+acceptance evidence artifact does not exist: AC-031 (pending)
+acceptance evidence does not match audited proof: AC-031
+incomplete Phase 0.6 acceptance row: AC-031
+acceptance criterion is not PASS: AC-032
+acceptance evidence artifact does not exist: AC-032 (pending)
+acceptance evidence does not match audited proof: AC-032
+incomplete Phase 0.6 acceptance row: AC-032
+acceptance criterion is not PASS: AC-033
+acceptance evidence artifact does not exist: AC-033 (pending)
+acceptance evidence does not match audited proof: AC-033
+incomplete Phase 0.6 acceptance row: AC-033
+current proof registry must cover exactly AC-001–AC-033
+Phase 0.6 PostgreSQL Gate 0 evidence is not qualified
+Phase 0.6 installed CLI/PostgreSQL evidence is not artifact-qualified
+Gate A is OPEN; release requires PASS
+Gate B is OPEN; release requires PASS
+Gate C is OPEN; release requires PASS
+expected one wheel artifact in /Volumes/T7/coding/shuetl/dist
+expected one sdist artifact in /Volumes/T7/coding/shuetl/dist
+missing Phase 0.6 evidence artifact: proofs.json

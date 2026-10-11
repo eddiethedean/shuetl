@@ -2,6 +2,14 @@
 
 ## 0.6.0 — Unreleased
 
+- Update the exact ETLantic core, FastAPI, SQLModel and SQL connector train to
+  0.57.2. Existing 0.6 qualification evidence remains bound to 0.57.0; repeat
+  installed-wheel and hosted gates before making release claims.
+
+- Verify 0.57.2 deterministic sort/deduplication and isolated PostgreSQL
+  connection/schema handlers; adopt revision-pinned static preflight. Live
+  pipeline readiness remains tracked upstream under #121.
+
 - Accept ETLantic 0.57.0 backend, schedule, schema and role lifecycle contracts;
   adopt exact core/FastAPI/SQLModel pins while retaining other runtime pins.
 - Delegate schema recognition to the public SQLModel provider API.

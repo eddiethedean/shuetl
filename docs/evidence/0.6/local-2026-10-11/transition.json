@@ -1,0 +1,90 @@
+{
+  "schema": "shuetl.phase06.transition/1",
+  "result": "PASS",
+  "source_commit": "a0b3a1258cf199e755e045cd9b6e9e8b4c218511",
+  "steps": [
+    {
+      "pid": 68479,
+      "mode": "retained-seed",
+      "versions": {
+        "shuetl": "0.5.0",
+        "etlantic": "0.55.0",
+        "etlantic-fastapi": "0.55.0",
+        "etlantic-sqlmodel": "0.55.0"
+      },
+      "receipt": {
+        "schema": "etlantic.control_plane.accept_receipt/1",
+        "acceptance_id": "acc-a37f5be50aa94f4a",
+        "submission_id": "sub-3ab57bca510d4d39",
+        "tenant_id": "phase06",
+        "workspace_id": "transition",
+        "idempotency_key": "retained-uncertain",
+        "created_at": "2026-10-11T17:59:06.999334Z",
+        "status": "accepted",
+        "resource_type": "run",
+        "resource_id": "sub-3ab57bca510d4d39",
+        "status_url": null,
+        "events_url": null
+      },
+      "retained_application_mounted": true,
+      "schema": "005_cp1_reference"
+    },
+    {
+      "pid": 68484,
+      "mode": "reject-old",
+      "versions": {
+        "shuetl": "0.6.0",
+        "etlantic": "0.57.2",
+        "etlantic-fastapi": "0.57.2",
+        "etlantic-sqlmodel": "0.57.2"
+      },
+      "rejection": "ProviderReadinessError",
+      "read_only_rejection": true
+    },
+    {
+      "pid": 68485,
+      "mode": "fresh-enroll",
+      "versions": {
+        "shuetl": "0.6.0",
+        "etlantic": "0.57.2",
+        "etlantic-fastapi": "0.57.2",
+        "etlantic-sqlmodel": "0.57.2"
+      },
+      "old_acceptance_absent": true,
+      "definitions_reenrolled": [
+        "retained-transfer"
+      ],
+      "no_automatic_replay": true,
+      "schema": "014_cp1_complete_principal_idempotency_0_56"
+    },
+    {
+      "pid": 68486,
+      "mode": "rollback",
+      "versions": {
+        "shuetl": "0.5.0",
+        "etlantic": "0.55.0",
+        "etlantic-fastapi": "0.55.0",
+        "etlantic-sqlmodel": "0.55.0"
+      },
+      "receipt": {
+        "schema": "etlantic.control_plane.accept_receipt/1",
+        "acceptance_id": "acc-a37f5be50aa94f4a",
+        "submission_id": "sub-3ab57bca510d4d39",
+        "tenant_id": "phase06",
+        "workspace_id": "transition",
+        "idempotency_key": "retained-uncertain",
+        "created_at": "2026-10-11T17:59:06.999334Z",
+        "status": "accepted",
+        "resource_type": "run",
+        "resource_id": "sub-3ab57bca510d4d39",
+        "status_url": null,
+        "events_url": null
+      },
+      "retained_application_mounted": true,
+      "schema": "005_cp1_reference"
+    }
+  ],
+  "limits": "Rehearses store incompatibility, definition re-enrollment and retained application mounting. The retained acceptance is a seeded reconciliation case, not proof of an interrupted 0.55 ETL effect. No production systemd supervisor or traffic switch is exercised.",
+  "one_application_authority_at_a_time": true,
+  "retained_identity_unchanged": true
+}

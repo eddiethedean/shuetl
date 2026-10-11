@@ -451,6 +451,7 @@ def test_postgresql_scheduler_signal_drains_active_claim(
             role="scheduler",
             store_id=f"pg-drain-{uuid.uuid4().hex[:10]}",
             database_url=settings.database_url,
+            postgresql_sslmode=settings.postgresql_sslmode,
             probe_port=probe_port,
             shutdown_grace_seconds=0.1,
             dispatch_interval_seconds=0.05,
@@ -564,6 +565,7 @@ def test_postgresql_runtime_role_provider_outage_recovers(
                     host="127.0.0.1", port=proxy.port
                 ).render_as_string(hide_password=False),
                 probe_port=probe_port,
+                postgresql_sslmode=settings.postgresql_sslmode,
                 shutdown_grace_seconds=0.5,
                 dispatch_interval_seconds=0.05,
             ),

@@ -1,0 +1,29 @@
+[Unit]
+Description=ShuETL managed role %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=shuetl
+Group=shuetl
+WorkingDirectory=/var/lib/shuetl
+EnvironmentFile=/etc/shuetl/common.env
+EnvironmentFile=/etc/shuetl/%i.env
+ExecStart=/opt/shuetl/venv/bin/python -m shuetl.cli serve --role ${SHUETL_ROLE}
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+# ShuETL marks grace expiry as incomplete drain. This is the operator's
+# independent deadline for forcible termination; it can leave uncertain effects.
+TimeoutStopSec=120
+KillMode=control-group
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/shuetl
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -137,7 +137,7 @@ wheels = [
 
 [[package]]
 name = "etlantic"
-version = "0.57.0"
+version = "0.57.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -151,36 +151,36 @@ dependencies = [
     { name = "typer" },
     { name = "tzdata" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/d7/8761d90dabdb50aed739bfcd854bee7b5a886dca965b7700f243590c1520/etlantic-0.57.0.tar.gz", hash = "sha256:1c6539cf5c1ff62df5eb021d90475a5ee4583c4df239ed4b95080a2b6c5d897d", size = 2031788, upload-time = "2026-10-08T20:39:36.162Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/3d/b796b4e5df58c65d2f13b3af1c47919dddb9b0fa9b99ad6b70d25c6ef8ab/etlantic-0.57.2.tar.gz", hash = "sha256:e6418ab87f160f17cb8c7d0e750b580e22ea01c5b09005eb94ac5acb5adc3d62", size = 2044525, upload-time = "2026-10-11T03:43:01.16Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4e/77/3016e31d787dcd0c36da281ddff7b39c6096b9223349c4e41c121c913c75/etlantic-0.57.0-py3-none-any.whl", hash = "sha256:ff7939f9134a07c0ef1513d45b76623154e12931c935a01aedfceabcb93ab7b4", size = 1200899, upload-time = "2026-10-08T20:39:34.306Z" },
+    { url = "https://files.pythonhosted.org/packages/4a/59/600aa78e60419f0bc9d0de6a8cb198bf526a9b88710aaf20c5175eeef2b3/etlantic-0.57.2-py3-none-any.whl", hash = "sha256:3e99c9228faca565257fda4868ae81255934de1e8f2be4ff1cf7612cc87c72d6", size = 1205394, upload-time = "2026-10-11T03:42:59.051Z" },
 ]
 
 [[package]]
 name = "etlantic-fastapi"
-version = "0.57.0"
+version = "0.57.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "etlantic" },
     { name = "fastapi" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/41/da/c6f68028c3a56b4ccd55d741e9174138e96342a9e227c363bae85cf1609f/etlantic_fastapi-0.57.0.tar.gz", hash = "sha256:26e9167205829b2903f742db4ead50b8440f1f5b90436629f8b9aeaf5529ca50", size = 47281, upload-time = "2026-10-08T20:40:02.753Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/4d/fdfd6099eed643e216a18079ba048ec13f8a1b7d44fe320af7e59c3cb864/etlantic_fastapi-0.57.2.tar.gz", hash = "sha256:cbe99dfc16df27cb153c323818c1d7aec5010a0be166064cd12b5bda262dfab1", size = 47283, upload-time = "2026-10-11T03:43:32.174Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/e3/e720928734691d754cf46b051e68ef50ab7e8f7a935ec3a35c1e64de49cb/etlantic_fastapi-0.57.0-py3-none-any.whl", hash = "sha256:4545131b0e7d3a9cfc9972a0f46374d136b755807c47216b27a8156bf83b0c27", size = 54095, upload-time = "2026-10-08T20:40:01.773Z" },
+    { url = "https://files.pythonhosted.org/packages/82/f7/e9958572dea73f2485c117e2881d7cf8ddc57dcec8a583ff3e6bd899b054/etlantic_fastapi-0.57.2-py3-none-any.whl", hash = "sha256:b6c292549a0db200fb38d4618c45ff171476f47ba96c5057040ea0153d557d4b", size = 54093, upload-time = "2026-10-11T03:43:31.063Z" },
 ]
 
 [[package]]
 name = "etlantic-sqlmodel"
-version = "0.57.0"
+version = "0.57.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "etlantic" },
     { name = "sqlmodel" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/da/b2d4970ddc6b700bf8acf00cf7173e6e1842526468e56ca38c159ba6286d/etlantic_sqlmodel-0.57.0.tar.gz", hash = "sha256:94901203ce781a688b8d01c7c2559da6f784362026bc3f11f64d1f768919f6bf", size = 58496, upload-time = "2026-10-08T20:39:53.05Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/56/5c/4157feffa3d115494e2ecca8917d99f19df0275ae29931f4a796fb070758/etlantic_sqlmodel-0.57.2.tar.gz", hash = "sha256:c1a15f70dc3e1485b64914d0cce67a506fd8533a6d874a9fff5bc5d1b2dec05d", size = 58501, upload-time = "2026-10-11T03:43:20.959Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/b2/9d0531f9a3b36a8982141a23b44b36668b210d966d0e1b589bd8c8c1bc02/etlantic_sqlmodel-0.57.0-py3-none-any.whl", hash = "sha256:28641b7bfefb888b83bfc00f172f4293913e74717b747ed7a0289737a2d7051f", size = 77446, upload-time = "2026-10-08T20:39:51.882Z" },
+    { url = "https://files.pythonhosted.org/packages/92/58/eab4c43324d3440a95a61feeb718198415d02d24cde4c5d876b4326103db/etlantic_sqlmodel-0.57.2-py3-none-any.whl", hash = "sha256:40a2826b85c304e510a91d4da6f089b704780a18c48e46e9638256db6956a191", size = 77450, upload-time = "2026-10-11T03:43:19.336Z" },
 ]
 
 [[package]]
@@ -802,10 +802,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "etlantic", specifier = "==0.57.0" },
-    { name = "etlantic-fastapi", specifier = "==0.57.0" },
-    { name = "etlantic-sqlmodel", marker = "extra == 'postgresql'", specifier = "==0.57.0" },
-    { name = "etlantic-sqlmodel", marker = "extra == 'sqlite'", specifier = "==0.57.0" },
+    { name = "etlantic", specifier = "==0.57.2" },
+    { name = "etlantic-fastapi", specifier = "==0.57.2" },
+    { name = "etlantic-sqlmodel", marker = "extra == 'postgresql'", specifier = "==0.57.2" },
+    { name = "etlantic-sqlmodel", marker = "extra == 'sqlite'", specifier = "==0.57.2" },
     { name = "fastapi", specifier = "==0.141.1" },
     { name = "httpx2", marker = "extra == 'test'", specifier = "==2.12.0" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgresql'", specifier = "==3.3.5" },

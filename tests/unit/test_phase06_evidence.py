@@ -64,7 +64,13 @@ def ledger(tmp_path, monkeypatch):
             )
             + "\nResult: PASS\n"
         )
-    text = re.sub(r"^(\| Gate [ABC].*)OPEN( \|)$", r"\1PASS\2", text, flags=re.M)
+
+    def pass_release_gate(match):
+        cells = [cell.strip() for cell in match.group(0).strip("|").split("|")]
+        cells[-1] = "PASS"
+        return "| " + " | ".join(cells) + " |"
+
+    text = re.sub(r"^\| Gate [ABC].*\|$", pass_release_gate, text, flags=re.M)
     source_commit = "a" * 40
     text = re.sub(
         r"^\| ShuETL source commit \|.*\|$",
@@ -74,9 +80,13 @@ def ledger(tmp_path, monkeypatch):
     )
     index.write_text(text)
     (evidence / "proofs.json").write_text(json.dumps(proofs))
-    gate0_path = evidence / "postgresql-gate0.json"
+    manifest_path = next(evidence.glob("local-*/manifest.json"))
+    candidate_dir = manifest_path.parent
+    manifest = json.loads(manifest_path.read_text())
+    candidate_artifacts = manifest["candidate_artifacts_sha256"]
+    gate0_path = candidate_dir / "gate0-python-3.12.json"
     gate0 = json.loads(gate0_path.read_text())
-    reference_digest = hashlib.sha256(b"synthetic reference wheel fixture").hexdigest()
+    reference_digest = candidate_artifacts["gate0_reference_wheel"]
     gate0.update(
         source_commit=source_commit,
         shuetl_wheel_sha256=wheel_digest,
@@ -106,12 +116,12 @@ def ledger(tmp_path, monkeypatch):
                 "implementation": "python-records/1",
             },
             "normalized_rows": [
-                {"id": 1, "payload": "ok", "quantity": 4},
+                {"id": 1, "payload": "ok", "quantity": 3},
                 {"id": 2, "payload": "no", "quantity": 60},
                 {"id": 3, "payload": None, "quantity": 4},
                 {"id": 4, "payload": "ok", "quantity": 120},
             ],
-            "accepted_rows": [{"id": 1, "payload": "ok", "quantity": 4}],
+            "accepted_rows": [{"id": 1, "payload": "ok", "quantity": 3}],
             "rejected_rows": [
                 {"id": 2, "payload": "no", "quantity": 60},
                 {"id": 3, "payload": None, "quantity": 4},
@@ -125,11 +135,11 @@ def ledger(tmp_path, monkeypatch):
                 {"id": 4, "payload": "ok", "quantity": 120},
             ],
             "sort_deduplicate_order_observation": {
-                "deterministic": False,
-                "forward_key_quantity": 4,
+                "deterministic": True,
+                "forward_key_quantity": 3,
                 "reversed_key_quantity": 3,
             },
-            "unqualified_capabilities": ["deterministic_sort_before_deduplicate"],
+            "unqualified_capabilities": [],
         },
         connector_grants={
             "input_select": True,
@@ -210,21 +220,20 @@ def ledger(tmp_path, monkeypatch):
         },
     )
     for role in gate0["roles"]:
+        role["versions"] = dict.fromkeys(role["versions"], "0.57.2")
         role["owner_id"] = (
             None if role["started"] == "gateway" else f"owner-{role['started']}"
         )
     gate0_path.write_text(json.dumps(gate0))
-    cli_path = evidence / "cli-postgresql.json"
+    cli_path = candidate_dir / "cli-postgresql.json"
     cli = json.loads(cli_path.read_text())
     cli.update(
-        etlantic_version="0.57.0",
-        etlantic_sql_version="0.57.0",
-        etlantic_sqlmodel_version="0.57.0",
+        etlantic_version="0.57.2",
+        etlantic_sql_version="0.57.2",
+        etlantic_sqlmodel_version="0.57.2",
         source_commit=source_commit,
         shuetl_wheel_sha256=wheel_digest,
-        reference_wheel_sha256=hashlib.sha256(
-            b"synthetic reference host wheel"
-        ).hexdigest(),
+        reference_wheel_sha256=candidate_artifacts["host_bindings_wheel"],
         role_imports=[
             {
                 "role": role,
@@ -258,6 +267,16 @@ def ledger(tmp_path, monkeypatch):
             "bindings.close",
         ]
     cli_path.write_text(json.dumps(cli))
+    manifest["working_tree_changes_present"] = False
+    manifest["source_commit"] = source_commit
+    manifest["candidate_artifacts_sha256"]["shuetl_wheel"] = wheel_digest
+    manifest["records_sha256"][gate0_path.name] = hashlib.sha256(
+        gate0_path.read_bytes()
+    ).hexdigest()
+    manifest["records_sha256"][cli_path.name] = hashlib.sha256(
+        cli_path.read_bytes()
+    ).hexdigest()
+    manifest_path.write_text(json.dumps(manifest))
     (evidence / "qualification.md").write_text("\n".join(records))
     (evidence / "source.md").write_text(
         "# Fixture\n"
@@ -308,12 +327,13 @@ def test_required_upstream_results_cannot_skip_cases(ledger):
 
 
 def test_missing_postgresql_evidence_is_rejected(ledger):
-    (ledger / "postgresql-gate0.json").unlink()
+    manifest_path = next(ledger.glob("local-*/manifest.json"))
+    (manifest_path.parent / "gate0-python-3.12.json").unlink()
     assert any("Gate 0 evidence" in error for error in check_evidence.check(ledger))
 
 
 def test_failed_postgresql_evidence_is_rejected(ledger):
-    path = ledger / "postgresql-gate0.json"
+    path = next(ledger.glob("local-*/gate0-python-3.12.json"))
     data = json.loads(path.read_text())
     data["result"] = "FAIL"
     path.write_text(json.dumps(data))
@@ -321,7 +341,7 @@ def test_failed_postgresql_evidence_is_rejected(ledger):
 
 
 def test_phase06_gate0_requires_live_transform_and_quality_observations(ledger):
-    path = ledger / "postgresql-gate0.json"
+    path = next(ledger.glob("local-*/gate0-python-3.12.json"))
     data = json.loads(path.read_text())
     data["capability_results"]["quality_range_accept_and_reject"] = False
     path.write_text(json.dumps(data))
@@ -329,7 +349,7 @@ def test_phase06_gate0_requires_live_transform_and_quality_observations(ledger):
 
 
 def test_phase06_gate0_requires_portable_transform_qualification(ledger):
-    path = ledger / "postgresql-gate0.json"
+    path = next(ledger.glob("local-*/gate0-python-3.12.json"))
     data = json.loads(path.read_text())
     data["capability_results"]["portable_plan_contains_sort_before_deduplicate"] = False
     path.write_text(json.dumps(data))
@@ -337,7 +357,7 @@ def test_phase06_gate0_requires_portable_transform_qualification(ledger):
 
 
 def test_phase06_gate0_requires_postgresql_source_and_read_only_grants(ledger):
-    path = ledger / "postgresql-gate0.json"
+    path = next(ledger.glob("local-*/gate0-python-3.12.json"))
     data = json.loads(path.read_text())
     data["capability_results"]["postgresql_snapshot_source"] = False
     data["capability_results"]["postgresql_upsert_updates_by_key"] = False
@@ -347,7 +367,7 @@ def test_phase06_gate0_requires_postgresql_source_and_read_only_grants(ledger):
 
 
 def test_phase06_gate0_requires_distinct_process_contention_evidence(ledger):
-    path = ledger / "postgresql-gate0.json"
+    path = next(ledger.glob("local-*/gate0-python-3.12.json"))
     data = json.loads(path.read_text())
     data["coordination"]["run_worker_contention"][1]["count"] = 1
     path.write_text(json.dumps(data))
@@ -355,7 +375,7 @@ def test_phase06_gate0_requires_distinct_process_contention_evidence(ledger):
 
 
 def test_phase06_gate0_requires_unique_runtime_owner_ids(ledger):
-    path = ledger / "postgresql-gate0.json"
+    path = next(ledger.glob("local-*/gate0-python-3.12.json"))
     data = json.loads(path.read_text())
     data["coordination"]["role_instances"][1]["owner_id"] = data["roles"][1]["owner_id"]
     path.write_text(json.dumps(data))
@@ -363,7 +383,7 @@ def test_phase06_gate0_requires_unique_runtime_owner_ids(ledger):
 
 
 def test_phase06_gate0_requires_eight_distinct_process_ids(ledger):
-    path = ledger / "postgresql-gate0.json"
+    path = next(ledger.glob("local-*/gate0-python-3.12.json"))
     data = json.loads(path.read_text())
     data["coordination"]["role_instances"][0]["pid"] = data["roles"][0]["pid"]
     path.write_text(json.dumps(data))
@@ -373,7 +393,7 @@ def test_phase06_gate0_requires_eight_distinct_process_ids(ledger):
 
 
 def test_phase06_cli_requires_backend_before_binding_cleanup(ledger):
-    path = ledger / "cli-postgresql.json"
+    path = next(ledger.glob("local-*/cli-postgresql.json"))
     data = json.loads(path.read_text())
     data["shutdown"][0]["cleanup_events"] = [
         "bindings.close",

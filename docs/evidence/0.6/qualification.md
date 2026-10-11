@@ -1,4 +1,9 @@
-# Phase 0.6 qualification record
+# Phase 0.6 qualification record — historical snapshot
+
+This file preserves an earlier hosted qualification snapshot. Its ETLantic
+0.57.0 / ShuETL `c064aa9` observations and remaining-gap statements have been
+superseded where indicated by the [current development qualification](current-qualification.md)
+and the [0.57.2 upstream audit](../../reviews/ETLANTIC_0_57_2_REQUIREMENTS_AUDIT.md).
 
 Status: partial development qualification. This record covers installed
 baseline transfer, multi-process coordination, CLI cleanup ordering, and

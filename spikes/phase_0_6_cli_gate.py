@@ -22,11 +22,14 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+
+CONTAINER_PROBES: dict[int, str] = {}
 
 
 def _free_port() -> int:
@@ -67,16 +70,34 @@ def _settings_env(
             "SHUETL_SHUTDOWN_GRACE_SECONDS": "5",
             "SHUETL_DISPATCH_INTERVAL_SECONDS": "0.2",
             "PHASE06_ROOT": str(root),
-            "ETLANTIC_SQL_URL": url,
             "PYTHONNOUSERSITE": "1",
         }
     )
     if worker_kind is not None:
         env["SHUETL_WORKER_KIND"] = worker_kind
+        env["ETLANTIC_SQL_URL"] = url
     return env
 
 
 def _probe(port: int, endpoint: str) -> tuple[int, dict[str, Any]]:
+    if port in CONTAINER_PROBES:
+        code = (
+            "import json,urllib.request,urllib.error; "
+            f"url='http://127.0.0.1:{port}/{endpoint}'\n"
+            "try: response=urllib.request.urlopen(url,timeout=1)\n"
+            "except urllib.error.HTTPError as error: response=error\n"
+            "print(json.dumps([response.code,json.loads(response.read())]))"
+        )
+        result = subprocess.run(
+            ["docker", "exec", CONTAINER_PROBES[port], "python", "-c", code],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode:
+            raise OSError("container probe unavailable")
+        status, payload = json.loads(result.stdout)
+        return status, payload
     request = urllib.request.Request(f"http://127.0.0.1:{port}/{endpoint}")
     try:
         with urllib.request.urlopen(request, timeout=1) as response:
@@ -156,6 +177,371 @@ def _assert_runtime_grants(engine: Any, runtime: str, migrator: str) -> dict[str
     }
 
 
+def _active_drain(
+    *,
+    root,
+    children,
+    settings,
+    host_module,
+    evidence,
+    operator,
+    execution_url,
+    python,
+    gateway_port,
+    force,
+):
+    """Exercise actual CLI dispatch with public provider barriers in a test wheel."""
+    from phase06_host.workload import specification
+
+    from shuetl.backend import create_backend_runtime
+
+    controller = create_backend_runtime(settings, host_module.create(settings))
+    backend = controller.backend
+    ctx = host_module._context(settings)
+    service = backend.managed_service
+    try:
+        service.register_definition(ctx, "cli-transfer", specification())
+        _action_checks(root=root, backend=backend, ctx=ctx, evidence=evidence)
+        for role in ("scheduler", "worker-actions", "worker-runs"):
+            (root / f"arm-{role}").touch()
+        first = service.start_run_preparation(
+            ctx, "cli-transfer", idempotency_key="cli-drain-first"
+        )
+        second = service.start_run_preparation(
+            ctx, "cli-transfer", idempotency_key="cli-drain-second"
+        )
+        records = evidence.setdefault("active_drain", [])
+        gateway_probe = next(row[2] for row in children if row[0] == "gateway")
+        request_code = (
+            "import json,urllib.request; "
+            f"response=urllib.request.urlopen('http://127.0.0.1:{gateway_port}"
+            "/qualification/active-request',timeout=80); "
+            "print(json.dumps({'status':response.status,'body':json.loads(response.read())}))"
+        )
+        request_command = (
+            [
+                "docker",
+                "exec",
+                CONTAINER_PROBES[gateway_probe],
+                "python",
+                "-c",
+                request_code,
+            ]
+            if gateway_probe in CONTAINER_PROBES
+            else [python, "-c", request_code]
+        )
+        request_pool = ThreadPoolExecutor(max_workers=1)
+        request_future = request_pool.submit(
+            subprocess.run, request_command, capture_output=True, text=True, timeout=85
+        )
+        for name, host_role in (
+            ("scheduler", "scheduler"),
+            ("action_worker", "worker-actions"),
+            ("run_worker", "worker-runs"),
+            ("gateway", "gateway"),
+        ):
+            _, process, port, _ = next(row for row in children if row[0] == name)
+            reached = root / f"reached-{host_role}"
+            deadline = time.monotonic() + 40
+            while not reached.exists():
+                assert process.poll() is None, name
+                assert time.monotonic() < deadline, (
+                    f"{name} did not reach public barrier"
+                )
+                time.sleep(0.05)
+            process.send_signal(signal.SIGTERM)
+            process.send_signal(signal.SIGINT)
+            deadline = time.monotonic() + 10
+            while True:
+                status, readiness = _probe(port, "ready")
+                if status == 503 and readiness.get("reason_code") == "grace_expired":
+                    break
+                assert time.monotonic() < deadline, readiness
+                time.sleep(0.05)
+            live_status, live = _probe(port, "live")
+            assert live_status == 200 and live["live"] is True
+            assert process.poll() is None
+            lifecycle = root / (
+                f"lifecycle-{name}-1.jsonl"
+                if port in CONTAINER_PROBES
+                else f"lifecycle-{process.pid}.jsonl"
+            )
+            assert not lifecycle.exists(), "cleanup beneath active provider call"
+            (root / f"release-{host_role}").touch()
+            assert process.wait(timeout=30) == 0
+            records.append(
+                {
+                    "role": name,
+                    "boundary": reached.read_text(),
+                    "signals": ["SIGTERM", "SIGINT"],
+                    "ready_after_grace": readiness,
+                    "live_after_grace": live,
+                    "cleanup_before_release": False,
+                    "exit_code": 0,
+                }
+            )
+        request_result = request_future.result(timeout=10)
+        request_pool.shutdown(wait=True)
+        assert request_result.returncode == 0, request_result.stderr
+        response = json.loads(request_result.stdout)
+        assert response == {"status": 200, "body": {"completed": True}}, response
+        evidence["gateway_active_request"] = response
+        first_result = service.get_run_preparation(ctx, first["operation_id"])
+        second_result = service.get_run_preparation(ctx, second["operation_id"])
+        assert first_result["status"] == "succeeded", first_result
+        assert second_result["status"] == "queued", second_result
+        report = service.get_run_report(ctx, first_result["result"]["resource_id"])
+        assert report["status"] == "succeeded", report
+        with operator.connect() as connection:
+            rows = [
+                list(row)
+                for row in connection.execute(
+                    text("SELECT id,payload FROM sink.target ORDER BY id")
+                )
+            ]
+            effects = connection.execute(
+                text("SELECT count(*) FROM sink.effects")
+            ).scalar_one()
+        assert rows == [["001", "phase06-cli"]] and effects == 1, (rows, effects)
+        # Replacement roles recover queued work through canonical factories.
+        action = backend.create_action_execution_host(
+            worker_id="cli-replacement-actions"
+        )
+        run = backend.create_execution_host(owner_id="cli-replacement-runs")
+        assert action.tick(ctx) == 1
+        previous_url = os.environ.get("ETLANTIC_SQL_URL")
+        os.environ["ETLANTIC_SQL_URL"] = execution_url
+        try:
+            assert run.tick(ctx) == 1
+        finally:
+            if previous_url is None:
+                os.environ.pop("ETLANTIC_SQL_URL", None)
+            else:
+                os.environ["ETLANTIC_SQL_URL"] = previous_url
+        action.request_drain()
+        run.request_drain()
+        assert action.tick(ctx) == run.tick(ctx) == 0
+        recovered = service.get_run_preparation(ctx, second["operation_id"])
+        assert recovered["status"] == "succeeded"
+        assert (
+            service.get_run_report(ctx, recovered["result"]["resource_id"])["status"]
+            == "succeeded"
+        )
+        evidence["active_execution"] = {
+            "first": first_result,
+            "queued_at_shutdown": second_result,
+            "replacement": recovered,
+            "rows_before_replacement": rows,
+            "effects_before_replacement": effects,
+            "result": "PASS",
+        }
+        if force:
+            _force_roles(
+                root=root,
+                settings=settings,
+                backend=backend,
+                ctx=ctx,
+                python=python,
+                execution_url=execution_url,
+                evidence=evidence,
+            )
+    finally:
+        controller.close()
+
+
+def _action_checks(*, root, backend, ctx, evidence):
+    """Published SQL handlers execute in the installed CLI action worker."""
+    from dataclasses import replace
+
+    from etlantic.control_plane import ControlPlaneError, Principal
+
+    service = backend.managed_service
+    records = evidence.setdefault("connector_actions", [])
+
+    def execute(key, action, request, expected="succeeded", deadline_seconds=10):
+        job = service.submit_connector_action(
+            ctx, action, request, idempotency_key=key, deadline_seconds=deadline_seconds
+        )
+        deadline = time.monotonic() + 20
+        while True:
+            result = service.get_connector_action(ctx, job["action_id"])
+            if result["status"] in {"succeeded", "failed", "timed_out", "cancelled"}:
+                break
+            assert time.monotonic() < deadline, result
+            time.sleep(0.05)
+        assert result["status"] == expected, result
+        records.append({"case": key, "receipt": result, "result": "PASS"})
+        return job, result
+
+    request = {"provider": "postgresql", "connection_id": "saved-connection"}
+    job, connection = execute("cli-connection-test", "connector.test", request)
+    assert connection["result"]["ok"] is True
+    _, schema = execute(
+        "cli-schema-inspect", "connector.schema.inspect", {**request, "max_fields": 2}
+    )
+    assert len(schema["result"]["fields"]) == 2 and schema["result"]["has_more"] is True
+    foreign = replace(
+        ctx,
+        principal=Principal("foreign", issuer="reference-host", kind="service"),
+        resource_owner_id="foreign",
+    )
+    try:
+        service.get_connector_action(foreign, job["action_id"])
+    except ControlPlaneError as exc:
+        assert exc.status in {403, 404}
+    else:
+        raise AssertionError("another action owner read the receipt")
+    (root / "connection-version").write_text("2")
+    execute("cli-resource-rotation", "connector.test", request)
+    (root / "revoke-connection").touch()
+    try:
+        execute("cli-resource-revocation", "connector.test", request, "failed")
+    finally:
+        (root / "revoke-connection").unlink()
+    execute(
+        "cli-resource-deadline",
+        "connector.test",
+        {**request, "connection_id": "slow-connection"},
+        "timed_out",
+        deadline_seconds=2,
+    )
+    (root / "unavailable-port").write_text(str(_free_port()))
+    execute(
+        "cli-connector-outage",
+        "connector.test",
+        {**request, "connection_id": "unavailable-connection"},
+        "failed",
+    )
+    execute("cli-resource-recovery", "connector.test", request)
+    _, preflight = execute(
+        "cli-static-preflight", "connector.preflight", {"definition_id": "cli-transfer"}
+    )
+    assert preflight["result"]["metadata"]["mode"] == "read_only_plan"
+    evidence["action_limits"] = (
+        "Published worker-isolated connection/schema actions; test host rotates "
+        "a resource version and rejects revoked references. Preflight is explicitly "
+        "static; live pipeline readiness remains ETLantic #121."
+    )
+
+
+def _force_roles(*, root, settings, backend, ctx, python, execution_url, evidence):
+    """An external supervisor kills blocked native CLI processes after grace."""
+    from dataclasses import asdict
+
+    records = evidence.setdefault("forced_termination", [])
+    for role, kind, host_role in (
+        ("scheduler", None, "scheduler"),
+        ("worker", "actions", "worker-actions"),
+        ("worker", "runs", "worker-runs"),
+    ):
+        for prefix in ("arm", "reached", "release"):
+            (root / f"{prefix}-{host_role}").unlink(missing_ok=True)
+        port = _free_port()
+        env = _settings_env(
+            role=role,
+            url=execution_url,
+            factory="phase06_host.bindings:create",
+            root=root,
+            probe_port=port,
+            worker_kind=kind,
+        )
+        path = root / f"force-{host_role}.log"
+        with path.open("w") as log:
+            command = [python, "-m", "shuetl.cli", "serve", "--role", role]
+            if kind:
+                command.extend(("--kind", kind))
+            process = subprocess.Popen(
+                command,
+                env=env,
+                cwd=root,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            try:
+                _wait_ready(process, port, path, (execution_url,))
+                (root / f"arm-{host_role}").touch()
+                operation = None
+                if kind:
+                    operation = backend.managed_service.start_run_preparation(
+                        ctx,
+                        "cli-transfer",
+                        idempotency_key="cli-force-" + kind,
+                        deadline_seconds=10,
+                    )
+                if kind == "runs":
+                    action = backend.create_action_execution_host(
+                        worker_id="force-prepare-runs"
+                    )
+                    assert action.tick(ctx) == 1
+                    action.request_drain()
+                    operation = backend.managed_service.get_run_preparation(
+                        ctx, operation["operation_id"]
+                    )
+                    assert operation["status"] == "succeeded"
+                deadline = time.monotonic() + 45
+                while not (root / f"reached-{host_role}").exists():
+                    assert time.monotonic() < deadline, host_role
+                    assert process.poll() is None
+                    time.sleep(0.05)
+
+                def snapshot(kind=kind, operation=operation):
+                    if kind == "runs":
+                        return asdict(
+                            backend.durable_work.get_submission(
+                                ctx, operation["result"]["submission_id"]
+                            )
+                        )
+                    if kind == "actions":
+                        return asdict(
+                            backend.durable_work.get_action_job(
+                                ctx, operation["operation_id"]
+                            )
+                        )
+                    return None
+
+                before = snapshot()
+                process.send_signal(signal.SIGTERM)
+                deadline = time.monotonic() + 10
+                while True:
+                    status, readiness = _probe(port, "ready")
+                    if (
+                        status == 503
+                        and readiness.get("reason_code") == "grace_expired"
+                    ):
+                        break
+                    assert time.monotonic() < deadline, readiness
+                    time.sleep(0.05)
+                lifecycle = root / f"lifecycle-{process.pid}.jsonl"
+                assert not lifecycle.exists()
+                process.kill()
+                assert process.wait(timeout=10) == -signal.SIGKILL
+                assert not lifecycle.exists()
+                after = snapshot()
+                assert before == after, (before, after)
+                records.append(
+                    {
+                        "role": host_role,
+                        "pid": process.pid,
+                        "signals": ["SIGTERM", "SIGKILL"],
+                        "ready_after_grace": readiness,
+                        "before": before,
+                        "after": after,
+                        "cleanup_events": [],
+                        "result": "PASS",
+                    }
+                )
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait(timeout=10)
+    evidence["force_limits"] = (
+        "Native CLI processes killed after committed claims. Published "
+        "lease/deadline recovery is qualified separately by the installed "
+        "fault matrix; SIGKILL cannot run cleanup."
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--disposable-admin-url", required=True)
@@ -164,7 +550,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--shuetl-wheel", type=Path, required=True)
     parser.add_argument("--reference-wheel", type=Path, required=True)
     parser.add_argument("--source-commit", required=True)
+    parser.add_argument(
+        "--active",
+        action="store_true",
+        help="Qualify in-flight role drain and real effects",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Also kill active native CLI processes after grace",
+    )
+    parser.add_argument(
+        "--container-image",
+        help="Exact local Docker image ID for the same candidate wheels",
+    )
     args = parser.parse_args(argv)
+    if args.force and (not args.active or args.container_image):
+        parser.error("force requires active qualification in native processes")
+    if args.container_image is not None and (
+        not args.container_image.startswith("sha256:")
+        or len(args.container_image) != 71
+    ):
+        parser.error("container-image must be an exact sha256 Docker image ID")
     import importlib.metadata as metadata
 
     if metadata.version("shuetl") != "0.6.0":
@@ -278,7 +685,12 @@ def main(argv: list[str] | None = None) -> int:
         operator.dispose()
 
         with tempfile.TemporaryDirectory(prefix="shuetl-phase06-cli-") as temp_root:
-            root = Path(temp_root)
+            root = Path(temp_root).resolve()
+            if args.container_image:
+                root.chmod(0o777)  # Disposable fixture shared with container UID 10001.
+                evidence["schema"] = "shuetl.phase06.container/1"
+                evidence["container_image_id"] = args.container_image
+                evidence["platform"] = "linux/amd64"
             (root / "landing").mkdir()
             (root / "landing" / "input.csv").write_text(
                 "id,payload\n001,phase06-cli\n", encoding="utf-8"
@@ -394,6 +806,53 @@ def main(argv: list[str] | None = None) -> int:
                     env["SHUETL_PROBE_PORT"] = str(_free_port())
                     probe_port = int(env["SHUETL_PROBE_PORT"])
                     command.extend(("--host", "127.0.0.1", "--port", str(gateway_port)))
+                if args.container_image:
+                    container_name = f"shuetl-qualification-{token}-{role_name}"
+                    CONTAINER_PROBES[probe_port] = container_name
+                    container_env = {
+                        key: value
+                        for key, value in env.items()
+                        if key.startswith(("SHUETL_", "ETLANTIC_", "PHASE06_"))
+                    }
+                    container_env.update(
+                        SHUETL_DATABASE_URL=runtime_url.set(
+                            host="host.docker.internal"
+                        ).render_as_string(hide_password=False),
+                        PHASE06_ROOT="/qualification",
+                        PHASE06_PROCESS_TOKEN=role_name,
+                    )
+                    if kind is not None:
+                        container_env["ETLANTIC_SQL_URL"] = runtime_url.set(
+                            host="host.docker.internal"
+                        ).render_as_string(hide_password=False)
+                    env_path = root / f"{role_name}.env"
+                    env_path.write_text(
+                        "".join(
+                            f"{key}={value}\n" for key, value in container_env.items()
+                        ),
+                        encoding="utf-8",
+                    )
+                    env_path.chmod(0o600)
+                    command = [
+                        "docker",
+                        "run",
+                        "--rm",
+                        "--name",
+                        container_name,
+                        "--platform",
+                        "linux/amd64",
+                        "--env-file",
+                        str(env_path),
+                        "--volume",
+                        f"{root}:/qualification",
+                        args.container_image,
+                        *command[3:],
+                    ]
+                    if sys.platform.startswith("linux"):
+                        command[2:2] = [
+                            "--add-host",
+                            "host.docker.internal:host-gateway",
+                        ]
                 log_path = root / f"{role_name}.log"
                 log = log_path.open("w", encoding="utf-8")
                 process = subprocess.Popen(
@@ -414,12 +873,53 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 live_status, live = _probe(probe_port, "live")
                 assert live_status == 200 and live.get("live") is True, live
+                container_metadata = None
+                if args.container_image:
+                    result = subprocess.run(
+                        [
+                            "docker",
+                            "exec",
+                            container_name,
+                            "python",
+                            "-c",
+                            "import json,sys,pathlib,importlib.metadata as m; "
+                            "print(json.dumps({'python':sys.version.split()[0],"
+                            "'versions':{n:m.version(n) for n in ('shuetl','etlantic',"
+                            "'etlantic-fastapi','etlantic-sqlmodel','etlantic-sql')},"
+                            "'wheels':json.loads(pathlib.Path('/usr/local/share/shuetl-wheels.json').read_text())}))",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                        timeout=10,
+                    )
+                    container_metadata = json.loads(result.stdout)
+                    assert (
+                        container_metadata["wheels"][args.shuetl_wheel.name]
+                        == evidence["shuetl_wheel_sha256"]
+                    )
+                    assert (
+                        container_metadata["wheels"][args.reference_wheel.name]
+                        == evidence["reference_wheel_sha256"]
+                    )
+                    assert container_metadata["versions"] == {
+                        "shuetl": "0.6.0",
+                        "etlantic": "0.57.2",
+                        "etlantic-fastapi": "0.57.2",
+                        "etlantic-sqlmodel": "0.57.2",
+                        "etlantic-sql": "0.57.2",
+                    }
                 evidence["roles"].append(
                     {
                         "role": role_name,
                         "pid": process.pid,
                         "ready": ready,
                         "live": live,
+                        **(
+                            {"container_metadata": container_metadata}
+                            if container_metadata
+                            else {}
+                        ),
                         "probe_host": "127.0.0.1",
                         "gateway_port": (
                             gateway_port if role_name == "gateway" else None
@@ -439,7 +939,11 @@ def main(argv: list[str] | None = None) -> int:
                 import_role = expected_import_roles[role_name]
                 import_path = root / f"imports-{import_role}.json"
                 imports = json.loads(import_path.read_text(encoding="utf-8"))
-                assert imports["pid"] == process.pid, imports
+                assert imports["pid"] == (1 if args.container_image else process.pid), (
+                    imports
+                )
+                if args.container_image:
+                    imports["container_name"] = CONTAINER_PROBES[_port]
                 assert imports["role"] == import_role, imports
                 should_import_http = role_name == "gateway"
                 assert imports["fastapi_imported"] is should_import_http, imports
@@ -447,12 +951,34 @@ def main(argv: list[str] | None = None) -> int:
                     imports
                 )
                 evidence["role_imports"].append(imports)
+            if args.active:
+                operator = create_engine(migration_url)
+                try:
+                    _active_drain(
+                        root=root,
+                        children=children,
+                        settings=preflight_settings,
+                        host_module=host_module,
+                        evidence=evidence,
+                        operator=operator,
+                        execution_url=runtime_dsn,
+                        python=args.python,
+                        gateway_port=gateway_port,
+                        force=args.force,
+                    )
+                finally:
+                    operator.dispose()
             evidence["shutdown"] = []
             for role_name, process, probe_port, _log_path in reversed(children):
-                process.send_signal(signal.SIGTERM)
+                if process.poll() is None:
+                    process.send_signal(signal.SIGTERM)
                 exit_code = process.wait(timeout=15)
                 assert exit_code == 0, (role_name, exit_code)
-                lifecycle_path = root / f"lifecycle-{process.pid}.jsonl"
+                lifecycle_path = root / (
+                    f"lifecycle-{role_name}-1.jsonl"
+                    if args.container_image
+                    else f"lifecycle-{process.pid}.jsonl"
+                )
                 lifecycle_events = [
                     json.loads(line)["event"]
                     for line in lifecycle_path.read_text(encoding="utf-8").splitlines()
@@ -469,6 +995,36 @@ def main(argv: list[str] | None = None) -> int:
                         "cleanup_events": lifecycle_events,
                     }
                 )
+                if role_name == "action_worker" and args.active:
+                    resource_token = (
+                        role_name if args.container_image else str(process.pid)
+                    )
+                    calls = [
+                        json.loads(line)
+                        for line in (root / f"resource-calls-{resource_token}.jsonl")
+                        .read_text()
+                        .splitlines()
+                    ]
+                    cleanup = json.loads(
+                        (root / f"resource-cleanup-{resource_token}.json").read_text()
+                    )
+                    assert {call["version"] for call in calls} == {
+                        "1",
+                        "2",
+                        "unavailable",
+                    }
+                    assert all(
+                        call["pid"] == (1 if args.container_image else process.pid)
+                        and call["authority_matches"] is True
+                        and 0 < call["timeout_seconds"] <= 10
+                        for call in calls
+                    )
+                    assert cleanup == {"engines_disposed": 3}, cleanup
+                    evidence["resource_bridge"] = {
+                        "calls": calls,
+                        "cleanup": cleanup,
+                        "worker_only": True,
+                    }
                 try:
                     status, payload = _probe(probe_port, "live")
                     assert status == 503 and payload.get("live") is False
@@ -494,6 +1050,13 @@ def main(argv: list[str] | None = None) -> int:
                     process.kill()
                     process.wait(timeout=5)
                     cleanup_errors.append(f"force-terminated {role_name}")
+        for container_name in CONTAINER_PROBES.values():
+            subprocess.run(
+                ["docker", "rm", "--force", container_name],
+                capture_output=True,
+                timeout=15,
+            )
+        CONTAINER_PROBES.clear()
         with admin.connect() as connection:
             connection.execute(
                 text(f'DROP DATABASE IF EXISTS "{database}" WITH (FORCE)')

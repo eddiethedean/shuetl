@@ -1,6 +1,6 @@
 # ShuETL
 
-Development target: **0.6.0**, with exact ETLantic **0.57.0** dependencies.
+Development target: **0.6.0**, with exact ETLantic **0.57.2** dependencies.
 The published baseline remains 0.5.0. Contract acceptance and PostgreSQL role
 feasibility pass; the 0.6 release gates remain open. See
 [development evidence](docs/evidence/0.6/README.md).

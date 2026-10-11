@@ -1,15 +1,40 @@
 # Phase 0.6 development qualification
 
+**Current status (2026-10-11):** ShuETL pins ETLantic 0.57.2. Some earlier
+hosted records remain bound to 0.57.0. Current local qualification on the published
+0.57.2 artifacts passes Gate 0 on Python 3.11–3.13, native CLI active drain and
+force on Python 3.12, Linux container active drain, and the transition rehearsal.
+The 22-case crash matrix passes 20 cases and fails two action-worker-death
+reconciliation cases tracked in [ETLantic #299](https://github.com/eddiethedean/etlantic/issues/299).
+Managed live preflight remains an upstream gap in
+[ETLantic #121](https://github.com/eddiethedean/etlantic/issues/121). See the
+[current qualification record](current-qualification.md) for candidate hashes,
+limits, and the distinction between local and hosted results. Phase 0.6 is not
+release qualified.
+
+The [0.57.2 consumer audit](../../reviews/ETLANTIC_0_57_2_REQUIREMENTS_AUDIT.md)
+records published-wheel provenance and verification of the sort and
+action-handler fixes. The [current qualification record](current-qualification.md)
+supersedes the older local 0.57.0 development snapshots for its stated checks.
+Live preflight, crash reconciliation, remaining acceptance cases, and hosted
+final artifacts remain open.
+
 Recorded: 2026-10-09. **Not a release approval.** Development metadata targets
 ShuETL 0.6.0. Published ShuETL 0.5.0/ETLantic 0.55.0 remains the rollback baseline.
 
 | Gate | Result |
 | --- | --- |
-| Gate U — upstream coverage acceptance | PASS |
+| Gate U — 0.57.2 published upstream contracts | PASS |
 | Gate 0 — installed-artifact PostgreSQL role feasibility | PASS |
 | Gate A — final-wheel Python/hosted acceptance | OPEN |
-| Gate B — lifecycle/failure/capability/transition acceptance | OPEN |
+| Gate B — lifecycle/failure/capability/transition acceptance | BLOCKED by #299 and #121 |
 | Gate C — final dependency/boundary/release review | OPEN |
+
+Gate U is independently verified against the published 0.57.2 wheels. Gate 0's
+current local installed-wheel workload, controls and resource-retention cases
+pass on Python 3.11–3.13; earlier hosted records are linked below and remain
+bound to their recorded commit and hashes. These gate-level feasibility results
+do not close the reviewed 33-criterion release ledger.
 
 U01–U05 are accepted in [coverage-acceptance.md](coverage-acceptance.md), using
 published-wheel provenance, upstream 160-case conformance, 12 direct consumer
@@ -20,7 +45,7 @@ interpreter checks, not additional distinct coverage.
 | Reproducibility field | Value |
 | --- | --- |
 | OS and architecture | macOS, ARM64; exact platform in validation.json |
-| Python version | 3.11.14, 3.12.13, 3.13.9 |
+| Historical hosted Python versions | 3.11.14, 3.12.13, 3.13.9; current local Gate 0 uses 3.11.15, 3.12.13, 3.13.16 (see current qualification) |
 | uv version | Exact executable version in validation.json |
 | ETLantic source revision | Release tag d1f4e5a4d013e37f8adc54b4644ea9b2be66f801 |
 | ShuETL source commit | `c064aa9ead7b78d9f6451895d6799e088ab8682f` |
@@ -37,13 +62,13 @@ host-directory names redacted. Public release provenance is in the candidate aud
 ## Adopted dependencies and compatibility
 
 `pyproject.toml`, `uv.lock` and runtime compatibility checks agree on exact
-`etlantic==0.57.0`, `etlantic-fastapi==0.57.0` and optional
-`etlantic-sqlmodel==0.57.0`. Development ShuETL is 0.6.0. FastAPI 0.141.1,
+`etlantic==0.57.2`, `etlantic-fastapi==0.57.2` and optional
+`etlantic-sqlmodel==0.57.2`. Development ShuETL is 0.6.0. FastAPI 0.141.1,
 Pydantic 2.13.5, settings 2.15.0, SQLAlchemy 2.0.52, psycopg/binary 3.3.5
 and HTTPX2 2.12.0 are unchanged. Mixed ETLantic patch versions fail compatibility.
 The gateway's new optional `server` extra pins Uvicorn 0.46.0; runtime roles do
 not import the ASGI server. The clean-wheel check verifies this separate extra.
-The separately packaged qualification host enables `etlantic-sql==0.57.0`;
+The separately packaged qualification host enables `etlantic-sql==0.57.2`;
 this connector is not an implicit core ShuETL dependency.
 
 Provider schema contract: `014_cp1_complete_principal_idempotency_0_56`.
@@ -81,9 +106,10 @@ coordination and CLI cleanup qualification; the final release candidate and
 broader acceptance gates remain open.
 The independent reference host also executes an ETLantic portable plan and
 records selection, projection, rename, quality and output-schema observations.
-Its order-reversal case confirms that ETLantic 0.57.0 ignores canonical sort
-field expressions before keyed deduplication; this remains unqualified and is
-tracked in [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283).
+The historical 0.57.0 order-reversal case exposed a canonical sort/deduplication
+defect. The installed 0.57.2 consumer audit passes the same reversed-order
+requirement; see [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283)
+and the [0.57.2 audit](../../reviews/ETLANTIC_0_57_2_REQUIREMENTS_AUDIT.md).
 The [provider matrix](providers.md), [partial qualification record](qualification.md),
 and [hosted CI record](ci.md) identify the demonstrated combinations and current
 limitations.
@@ -92,6 +118,7 @@ limitations.
 python spikes/phase_0_6_gate_0.py \
   --disposable-admin-url "$DISPOSABLE_POSTGRES_ADMIN_URL" \
   --python "$INSTALLED_WHEEL_PYTHON" \
+  --controls --resources --retention \
   --output docs/evidence/0.6/postgresql-gate0.json
 ```
 
@@ -129,8 +156,8 @@ connector access; the gateway/scheduler have no connector connection environment
 
 Production plugin trust is enabled. The core's published local compiler descriptor
 uses `etlantic-local` version **0.50.0**, distinct from its containing core wheel
-0.57.0; the reference profile trusts that exact descriptor and `etlantic-sql`
-0.57.0. No wildcard or unpinned plugin trust is used.
+0.57.2; the reference profile trusts that exact descriptor and `etlantic-sql`
+0.57.2. No wildcard or unpinned plugin trust is used.
 
 ## Installed CLI startup and signal smoke test
 
@@ -148,10 +175,11 @@ and ShuETL wheel SHA-256
 `3921b62c7d8c27b6a7d5be69e3a4e36ae1a3030ba9020a1db8dcbfbb73060d24` and
 reference-host wheel SHA-256
 `1bc27163c3c30487a386fd019210594f807253fc50a443ef289754cbf9c5621a`.
-These installed CLI records qualify basic startup, signal shutdown, and exact
-cleanup ordering. Separate source-level PostgreSQL tests qualify role outage/
-recovery; installed-process active-work drain and forced termination remain
-open.
+These hosted installed CLI records qualify basic startup, signal shutdown, and
+exact cleanup ordering on the earlier recorded source. Separate source-level
+PostgreSQL tests qualify role outage/recovery. The newer local installed-wheel
+active-work drain/force results are in [current qualification](current-qualification.md);
+hosted active-work/force qualification remains open.
 
 The startup test exposed a lifecycle cycle: ETLantic roles report unknown
 prerequisites until their first tick, while ShuETL previously dispatched only
@@ -186,12 +214,14 @@ checks do not establish hosted CI or release acceptance.
 
 ## Acceptance results
 
-All 33 release criteria remain OPEN. Hosted Gate 0, CLI startup/cleanup and
-source-level PostgreSQL outage/recovery do not qualify installed-process
-active-work drain, forced termination, the full provider/resource contract or
-transition/rollback. W02 API freeze and W03/W04 source implementation are
-recorded in ADR-0014 and the implementation plan; W04 active-work, W05–W08
-remain required.
+All 33 release criteria remain OPEN because final reviewed proof bindings and
+hosted candidate artifacts are not complete. Current local development
+qualification now covers installed-process active-work drain, forced
+termination, selected controls and resource retention, and a bounded transition
+rehearsal; see [current qualification](current-qualification.md). Remaining
+limits include the two accepted-preparation crash failures in #299, live
+preflight in #121, the broader supported-capability matrix, production
+transition/rollback evidence, and hosted final-artifact review.
 
 | Criterion | Task | Command | Artifact | Status | Limitation | Reviewer | Date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -231,13 +261,12 @@ remain required.
 
 ## Gap register
 
-Role-specific ShuETL binding/API freeze; installed-process active-work drain and
-forced-termination qualification; complete live capability/resource matrix;
-fresh-store transition/rollback rehearsal; hosted final-wheel checks and audited
-33-row proofs. Deterministic portable deduplication remains blocked by
-[ETLantic #283](https://github.com/eddiethedean/etlantic/issues).
+Remaining release gaps: close the upstream blockers #299 and #121; qualify the
+complete advertised capability/resource matrix and production transition;
+complete hosted final-wheel checks and the reviewed 33-row proof registry.
+Deterministic portable deduplication passes on the selected 0.57.2 artifacts.
 
-## Reproducible development build
+## Historical hosted development build
 
 Built with `SOURCE_DATE_EPOCH=1580601600 uv build`; the index is excluded from
 the sdist to avoid self-referential hashes. This binds current development source
@@ -248,6 +277,9 @@ without approving release.
 | SHA-256 wheel | `3921b62c7d8c27b6a7d5be69e3a4e36ae1a3030ba9020a1db8dcbfbb73060d24` |
 | SHA-256 sdist | `23042e70c4f34ffe35c94e61bc4626522e57b1ba98e47c6dfced6dfaa21c0a3a` |
 
-The fresh-build artifact-hash regression passed after the evidence build.
+These hashes belong to the hosted source commit recorded above, not the current
+local candidate. The current local candidate wheel and its exact gate records
+are listed in [current qualification](current-qualification.md). The fresh-build
+artifact-hash regression passed after this historical evidence build.
 `check_evidence.py` intentionally rejects all 33 OPEN criteria and Gates A–C;
 it cannot approve this development record for release.

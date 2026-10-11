@@ -11,6 +11,7 @@ import tomllib
 import xml.etree.ElementTree as ET
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
@@ -176,8 +177,117 @@ def proof_registry(evidence_dir: Path, errors: list[str]) -> dict[str, dict[str,
     return result
 
 
+def phase06_candidate_records(
+    evidence_dir: Path, errors: list[str]
+) -> tuple[Path, Path, str | None, dict[str, Any]]:
+    """Resolve the current, manifest-bound Gate 0 and CLI records.
+
+    The root-level records are retained historical snapshots. Prefer the latest
+    local qualification manifest so a newer ETLantic train is not accidentally
+    checked against those older files. A dirty or hash-mismatched candidate is
+    still rejected below; selecting it does not qualify a release.
+    """
+    manifests = sorted(evidence_dir.glob("local-*/manifest.json"))
+    if not manifests:
+        errors.append("missing Phase 0.6 candidate manifest")
+        return (
+            evidence_dir / "postgresql-gate0.json",
+            evidence_dir / "cli-postgresql.json",
+            None,
+            {},
+        )
+    manifest_path = manifests[-1]
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        errors.append(f"cannot read current Phase 0.6 candidate manifest: {exc}")
+        return (
+            evidence_dir / "postgresql-gate0.json",
+            evidence_dir / "cli-postgresql.json",
+            None,
+            {},
+        )
+    if not isinstance(manifest, dict):
+        errors.append("current Phase 0.6 candidate manifest must be an object")
+        return (
+            evidence_dir / "postgresql-gate0.json",
+            evidence_dir / "cli-postgresql.json",
+            None,
+            {},
+        )
+
+    record_hashes = manifest.get("records_sha256")
+    if not isinstance(record_hashes, dict):
+        errors.append("current Phase 0.6 candidate manifest has no record hashes")
+        record_hashes = {}
+    required_records = {"gate0-python-3.12.json", "cli-postgresql.json"}
+    if not required_records <= set(record_hashes):
+        errors.append(
+            "current Phase 0.6 candidate manifest omits required Gate 0/CLI hashes"
+        )
+    for name, digest in record_hashes.items():
+        path = manifest_path.parent / name
+        if not path.is_file() or not isinstance(digest, str):
+            errors.append(f"candidate evidence record is missing: {name}")
+            continue
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != digest:
+            errors.append(f"candidate evidence record hash mismatch: {name}")
+
+    if manifest.get("working_tree_changes_present") is not False:
+        errors.append(
+            "current Phase 0.6 candidate was not recorded from a clean source tree"
+        )
+    source_commit = manifest.get("source_commit", manifest.get("base_commit"))
+    if not isinstance(source_commit, str) or not re.fullmatch(
+        r"[0-9a-f]{40}", source_commit
+    ):
+        errors.append("current Phase 0.6 candidate manifest has no exact source commit")
+        source_commit = None
+
+    artifact_hashes = manifest.get("candidate_artifacts_sha256")
+    expected_artifacts: dict[str, Any] = (
+        {
+            name: artifact_hashes.get(name)
+            for name in (
+                "shuetl_wheel",
+                "gate0_reference_wheel",
+                "host_bindings_wheel",
+            )
+        }
+        if isinstance(artifact_hashes, dict)
+        else {}
+    )
+    for name, digest in expected_artifacts.items():
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            errors.append(f"candidate manifest has no valid {name} hash")
+    wheel_hash = expected_artifacts.get("shuetl_wheel")
+    wheels = sorted(DIST.glob(f"shuetl-{PROJECT_VERSION}-*.whl"))
+    if len(wheels) != 1:
+        errors.append(
+            "expected one ShuETL wheel to compare with the candidate manifest"
+        )
+    elif (
+        not isinstance(wheel_hash, str)
+        or hashlib.sha256(wheels[0].read_bytes()).hexdigest() != wheel_hash
+    ):
+        errors.append(
+            "current candidate manifest does not match the built ShuETL wheel"
+        )
+
+    return (
+        manifest_path.parent / "gate0-python-3.12.json",
+        manifest_path.parent / "cli-postgresql.json",
+        source_commit,
+        expected_artifacts,
+    )
+
+
 def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
     """Require executed upstream acceptance and PostgreSQL role evidence."""
+    gate0_path, cli_path, manifest_commit, candidate_artifacts = (
+        phase06_candidate_records(evidence_dir, errors)
+    )
     coverage = evidence_dir / "coverage-acceptance.md"
     if not coverage.is_file():
         errors.append("missing Phase 0.6 upstream coverage acceptance")
@@ -216,9 +326,7 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
         except (OSError, ET.ParseError, ValueError):
             errors.append(f"cannot read required Phase 0.6 results: {name}")
     try:
-        gate0 = json.loads(
-            (evidence_dir / "postgresql-gate0.json").read_text(encoding="utf-8")
-        )
+        gate0 = json.loads(gate0_path.read_text(encoding="utf-8"))
         roles = gate0.get("roles", []) if isinstance(gate0, dict) else []
         role_rows = roles if isinstance(roles, list) else []
         role_map = {
@@ -360,13 +468,13 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             and portable["compiler"].get("implementation") == "python-records/1"
             and portable.get("normalized_rows")
             == [
-                {"id": 1, "payload": "ok", "quantity": 4},
+                {"id": 1, "payload": "ok", "quantity": 3},
                 {"id": 2, "payload": "no", "quantity": 60},
                 {"id": 3, "payload": None, "quantity": 4},
                 {"id": 4, "payload": "ok", "quantity": 120},
             ]
             and portable.get("accepted_rows")
-            == [{"id": 1, "payload": "ok", "quantity": 4}]
+            == [{"id": 1, "payload": "ok", "quantity": 3}]
             and portable.get("rejected_rows")
             == [
                 {"id": 2, "payload": "no", "quantity": 60},
@@ -384,12 +492,11 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             ]
             and portable.get("sort_deduplicate_order_observation")
             == {
-                "deterministic": False,
-                "forward_key_quantity": 4,
+                "deterministic": True,
+                "forward_key_quantity": 3,
                 "reversed_key_quantity": 3,
             }
-            and portable.get("unqualified_capabilities")
-            == ["deterministic_sort_before_deduplicate"]
+            and portable.get("unqualified_capabilities") == []
         )
         gate0_good = isinstance(gate0, dict) and (
             gate0.get("schema") == "shuetl.phase06.gate0/1"
@@ -439,7 +546,15 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             and re.fullmatch(
                 r"[0-9a-f]{64}", str(gate0.get("reference_wheel_sha256", ""))
             )
+            and (
+                not candidate_artifacts
+                or gate0.get("reference_wheel_sha256")
+                == candidate_artifacts.get("gate0_reference_wheel")
+            )
             and bool(re.fullmatch(r"[0-9a-f]{40}", str(gate0.get("source_commit", ""))))
+            and (
+                manifest_commit is None or gate0.get("source_commit") == manifest_commit
+            )
         )
         if not gate0_good:
             errors.append("Phase 0.6 PostgreSQL Gate 0 evidence is not qualified")
@@ -461,9 +576,9 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
                     or not isinstance(versions, dict)
                     or versions
                     != {
-                        "etlantic": "0.57.0",
-                        "etlantic-sqlmodel": "0.57.0",
-                        "etlantic-sql": "0.57.0",
+                        "etlantic": "0.57.2",
+                        "etlantic-sqlmodel": "0.57.2",
+                        "etlantic-sql": "0.57.2",
                     }
                     or "site-packages" not in role.get("origin", "")
                     or "site-packages" not in role.get("reference_origin", "")
@@ -474,9 +589,7 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
     except (OSError, ValueError):
         errors.append("cannot read Phase 0.6 PostgreSQL Gate 0 evidence")
     try:
-        cli = json.loads(
-            (evidence_dir / "cli-postgresql.json").read_text(encoding="utf-8")
-        )
+        cli = json.loads(cli_path.read_text(encoding="utf-8"))
         expected_roles = {"gateway", "scheduler", "run_worker", "action_worker"}
         cli_roles = cli.get("roles", []) if isinstance(cli, dict) else []
         role_imports = cli.get("role_imports", []) if isinstance(cli, dict) else []
@@ -492,18 +605,16 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
         import_pids = [
             item.get("pid") for item in role_imports if isinstance(item, dict)
         ]
-        gate0 = json.loads(
-            (evidence_dir / "postgresql-gate0.json").read_text(encoding="utf-8")
-        )
+        gate0 = json.loads(gate0_path.read_text(encoding="utf-8"))
         if (
             not isinstance(cli, dict)
             or cli.get("schema") != "shuetl.phase06.cli-gate/1"
             or cli.get("result") != "PASS"
             or not str(cli.get("postgresql_version", "")).startswith("18.6")
             or cli.get("shuetl_version") != PROJECT_VERSION
-            or cli.get("etlantic_version") != "0.57.0"
-            or cli.get("etlantic_sql_version") != "0.57.0"
-            or cli.get("etlantic_sqlmodel_version") != "0.57.0"
+            or cli.get("etlantic_version") != "0.57.2"
+            or cli.get("etlantic_sql_version") != "0.57.2"
+            or cli.get("etlantic_sqlmodel_version") != "0.57.2"
             or len(cli_roles) != 4
             or len(role_imports) != 4
             or any(not isinstance(pid, int) for pid in import_pids)
@@ -542,8 +653,19 @@ def phase06_prerequisites(evidence_dir: Path, errors: list[str]) -> None:
             or cli.get("shuetl_wheel_sha256") != gate0.get("shuetl_wheel_sha256")
             or source_commit != gate0.get("source_commit")
             or not re.fullmatch(r"[0-9a-f]{64}", cli.get("reference_wheel_sha256", ""))
-            or not source_record
-            or source_commit != source_record.group(1)
+            or (
+                candidate_artifacts
+                and cli.get("reference_wheel_sha256")
+                != candidate_artifacts.get("host_bindings_wheel")
+            )
+            or (
+                source_commit
+                != (
+                    manifest_commit
+                    if manifest_commit is not None
+                    else (source_record.group(1) if source_record else None)
+                )
+            )
         ):
             errors.append(
                 "Phase 0.6 installed CLI/PostgreSQL evidence is not artifact-qualified"

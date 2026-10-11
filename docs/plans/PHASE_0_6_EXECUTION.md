@@ -2,15 +2,24 @@
 
 ## Planning status
 
+**Current qualification update (2026-10-11):** Published ETLantic 0.57.2 is
+selected. Local installed-wheel Gate 0 passes on Python 3.11–3.13; native CLI
+active drain/force, container active drain, and transition checks pass on Python
+3.12. The 22-case crash matrix has 20 passes and two failures tracked in
+[ETLantic #299](https://github.com/eddiethedean/etlantic/issues/299). Live
+pipeline preflight remains tracked in
+[ETLantic #121](https://github.com/eddiethedean/etlantic/issues/121). These
+upstream blockers and pending hosted final-artifact checks keep the phase open.
+
 - Target release: `0.6.0`; released baseline: ShuETL `0.5.0` at
   `d846c3dd15b517def5c736e831202a603ca0e080`, using ETLantic `0.55.0`.
 - Revised ownership decision: [ADR-0015](../adr/0015-backend-and-deployment-ownership.md),
   accepted 2026-10-08. [ADR-0014](../adr/0014-role-separated-managed-runtime.md)
   defines the revised process composition requirements; upstream APIs and the
   ShuETL binding/API freeze are recorded; installed-runtime qualification remains open.
-- **Upstream selection accepted:** exact published `0.57.0` core, HTTP adapter
-  and SQLModel artifacts now appear in development metadata/lock. The previous
-  0.56.0 selection and constructor-DDL exception are superseded.
+- **Upstream selection accepted:** exact published `0.57.2` core, HTTP adapter,
+  SQLModel and SQL provider artifacts appear in development metadata/lock. The
+  previous 0.56.0/0.57.0 selections and constructor-DDL exception are superseded.
   [Coverage acceptance](../evidence/0.6/coverage-acceptance.md) records U01–U05 PASS;
   [PostgreSQL evidence](../evidence/0.6/README.md) records Gate 0 feasibility.
   Gates A–C and all 33 release criteria remain OPEN.
@@ -18,10 +27,12 @@
   Select exact published core, HTTP adapter, persistence and enabled provider
   artifacts after Gate U. Preserve their declared compatibility; pin every
   enabled package and record hashes. No source-wheel patches or floating pins.
-- Status as of 2026-10-09: **U01–U05 accepted; exact 0.57.0 pins adopted;
-  installed-artifact PostgreSQL role feasibility PASS on Python 3.11–3.13;
-  role binding/CLI/probe/drain source implementation present**. Final-wheel,
-  lifecycle, failure, capability, transition and release gates remain OPEN.
+- Historical status as of 2026-10-09: **U01–U05 accepted; exact 0.57.0 pins
+  adopted; installed-artifact PostgreSQL role feasibility PASS on Python
+  3.11–3.13; role binding/CLI/probe/drain source implementation present**.
+  Current 0.57.2 qualification and remaining blockers are summarized above and
+  in the [current evidence record](../evidence/0.6/current-qualification.md).
+  Hosted final-wheel and full release gates remain OPEN.
 
 
 The [verification plan](PHASE_0_6_VERIFICATION.md) maps Gate U, Gate 0 and all
@@ -87,7 +98,7 @@ same pinned application artifact
 
 ## Gate U — Upstream contracts before standard-path implementation
 
-All five surfaces are published in 0.57.0 and accepted in the coverage record.
+All five surfaces are published in 0.57.2 and accepted in the coverage record.
 The candidate audit binds hashes, signatures, upstream conformance and focused
 isolated checks. The ETLantic GitHub issues remain administratively open; that
 state is separate from ShuETL acceptance and deployment proof.
@@ -103,7 +114,7 @@ the ownership and behavioral contracts below hold.
 | U05 | Public role-specific runtime status and cooperative-stop guarantees for scheduler, run worker and action worker | [ETLantic #282](https://github.com/eddiethedean/etlantic/issues/282) | Own dispatch, signals, process probes, freshness and cleanup; never leases or run transitions. |
 
 The 0.56.0 wheel audit and focused 0.56.2 findings remain historical evidence.
-The 0.57.0 candidate removes the headless HTTP dependency, supplies schedule
+The 0.57.2 candidate removes the headless HTTP dependency, supplies schedule
 commands/store/factory, uses explicit occurrence collaborators and exposes role
 status/drain. U04 now has a public provider inspection API beyond the #273 fix.
 Do not carry the old constructor exception forward.
@@ -135,7 +146,7 @@ Gate 0 does not replace any of AC-001–033 or the final-artifact failure matrix
 
 Provision a fresh separate store using the selected provider's explicit migration
 API through `shuetl database upgrade`. Gate U/W01 records its exact schema head;
-`014_cp1_complete_principal_idempotency_0_56` is also the inspected 0.57.0 head, not an
+`014_cp1_complete_principal_idempotency_0_56` is also the inspected 0.57.2 head, not an
 assumption about a future selected release. Retain the 0.5 application and 0.55
 store for rollback. Disable old admissions/native scheduling before enabling the
 new deployment, re-enroll through canonical APIs, and reconcile unfinished work

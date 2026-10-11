@@ -2,14 +2,15 @@
 
 Status: frozen 0.6 candidate matrix; qualification inventory, not a final
 support promise. The ETLantic SQL provider is marked **Experimental** in
-version 0.57.0. The candidate scope is exactly the three executed rows below:
+version 0.57.2. The candidate scope is exactly the three executed rows below:
 CSV landing snapshot to PostgreSQL append, PostgreSQL snapshot to PostgreSQL
 append, and PostgreSQL snapshot to the single declared-primary-key upsert case.
 The table freezes each row's observed control path. No other pairing, mode or
 control path is in the candidate claim. CSV append, PostgreSQL snapshot append,
 and the primary-key upsert passed the hosted installed-artifact matrix on
-Python 3.11–3.13, but release support remains conditional on the outstanding
-AC-028–033 evidence, including file-resource immutability and expiry.
+Python 3.11–3.13. Local 0.57.2 Gate 0 also qualifies selected controls and
+immutable input/report behavior; release support remains conditional on the
+full AC-028–033 evidence and hosted final candidate.
 
 ## Ownership boundary
 
@@ -49,15 +50,13 @@ The separate portable-plan conformance command builds and executes a
 `dtcs.transform-plan/2` plan with the installed ETLantic local compiler
 (`etlantic-local` 0.50.0). It observes select/drop/rename, lowercase, filter,
 output schema, and not-null, range, membership, and uniqueness quality
-outcomes. The plan declares sort before keyed deduplication, but reversing two
-duplicate-key inputs changes the chosen row: the local compiler accepts the
-canonical sort action but ignores its field-reference expression. This fails
-the deterministic-deduplication requirement and is tracked in
-[ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283). Its exact
-input, both order-dependent outputs, accepted and rejected rows, plan actions,
-and compiler identity are retained in `postgresql-gate0.json`. The three live
-PostgreSQL connector runs still execute the separately packaged native
-reference transformation and do not establish portable-plan pushdown.
+outcomes. The 0.57.2 plan declares sort before keyed deduplication and retains
+the same expected row for both input orders. This resolves the historical
+0.57.0 observation tracked by [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283).
+The exact input orders, results, plan actions and compiler identity are retained
+in the current 0.57.2 upstream audit. The live PostgreSQL connector runs still
+execute the separately packaged native reference transformation and do not
+establish portable-plan pushdown.
 
 The PostgreSQL-source fixture gave its runtime role `USAGE` on `input` and
 `SELECT` on `input.source_rows`, with no `INSERT`, `UPDATE`, or `DELETE` rights
@@ -70,11 +69,10 @@ destination tables and the provider effect ledger after worker execution.
 | --- | --- |
 | PostgreSQL source modes other than `snapshot` | Not supported by the ETLantic 0.57 SQL connector contract |
 | PostgreSQL sink `overwrite`, `replace`, `merge`, aliases, or alternate key selection | Not qualified for the ShuETL 0.6 candidate; one primary-key upsert case is observed |
-| PostgreSQL-to-PostgreSQL alias/resource overlap rejection and schema drift | Not observed in the ShuETL installed workload |
-| Canonical local sort followed by keyed deduplication | Unqualified: ETLantic 0.57.0 ignores the plan's sort field expression, so the retained duplicate changes with input order; see [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283) |
-| Immutable input-resource ownership, checksum mismatch, expiry, retention, and cleanup | Not observed; the CSV fixture uses a temporary landing file |
-| Effective overrides, disabled-writer policy, retry versus deliberate new-run identity | Not observed in this matrix |
-| Provider action handlers for connection/catalog/schema/preflight, rotation, revocation, and deadlines | Not qualified by the role startup/transfer fixture |
+| PostgreSQL-to-PostgreSQL alias/resource overlap rejection and alternate upsert keys | Not qualified; one alias/upsert-key case and target schema-drift handling pass the local control matrix |
+| Immutable input-resource ownership, checksum/version/owner/scope, cross-worker access, expiry, retained retry bytes and bounded cleanup | Selected cases pass local Gate 0 on Python 3.11–3.13; the first retry failure occurs before any sink effect and the retained bytes are consumed after expiry. Hosted final-candidate proof remains open. |
+| Effective run options, no-write, failed retry versus deliberate new-run identity, and uncertain partial-effect replay policy | Selected cases pass the local 0.57.2 control matrix; the complete option/control inventory remains unqualified |
+| Provider action handlers for connection/catalog/schema and bounded worker execution | Connection/schema actions pass the 0.57.2 provider probe. Live managed preflight, resource rotation/revocation, stale-preflight handling and outage recovery remain unqualified in ShuETL. |
 | SQL/PySpark execution, preview, and destination provisioning | Not included in the baseline qualification |
 
 These entries remain open against AC-028–033 where required. A provider's

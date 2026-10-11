@@ -50,6 +50,11 @@ def create_backend_runtime(
         raise ProviderReadinessError("runtime role requires RuntimeBindings")
     if settings.role == "gateway" and not isinstance(bindings, GatewayBindings):
         raise ProviderReadinessError("gateway role requires GatewayBindings")
+    resource_options = {}
+    for name in ("run_artifact_retention_seconds", "run_artifact_cleanup_batch_size"):
+        value = getattr(bindings, name)
+        if value is not None:
+            resource_options[name] = value
     try:
         backend = create_managed_backend(
             SQLModelBackendConfig(
@@ -69,6 +74,7 @@ def create_backend_runtime(
                 require_attestations=bindings.require_attestations,
                 schedule_parameter_resolver=bindings.schedule_parameter_resolver,
                 artifact_root=bindings.artifact_root,
+                **resource_options,
                 engine_options={
                     "pool_pre_ping": True,
                     "pool_timeout": settings.provider_connect_timeout_seconds,

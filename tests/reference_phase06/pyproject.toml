@@ -2,7 +2,7 @@
 name = "shuetl-phase06-reference"
 version = "0.0.1"
 requires-python = ">=3.11,<3.14"
-dependencies = ["etlantic-sql==0.57.0"]
+dependencies = ["etlantic-sql==0.57.2"]
 [build-system]
 requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"

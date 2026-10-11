@@ -340,5 +340,31 @@ def test_host_handler_executes_a_canonical_action_job(sql_runtime):
     assert result["status"] == "succeeded", result
     assert result["result"] == {"connected": True}
     assert observed == [
-        ("tenant-a", {"provider": "postgresql", "connection_id": "saved-connection"})
+        (
+            "tenant-a",
+            {
+                "provider": "postgresql",
+                "connection_id": "saved-connection",
+                "_deadline_at": job["deadline_at"],
+            },
+        )
     ]
+
+
+def test_host_artifact_retention_configures_public_provider(sql_runtime, tmp_path):
+    runtime = sql_runtime(
+        role="worker",
+        artifact_root=str(tmp_path / "artifacts"),
+        run_artifact_retention_seconds=30,
+        run_artifact_cleanup_batch_size=2,
+    )
+    assert runtime.backend.managed_service.run_artifact_retention_seconds == 30
+    run_worker = runtime.backend.create_execution_host(owner_id="retention-contract")
+    assert run_worker.runner.run_artifact_retention_seconds == 30
+    assert run_worker.runner.artifact_cleanup_batch_size == 2
+    run_worker.request_drain()
+
+
+def test_provider_validates_host_artifact_retention(sql_runtime):
+    with pytest.raises(ValueError, match="run_artifact_cleanup_batch_size"):
+        sql_runtime(run_artifact_cleanup_batch_size=0)

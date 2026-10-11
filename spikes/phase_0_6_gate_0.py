@@ -20,6 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Barrier
 
+from etlantic.authoring.serialize import pipeline_from_dict, pipeline_to_dict
 from etlantic_sqlmodel.migrations import upgrade
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
@@ -115,6 +116,14 @@ def main():
     parser.add_argument("--shuetl-wheel", type=Path, required=True)
     parser.add_argument("--reference-wheel", type=Path, required=True)
     parser.add_argument("--source-commit", required=True)
+    parser.add_argument(
+        "--faults",
+        action="store_true",
+        help="Also qualify installed process crash recovery",
+    )
+    parser.add_argument("--resources", action="store_true")
+    parser.add_argument("--controls", action="store_true")
+    parser.add_argument("--retention", action="store_true")
     args = parser.parse_args()
     token = uuid.uuid4().hex[:12]
     database, migrator, runtime = [
@@ -297,7 +306,7 @@ def main():
                     "input_delete": False,
                 }
             with tempfile.TemporaryDirectory(prefix="shuetl-gate0-") as scratch:
-                root = Path(scratch)
+                root = Path(scratch).resolve()
                 (root / "landing").mkdir()
                 content = (
                     "id,payload,quantity,discarded\n"
@@ -313,11 +322,13 @@ def main():
                     if not k.startswith(("SHUETL_", "ETLANTIC_", "PYTHONPATH"))
                 }
                 env.update(
-                    PHASE06_ROOT=scratch,
+                    PHASE06_ROOT=str(root),
                     PHASE06_RUNTIME_URL=runtime_url.render_as_string(
                         hide_password=False
                     ),
                 )
+                if args.retention:
+                    env["PHASE06_ARTIFACT_RETENTION"] = "3600"
                 for name in ("gateway", "scheduler", "run-worker", "action-worker"):
                     role_env = dict(env)
                     if name in ("run-worker", "action-worker"):
@@ -379,7 +390,64 @@ def main():
                 }
                 evidence["portable_conformance"] = gateway.call("portable-conformance")
                 gateway.call("definition")
-                evidence["plan"] = gateway.call("plan")
+                initial_plan = gateway.call("plan")
+                host_code_before = gateway.call("host-code-digest")
+                changed_definition = gateway.call("definition-document")
+                changed_definition["metadata"]["phase06_specification_revision"] = (
+                    "runtime-change-through-managed-service"
+                )
+                asset_changes = {
+                    "source": "pg-source",
+                    "sink": "pg-sink",
+                    "rejected": "pg-rejected",
+                }
+                for node in changed_definition["nodes"]:
+                    if node["name"] in asset_changes:
+                        node["asset"] = asset_changes[node["name"]]
+                changed_definition = pipeline_to_dict(
+                    pipeline_from_dict(changed_definition, verify=False)
+                )
+                gateway.call(
+                    "register-definition-document",
+                    definition_id="transfer",
+                    document=changed_definition,
+                )
+                definition_http = gateway.call(
+                    "http", method="GET", path="/v1/definitions/transfer"
+                )
+                assert definition_http["status"] == 200, definition_http
+                assert definition_http["body"]["document"] == changed_definition, (
+                    definition_http
+                )
+                headless_plan = gateway.call("plan")
+                http_plan = gateway.call(
+                    "http", method="POST", path="/v1/definitions/transfer/plan"
+                )
+                assert http_plan["status"] == 200, http_plan
+                assert http_plan["body"] == headless_plan, (
+                    http_plan,
+                    headless_plan,
+                )
+                assert headless_plan["fingerprint"] != initial_plan["fingerprint"], (
+                    initial_plan["fingerprint"],
+                    headless_plan["fingerprint"],
+                )
+                host_code_after = gateway.call("host-code-digest")
+                assert host_code_after == host_code_before, (
+                    host_code_before,
+                    host_code_after,
+                )
+                evidence["specification_change"] = {
+                    "host_runtime_code_sha256": host_code_before,
+                    "host_runtime_code_unchanged_during_update": True,
+                    "changed_assets": asset_changes,
+                    "canonical_metadata": changed_definition["metadata"],
+                    "http_definition_matches_registered_document": True,
+                    "http_and_headless_plan_records_match": True,
+                    "initial_plan_fingerprint": initial_plan["fingerprint"],
+                    "changed_plan_fingerprint": headless_plan["fingerprint"],
+                }
+                evidence["plan"] = headless_plan
                 prep_requests = _parallel(
                     [
                         lambda role=role: role.call(
@@ -801,6 +869,117 @@ def main():
                     "postgresql_upsert_updates_by_key": True,
                     **evidence["portable_conformance"]["capability_results"],
                 }
+                if args.retention:
+                    from datetime import UTC, datetime, timedelta
+
+                    future = (datetime.now(UTC) + timedelta(hours=2)).isoformat()
+                    passes = []
+                    for _index in range(100):
+                        result = worker_replica.call(
+                            "artifact-cleanup", now=future, limit=1
+                        )
+                        assert result["enabled"] is True
+                        assert result["processed_reports"] <= 1
+                        assert result["failed_artifacts"] == 0, result
+                        passes.append(result)
+                        if not result["remaining_candidates"]:
+                            break
+                    else:
+                        raise AssertionError(
+                            "bounded artifact cleanup did not converge"
+                        )
+                    assert sum(result["deleted_artifacts"] for result in passes) > 0
+                    evidence["artifact_retention"] = {
+                        "result": "PASS",
+                        "passes": passes,
+                        "limit": 1,
+                        "limits": (
+                            "Provider-owned cleanup across a replacement worker with "
+                            "an explicit future observation clock. Active run lease "
+                            "retention is covered by the uploaded-input execution "
+                            "probe."
+                        ),
+                    }
+                if args.controls:
+                    import importlib.util
+
+                    spec = importlib.util.spec_from_file_location(
+                        "phase06_controls",
+                        Path(__file__).with_name("phase_0_6_controls.py"),
+                    )
+                    assert spec is not None and spec.loader is not None
+                    fixture = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(fixture)
+                    evidence["controls"] = {"result": "FAIL", "cases": []}
+                    fixture.qualify(
+                        gateway=gateway,
+                        action=action,
+                        worker=worker,
+                        replica=worker_replica,
+                        operator=operator,
+                        schedule_id=schedule_id,
+                        runtime_role=runtime,
+                        evidence=evidence["controls"],
+                    )
+                if args.resources:
+                    import importlib.util
+
+                    spec = importlib.util.spec_from_file_location(
+                        "phase06_resources",
+                        Path(__file__).with_name("phase_0_6_resources.py"),
+                    )
+                    assert spec is not None and spec.loader is not None
+                    fixture = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(fixture)
+                    evidence["inputs"] = {"result": "FAIL", "cases": []}
+                    fixture.qualify(
+                        gateway=gateway,
+                        worker=worker,
+                        replica=worker_replica,
+                        evidence=evidence["inputs"],
+                    )
+                if args.faults:
+                    # Load sibling fixture explicitly so isolated Python (-I)
+                    # never imports a product package from this checkout.
+                    import importlib.util
+
+                    spec = importlib.util.spec_from_file_location(
+                        "phase06_faults",
+                        Path(__file__).with_name("phase_0_6_faults.py"),
+                    )
+                    assert spec is not None and spec.loader is not None
+                    fixture = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(fixture)
+
+                    def start_fault_role(name):
+                        fault_env = dict(env, PHASE06_LEASE_SECONDS="2")
+                        if name in {"run-worker", "action-worker", "scheduler"}:
+                            fault_env["ETLANTIC_SQL_URL"] = (
+                                runtime_url.render_as_string(hide_password=False)
+                            )
+                        instance = Role(
+                            args.python,
+                            f"{name}@fault-{len(coordination_roles)}",
+                            fault_env,
+                            scratch,
+                            redactions=(
+                                runtime_password,
+                                runtime_url.render_as_string(hide_password=False),
+                            ),
+                        )
+                        coordination_roles.append(instance)
+                        return instance
+
+                    evidence["crashes"] = {"result": "FAIL", "cases": []}
+                    fixture.qualify(
+                        start_role=start_fault_role,
+                        gateway=gateway,
+                        action=action,
+                        worker=worker,
+                        operator=operator,
+                        schedule_id=schedule_id,
+                        evidence=evidence["crashes"],
+                    )
                 for role in reversed(roles):
                     role.close()
                 for role in reversed(coordination_roles):

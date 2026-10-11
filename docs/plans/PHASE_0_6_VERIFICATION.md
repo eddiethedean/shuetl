@@ -1,14 +1,18 @@
 # Phase 0.6 — Verification and Evidence Plan
 
-Status: Gate U and installed-artifact PostgreSQL Gate 0 PASS;
-33 release criteria and Gates A–C remain OPEN. This document refines the
+Status (2026-10-11): Gate U and local installed-artifact PostgreSQL Gate 0 pass
+on published ETLantic 0.57.2. Native/container lifecycle and transition checks
+are recorded locally. Crash recovery has two open upstream #299 failures; live
+preflight is tracked by upstream #121. Hosted final-artifact qualification and
+the 33-criterion review remain open. This document refines the
 [execution contract](PHASE_0_6_EXECUTION.md) and
 [accepted role implementation contract](../adr/0014-role-separated-managed-runtime.md).
 Paths and commands below distinguish existing source checks from pending
-qualification claims. Use exact published artifacts selected after Gate U,
-PostgreSQL 18.6 and Python 3.11–3.13. Published 0.57.0 is accepted and pinned.
-[Current evidence](../evidence/0.6/README.md) distinguishes contract acceptance
-and role feasibility from final release qualification.
+qualification claims. Use exact published artifacts selected after Gate U, PostgreSQL 18.6 and
+Python 3.11–3.13. Historical 0.57.0 evidence remains separately identified;
+current local checks use published 0.57.2. [Current evidence](../evidence/0.6/README.md)
+distinguishes the earlier contract acceptance and role feasibility from final
+release qualification.
 [ADR-0015](../adr/0015-backend-and-deployment-ownership.md) governs ownership.
 The [implementation and release plan](PHASE_0_6_IMPLEMENTATION.md) orders the
 work that produces this evidence; this document retains the verification matrix.

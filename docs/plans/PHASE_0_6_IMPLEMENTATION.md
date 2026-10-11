@@ -1,16 +1,32 @@
 # Phase 0.6 — Implementation and Release Plan
 
+**Train update (2026-10-11):** ETLantic core, FastAPI, SQLModel and SQL connector
+are pinned to 0.57.2. Earlier hosted snapshots remain bound to their recorded
+source commits. Current local installed-wheel checks now pass Gate 0 with
+controls and retention on Python 3.11–3.13, active native CLI drain/force on
+Python 3.12, a Linux container role run, and a 0.5-to-0.6 transition rehearsal. Crash qualification still has two
+upstream failures (#299), live preflight remains open in #121, and hosted
+final-artifact acceptance is pending.
+
+The [0.57.2 audit](../reviews/ETLANTIC_0_57_2_REQUIREMENTS_AUDIT.md) records
+published-wheel provenance and issue follow-ups. Current details and exact
+candidate hashes are in the [development qualification record](../evidence/0.6/current-qualification.md).
+Default preflight is static; live readiness remains upstream #121. These results
+do not close the broader 33-criterion release matrix.
+
 Prepared: 2026-10-08.
-Updated: 2026-10-09 after ETLantic 0.57.0 publication.
-Status: Gate U accepted, exact pins adopted, PostgreSQL Gate 0 qualified.
-W02 public-interface freeze and W03/W04 source implementation are complete.
-The installed 0.6.0 wheel passes hosted PostgreSQL 18.6 Gate 0 and four-role CLI
-startup/cleanup checks on Python 3.11–3.13. Source-level outage/recovery tests
-pass for scheduler, run-worker and action-worker on the same hosted matrix.
-Current evidence and wheel hashes are in
-[`docs/evidence/0.6/README.md`](../evidence/0.6/README.md). W04 active-work/
-forced-termination qualification, remaining W05 capability coverage, W06–W08,
-and hosted final-artifact acceptance remain open.
+Updated: 2026-10-11 after ETLantic 0.57.2 publication and local candidate runs.
+Status: W02 public-interface freeze and W03/W04 source implementation are
+complete. Current local Gate 0 with controls and retention passes Python
+3.11–3.13; current native active drain/force and container active-drain checks
+and transition rehearsal pass on Python 3.12.
+The crash matrix records 20 passes and two failures assigned to upstream #299.
+Live preflight and hosted final-artifact review remain open. Current evidence and
+wheel hashes are in
+[`docs/evidence/0.6/current-qualification.md`](../evidence/0.6/current-qualification.md).
+Hosted final-artifact acceptance, the broader W05 capability matrix, two W06
+recovery failures, production W07 transition evidence, and W08 final review
+remain open.
 
 The installed Gate 0 reference workload executes CSV-to-PostgreSQL append,
 PostgreSQL snapshot-to-PostgreSQL append, and a keyed PostgreSQL upsert with
@@ -47,7 +63,9 @@ ETLantic/providers supply the backend graph, schedule services, complete role
 factories, schema inspection and runtime correctness.
 
 Current development source is ShuETL 0.6.0, pinned to ETLantic core/FastAPI/
-SQLModel 0.57.0; non-ETLantic runtime pins are retained. The published rollback
+SQLModel/SQL 0.57.2; non-ETLantic runtime pins are retained. Current Gate U
+auditing and local Gate 0 evidence use 0.57.2; older hosted snapshots remain
+bound to earlier source commits. The published rollback
 baseline remains ShuETL 0.5.0/ETLantic 0.55.0. The CLI supports doctor, database
 upgrade and `serve --role` for gateway, scheduler, run-worker and action-worker
 processes. W03/W04 source provides trusted bindings, upstream backend composition,
@@ -57,13 +75,13 @@ lifecycle behavior still needs qualification.
 [Coverage acceptance](../evidence/0.6/coverage-acceptance.md) records U01–U05 PASS.
 [Gate 0 evidence](../evidence/0.6/README.md) records four separately launched roles,
 restricted PostgreSQL 18.6 grants, real manual/native scheduled effects, canonical
-reports and HTTP/headless schedule parity. The existing upstream issues remain
-administratively OPEN. Publication/release criteria are not closed by feasibility.
+reports and HTTP/headless schedule parity. The existing U01–U05 upstream issues
+are closed. Publication/release criteria are not closed by feasibility.
 
 The critical path is:
 
 ```text
-W00: accept published 0.57.0 public contracts and artifact evidence
+W00: accept published 0.57.2 public contracts and artifact evidence
   → W01: exact dependency/schema selection and compatibility
   → W02: installed-artifact PostgreSQL Gate 0 + API freeze
   → W03: ShuETL settings, bindings and upstream factory selection
@@ -95,7 +113,7 @@ public interface or release proof.
 
 Owner: ShuETL for Gate U evidence review and acceptance; ETLantic/provider
 maintainers for any qualification defects. Contract surfaces and upstream
-conformance are delivered in 0.57.0. Use the existing issues for traceability:
+conformance are delivered in 0.57.2. Use the existing issues for traceability:
 
 | Issue / gate | Published outcome | Acceptance focus |
 | --- | --- | --- |
@@ -109,7 +127,7 @@ Tasks:
 
 - [x] Agree exact public imports, constructor inputs, returned handles, status
   results, stop guarantees and resource owners in upstream review.
-- [x] Upstream delivered canonical behavior and semantic conformance in 0.57.0.
+- [x] Upstream delivered canonical behavior and semantic conformance in 0.57.2.
   Include context authorization, schedule command parity, missing collaborator
   rejection, schema corruption, recovery and in-flight stop limitations.
 - [x] Independently prove the neutral upstream package works without installing the HTTP adapter.
@@ -256,17 +274,23 @@ Owner: ShuETL. Depends on W03 and qualified U05. Acceptance: AC-009/010/019/021/
   The disposable PostgreSQL harness records one owned-engine disposal followed
   by one host-binding close after SIGTERM for gateway, scheduler, run worker and
   action worker; local Python 3.13 passed. Hosted verification remains pending.
-- [ ] Exercise active PostgreSQL work through grace expiry and external process
-  termination for each applicable role. Verify no ShuETL path adjusts upstream
-  leases, repairs work or writes terminal results.
+- [x] Run installed native active-work drain and forced termination for
+  scheduler, run worker and action worker against PostgreSQL 18.6 on Python
+  3.12.13. Cooperative SIGTERM/SIGINT drain passes; forced SIGKILL leaves
+  canonical state for upstream recovery without synthesizing a terminal result.
+  Local evidence is in
+  [`current-qualification.md`](../evidence/0.6/current-qualification.md).
+- [ ] Run the native active-work/force case on hosted Python 3.11–3.13 and
+  qualify active work through grace expiry in the Linux container for all
+  applicable roles. Local native qualification currently covers Python 3.12.13.
 
 Exit: source implementation supports all four kinds. Installed startup and basic
 signal shutdown pass locally. PostgreSQL scheduler drain and scheduler, run-
 worker and action-worker outage/recovery pass locally; hosted run 37989243217
 passes the outage cases for all three runtime roles on Python 3.11–3.13. Exact
 cleanup order/count passes locally and in hosted CI for all four CLI roles.
-Other-role active drain and external termination remain open pending additional
-failure cases.
+Hosted active drain and container force evidence remain open. Local native
+Python 3.12 active drain/force and container active drain pass.
 
 ## W05 — Qualify advertised live capabilities
 
@@ -295,14 +319,15 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
   The portable plan runs on the independent installed reference host; live
   PostgreSQL connector runs remain a separate provider observation and do not
   claim portable-plan pushdown.
-- [ ] Qualify deterministic keyed deduplication. The canonical plan emits a sort
-  before deduplication, but ETLantic 0.57.0's local compiler ignores the field
-  expression and retains the first input row. This is tracked upstream in
-  [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283); do not
-  advertise deterministic deduplication until the installed compiler passes an
-  order-reversal conformance case.
-- [ ] Verify effective overrides, disabled-writer policy, aliases/upsert keys,
-  schema drift, retry versus new-run identity, and broader extension execution.
+- [x] Qualify deterministic keyed deduplication on the installed 0.57.2 local
+  compiler with an order-reversal case. The historical 0.57.0 defect is fixed
+  upstream in [ETLantic #283](https://github.com/eddiethedean/etlantic/issues/283);
+  published-wheel evidence is in the 0.57.2 audit.
+- [x] Verify selected effective/no-write options, aliases/upsert keys, schema
+  drift, failed retry versus deliberate new-run identity, uncertain partial
+  effect replay policy, and independent transformation package execution in the
+  local control/provider fixtures. Alternate write modes and full option support
+  remain outside the qualified matrix.
 - [x] Add a concrete CSV/PostgreSQL-to-PostgreSQL fixture to Gate 0. It verifies
   integer normalization, lowercase, scalar arithmetic, filtering, projection,
   not-null/range/membership quality rules, accepted/rejected rows and independent
@@ -319,12 +344,22 @@ Depends on W03/W04. Acceptance: AC-020/027–031/033.
   each hosted record binds two distinct run IDs and the single updated target row.
 - [ ] Change specifications while reference host runtime code remains unchanged.
   Verify HTTP/headless canonical records and command/control parity.
-- [ ] Exercise action workers for connection/catalog/schema/preflight; test
-  deadlines, rotation/revocation, stale preflight and outages. No gateway secrets.
-- [ ] Prove immutable input/report access across worker replacement, ownership,
-  checksums, expiry, retry retention and bounded cleanup for advertised file support.
-- [ ] Attach upstream conformance references and independent ShuETL process/sink
-  observations to each row; mark unavailable features explicitly.
+  The installed Gate 0 harness now registers a changed canonical definition
+  through the public managed service, changes its source/sink asset bindings,
+  hashes the installed host runtime before and after, and compares the HTTP
+  definition and plan with headless results. This remains unchecked until the
+  candidate-wheel PostgreSQL run records a passing result.
+- [x] Exercise action workers for connection/schema and static preflight;
+  test deadlines, resource rotation/revocation and connector outage/recovery
+  without gateway secrets. Managed preflight is only `read_only_plan`; live
+  readiness remains blocked by [ETLantic #121](https://github.com/eddiethedean/etlantic/issues/121).
+- [x] Prove selected immutable input/report access across worker replacement,
+  owner/scope/checksum/version checks, expiry, retained retry bytes and bounded
+  cleanup. Hosted final-candidate and broader file-mode evidence remain open.
+- [x] Attach 0.57.2 upstream conformance references and independent ShuETL
+  process/sink observations to the executed rows; the provider matrix marks
+  excluded and still-unqualified capabilities. The full release evidence
+  registry remains pending in W08.
 
 Exit: every advertised combination passes. Resolve semantic failures upstream;
 adjust advertised scope only through an explicit contract change, never by
@@ -342,21 +377,24 @@ and a working W05 fixture. Acceptance: AC-007/010–019/021/031/032.
   operation or claim. Local PostgreSQL 18.6 passed. [Hosted CI run 37988337495](https://github.com/eddiethedean/shuetl/actions/runs/37988337495)
   passed the expanded Gate 0 on Python 3.11–3.13 for source commit
   `87a9549dcc148bf5317b4b747d90a6bdcdbee6c2`.
-- [ ] Add deterministic barriers/observations around public commit boundaries,
-  bounded deadlines, process-group cleanup and diagnostic capture. Avoid
-  sleep-only synchronization and production fault hooks. The current fixture
-  uses a parent-side barrier to start independent process calls together; it
-  does not inject a crash at a database commit boundary.
-- [ ] Kill gateways before/after acceptance and retry the logical idempotency
-  token; inspect one canonical submission and changed-intent conflicts.
-- [ ] Kill schedulers across preparation, claim, accept and link; verify one
-  logical firing and upstream recovery of unlinked accepted work.
-- [ ] Kill workers before/after lease/effect/result publication, expire leases,
+- [x] Add deterministic subprocess barriers/observations around public commit
+  boundaries, bounded deadlines, process-group cleanup and diagnostic capture.
+  The installed crash fixture injects process death at named public-operation
+  barriers and makes no production fault hooks.
+- [x] Kill gateways before/after acceptance and retry the logical idempotency
+  token; both cases recover one canonical operation.
+- [x] Kill schedulers across preparation, claim, accept and link; the firing
+  recovery cases pass with one canonical linked submission.
+- [x] Kill run workers around lease/effect/result publication, expire leases,
   reject stale completion, and inspect attempts plus actual sink effects.
-- [ ] Exercise queued/leased/running cancellation, long-tick drain, grace expiry,
+- [x] Exercise queued/leased/running cancellation, long-tick drain, grace expiry,
   provider outages and recovery without fallback stores or fabricated success.
-- [ ] Scan outputs for seeded credential sentinels while retaining meaningful
-  failure reasons and truthful uncertain-effect outcomes.
+- [x] Scan captured outputs for seeded credential sentinels while retaining
+  failure reasons and uncertain-effect outcomes.
+- [ ] Resolve the two accepted `run.prepare` recovery failures when the action
+  worker dies after CP1 acceptance (before and after durable submission). The
+  other 20 of 22 cases pass; see [ETLantic #299](https://github.com/eddiethedean/etlantic/issues/299)
+  and the checked-in current crash record.
 
 Exit: required failure rows pass on real PostgreSQL with separate processes.
 Unit/thread tests supplement these checks but cannot replace them.
@@ -366,15 +404,16 @@ Unit/thread tests supplement these checks but cannot replace them.
 Owner: ShuETL operator documentation/integration. Depends on W05/W06.
 Acceptance: AC-022/025.
 
-- [ ] Provide one-artifact container and ordinary process-supervisor examples
+- [x] Provide one-artifact container and ordinary process-supervisor examples
   for every role, explicit ports/identities, TLS/grants, shared resources and
-  migration-before-runtime ordering. No broker unless a selected provider needs it.
-- [ ] Rehearse disabling old admissions/scheduling, provisioning a separate new
-  store, public re-enrollment, unfinished-work/effect reconciliation and activation.
-- [ ] Rehearse rollback to retained 0.5/0.55 with one trigger authority; no
-  conversion or automatic replay of uncertain work between stores.
-- [ ] Document supported provider modes, observable health, stop limitations and
-  at-least-once effects using the qualified evidence.
+  migration-before-runtime ordering. The Linux/amd64 container runs against
+  PostgreSQL 18.6 locally; production supervisor behavior is not exercised.
+- [x] Rehearse old-store rejection, provisioning a separate new store, public
+  re-enrollment, no automatic replay and rollback mounting of retained 0.5/0.55.
+  The accepted-work reconciliation record is seeded, not an interrupted effect;
+  production cutover remains unqualified.
+- [x] Document the selected provider modes, observable health, stop limitations
+  and at-least-once effects using the qualification evidence.
 
 Exit: commands work from the pinned installed artifact; transition and rollback
 transcripts demonstrate the same topology and ownership claimed by the release.
@@ -384,30 +423,32 @@ transcripts demonstrate the same topology and ownership claimed by the release.
 Owner: ShuETL release engineering. Checker/CI design can begin early; acceptance
 depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
 
-- [ ] Extend `scripts/check_evidence.py` with the 0.6 plan, exactly 33 ACs,
+- [x] Extend `scripts/check_evidence.py` with the 0.6 plan, exactly 33 ACs,
   requirement/provenance bindings, Gate U/0 evidence and incomplete-result rejection.
-- [ ] Extend `check_release.py`, `check_clean_wheel.py`, artifact/OpenAPI checks
-  and no-skips enforcement for installed role/process fixtures and upstream gates.
+- [x] Wire the local `check_release.py` gate to format, lint, typing, boundaries,
+  tests, reproducible build, artifact/OpenAPI checks, clean-wheel checks and the
+  evidence ledger. The final evidence ledger correctly rejects this blocked
+  candidate until all release rows pass.
 - [x] Add a hosted PostgreSQL 18.6 matrix job that builds and installs ShuETL and
   the reference host outside the checkout, verifies installed origins, and runs
-  the public CLI against all four roles on Python 3.11–3.13. Remaining hosted
-  fault-integration and final-artifact acceptance are still required.
+  the public CLI against all four roles on Python 3.11–3.13, including active
+  drain/force and transition steps. These expanded workflow changes still need
+  a hosted run against the committed candidate.
 - [x] Add a separate hosted PostgreSQL 18.6 Gate 0 matrix job that builds and
   installs ShuETL and the independent reference workload outside the checkout,
   runs canonical manual/native-scheduled transfer, and uploads sink-backed
-  evidence on Python 3.11–3.13, including PostgreSQL snapshot-source append and
-  keyed-upsert fixtures.
-  CI run 37982842772 passed all three versions, including the keyed-upsert case;
-  checked-in records bind the runs to source commit `0595029` and exact wheel
-  hashes. This does not close final-wheel acceptance.
+  evidence on Python 3.11–3.13, including PostgreSQL snapshot-source append,
+  keyed-upsert, control, resource-retention and fault fixtures. The expanded
+  workflow changes still need a hosted run against the committed candidate.
 - [x] Locally and in hosted CI, build/install the development wheel and reference
   host outside the checkout, verify origins, and run all role kinds against
-  PostgreSQL 18.6. Hosted startup/readiness/SIGTERM and transfer evidence is
-  recorded for Python 3.11–3.13 under run 37982842772; fault-integration remains
-  open.
-- [ ] Create `docs/evidence/0.6/` with all verification-plan records. Record the
-  exact commit, upstream artifacts, schema contract, environments, commands,
-  results, identities, independent effects and limitations. No placeholder PASS.
+  PostgreSQL 18.6. The latest local run includes controls, retention, native
+  force and a rebuilt container image; hosted qualification of these latest
+  candidate hashes remains open.
+- [x] Create the 0.6 evidence index and current local qualification records.
+  Current raw artifacts bind candidate hashes, source base commit, environments,
+  commands, identities, effects and limitations. The final proof registry still
+  awaits remaining acceptance and hosted results; no placeholder PASS is used.
 - [x] Resolve the source-distribution hash check as part of artifact
   provenance: compare 0.6 builds with their own reproducible manifest, preserve
   historical 0.5 hashes, and avoid a hash record embedded in the artifact it hashes.
@@ -421,7 +462,11 @@ depends on W00–W07. Acceptance: AC-023/024 and every release criterion.
   workload and CLI reference-host wheels. Gate 0 and CLI qualification must agree
   on the ShuETL wheel hash and source commit; each reference fixture is bound to
   its own hash. The release build and post-download publish job now recheck the
-  qualified hashes before publication. After any
+  qualified hashes before publication. The tag-gated hosted release check now
+  downloads every Python-matrix qualification artifact and verifies its source
+  commit, candidate wheel, reference wheel, and required pass cases against the
+  frozen manifest before packaging can proceed. This wiring still needs a
+  hosted run against a clean candidate. After any
   subsequent source or packaged-document change, rebuild and rerun affected gates.
 - [ ] Publish/tag 0.6.0 only when Gates U/0/A–C and AC-001–033 pass with zero skipped
   required cases. Verify distribution metadata and clean-install role smoke tests
@@ -438,7 +483,7 @@ Do not combine both repositories' ownership in one implementation patch.
 | Change | Scope | Merge prerequisite |
 | --- | --- | --- |
 | Preparation | Disposable fixtures, reference package scaffolding, regression inventory and CI/evidence design | Existing baseline checks; no new public API or Gate U PASS claim |
-| Upstream delivery — published in 0.57.0 | U01–U05 with conformance and compatibility delegation | Candidate audit verified publication and evidence; any new defect is fixed upstream |
+| Upstream delivery — published in 0.57.2 | U01–U05 with conformance and compatibility delegation | Candidate audit verified publication and evidence; new recovery and live-preflight requirements are tracked in #299 and #121 |
 | Upstream acceptance | Gate U decisions for the exact published candidate | Bind signatures, artifact provenance, conformance and isolated checks to U01–U05 |
 | ShuETL adoption | W01/W02 pins, public inspection integration, regression and Gate 0 harness | Published upstream artifacts; Gate U verification |
 | ShuETL construction | W03 settings/bindings/factory selection and boundaries | Gate 0 and frozen signatures |
@@ -458,8 +503,8 @@ or qualified with an exact command/artifact reference. No inferred PASS from
 issue closure. Use the dependency register for upstream state and the 0.6 ledger
 for executed qualification; do not create a second acceptance vocabulary.
 
-The next actions are W04 active-work/forced-termination qualification and W05
-capability scope/effect evidence. W06 process-failure injection, W07 transition
-rehearsal and W08 final-artifact/hosted acceptance remain release prerequisites.
-Do not close Gates A–C based on source implementation, Gate 0 feasibility or
-basic hosted CLI smoke tests.
+The remaining actions are to receive ETLantic fixes for #299 and #121, rerun
+the complete failure/preflight matrix, qualify hosted active-work/container
+force and current candidate hashes, and complete production transition/rollback
+evidence plus the reviewed 33-row ledger. Do not close Gates A–C based on local
+evidence or on hosted runs bound to earlier commits.

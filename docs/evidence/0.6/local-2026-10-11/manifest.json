@@ -1,0 +1,26 @@
+{
+  "observed_on": "2026-10-11",
+  "base_commit": "a0b3a1258cf199e755e045cd9b6e9e8b4c218511",
+  "working_tree_changes_present": true,
+  "etlantic_versions": {
+    "etlantic": "0.57.2",
+    "etlantic-fastapi": "0.57.2",
+    "etlantic-sqlmodel": "0.57.2",
+    "etlantic-sql": "0.57.2"
+  },
+  "candidate_artifacts_sha256": {
+    "shuetl_wheel": "7a22a8b51f65af9150481fbc897a9858e2ff8d249f86db703926bdcc3808b826",
+    "gate0_reference_wheel": "80e55db32d07124dcbd6a80177aed7be1383c3fec6bf1626fb15ed110367e1d1",
+    "host_bindings_wheel": "2585ce1ab66bbfea536cbd81d725b63ff0efdf970082ae77f6da16ee17e1a2ef"
+  },
+  "container_image": "sha256:fbbd469cbe53aed77a1c9a2efaf0ea3dd5c0e22a670db5cc51305894b477d1b7",
+  "records_sha256": {
+    "cli-postgresql.json": "24bf7804ab39a5e07547997fc88d679a763bd3dbbeb24b01fa10170cdc0f699b",
+    "container-postgresql.json": "36386231a803a110300d8e1af664eb92e543542f56ee60a26b291b82b079b3d2",
+    "crash-matrix.json": "8532451266b527c091206605ee583ce6020a951ce875cc8aa87aec55df4ab030",
+    "gate0-python-3.11.json": "6b725219cb911899eacefcd65e61e6ead47179212d4eae84f32a397281162268",
+    "gate0-python-3.12.json": "13a1baf40b7ca908a3f58cf3de105808e76767b53c08b3cb641ad9b954dba1f0",
+    "gate0-python-3.13.json": "a161ea40684f0207f2579b3f2ad7775cc29e9cfe8495e500c939860285f41851",
+    "transition.json": "44359b15c791344e3b88e144102d832a20d68f62011ca958a9d4457ac43ca2b4"
+  }
+}

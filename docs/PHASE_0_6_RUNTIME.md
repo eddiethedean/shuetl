@@ -1,7 +1,7 @@
 # Phase 0.6 role runtime
 
 **Implementation guide; deployment qualification remains open.** Use the same
-exact ShuETL 0.6.0 candidate and ETLantic 0.57.0 train for every process. This
+exact ShuETL 0.6.0 candidate and ETLantic 0.57.2 train for every process. This
 guide describes the implemented interfaces; it does not certify a final wheel,
 real deployment, process-failure behavior or transition from a 0.5 store.
 
@@ -20,7 +20,11 @@ creates host-owned identity and resource bridges, then returns:
   handlers from trusted backend packages. ShuETL forwards this mapping to
   upstream `SQLModelBackendConfig`; upstream validates action names, handler
   contracts, authorization, leases and results. Gateway bindings do not contain
-  these handlers or resolve their secrets.
+  these handlers or resolve their secrets. Optional
+  `run_artifact_retention_seconds` and `run_artifact_cleanup_batch_size`
+  settings pass unchanged to `SQLModelBackendConfig`; ETLantic validates them
+  and owns report artifact expiry and bounded cleanup. Omit them to use the
+  published provider defaults.
 
 The factory may set `close=` to release host-owned resources. ShuETL owns and
 closes the backend it constructs; ETLantic/providers own service semantics,
@@ -101,3 +105,6 @@ active at a time. Reconcile unfinished work and uncertain external effects
 before directing traffic or schedules to the new store. There is no implicit
 conversion, rolling upgrade, or replay between stores. These steps require a
 deployment rehearsal before 0.6 release qualification.
+
+The [deployment templates](../examples/deployment/README.md) include four-role
+container and systemd configurations, grant ordering and rollback steps.

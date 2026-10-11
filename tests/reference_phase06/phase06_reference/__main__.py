@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import sys
 import traceback
 from dataclasses import asdict, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from importlib import metadata
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,7 @@ from etlantic.control_plane import (
     TenantRef,
     WorkspaceRef,
 )
+from etlantic.control_plane.input_resources import InputResourceReference
 from etlantic.profile import Profile
 from etlantic.quality import (
     QualityRuleset,
@@ -243,8 +245,8 @@ def portable_conformance():
         or not all(capability_results.values())
         or order_sensitive
         != {
-            "deterministic": False,
-            "forward_key_quantity": 4,
+            "deterministic": True,
+            "forward_key_quantity": 3,
             "reversed_key_quantity": 3,
         }
     ):
@@ -266,7 +268,7 @@ def portable_conformance():
         "rejected_rows": rejected,
         "duplicate_quality_rejections": duplicate_rejections,
         "sort_deduplicate_order_observation": order_sensitive,
-        "unqualified_capabilities": ["deterministic_sort_before_deduplicate"],
+        "unqualified_capabilities": [],
         "capability_results": capability_results,
     }
 
@@ -312,6 +314,14 @@ class PostgreSQLUpsertTransfer(Pipeline):
     )
 
 
+class UploadedTransfer(Pipeline):
+    source: Extract[Row] = Extract(asset="uploaded-source")
+    normalized = NormalizeRows.step(rows=source)
+    quality = Quality.step(rows=normalized.result)
+    sink: Load[NormalizedRow] = Load(input=quality.result, asset="sink")
+    rejected: Load[NormalizedRow] = Load(input=quality.rejected, asset="rejected")
+
+
 def main():
     requested_role = sys.argv[1]
     role, _, _instance = requested_role.partition("@")
@@ -322,6 +332,7 @@ def main():
         workspace=WorkspaceRef("gate0", "qualification"),
         environment=EnvironmentRef("test"),
         security_domain=SecurityDomain("gate0"),
+        resource_owner_id="gate0-workload",
     )
     auth = MemoryAuthorizer()
     for action in (
@@ -330,6 +341,12 @@ def main():
         "run.submit",
         "run.read",
         "run.report",
+        "run.retry",
+        "run.rerun",
+        "run.actions",
+        "run.lineage",
+        "run.artifacts",
+        "run.artifact.content",
         "input.read",
         "schedule.write",
         "schedule.read",
@@ -341,17 +358,30 @@ def main():
         security_mode="production",
         portable_transform_policy="native",
         plugin_allowlist={
-            "etlantic": "0.57.0",
+            "etlantic": "0.57.2",
             "etlantic-local": "0.50.0",
-            "etlantic-sql": "0.57.0",
-            "postgresql": "0.57.0",
-            "local-files": "0.57.0",
+            "etlantic-sql": "0.57.2",
+            "postgresql": "0.57.2",
+            "local-files": "0.57.2",
         },
         safe_io={"approved_roots": [str(root / "landing")]},
     )
 
     def planning_factory(_ctx, effective_profile):
         planning = PlanningContext.create(profile=effective_profile)
+        uploaded_path = root / "uploaded-input.json"
+        if uploaded_path.exists():
+            reference = InputResourceReference.from_dict(
+                json.loads(uploaded_path.read_text())
+            )
+            planning.registry.register_binding(
+                BindingDescriptor(
+                    binding="uploaded-source",
+                    provider="local-files",
+                    kind="source",
+                    config={"format": "csv", "input_resource": reference.to_dict()},
+                )
+            )
         planning.registry.register_binding(
             BindingDescriptor(
                 binding="source",
@@ -419,20 +449,21 @@ def main():
                     },
                 )
             )
-        planning.registry.register_binding(
-            BindingDescriptor(
-                binding="upsert-sink",
-                provider="postgresql",
-                kind="sink",
-                location="upsert_target",
-                config={
-                    "schema": "sink",
-                    "mode": "upsert",
-                    "key_columns": ["id"],
-                    "effect_table": "sink.effects",
-                },
+        for binding in ("upsert-sink", "upsert-sink-alias"):
+            planning.registry.register_binding(
+                BindingDescriptor(
+                    binding=binding,
+                    provider="postgresql",
+                    kind="sink",
+                    location="upsert_target",
+                    config={
+                        "schema": "sink",
+                        "mode": "upsert",
+                        "key_columns": ["id"],
+                        "effect_table": "sink.effects",
+                    },
+                )
             )
-        )
         return planning
 
     clock = FakeScheduleClock(datetime(2026, 10, 9, tzinfo=UTC))
@@ -453,6 +484,15 @@ def main():
             profile=profile,
             artifact_root=str(root / "artifacts"),
             schedule_clock=clock,
+            action_job_lease_seconds=int(
+                os.environ.get("PHASE06_ACTION_LEASE_SECONDS", "330")
+            ),
+            run_artifact_retention_seconds=(
+                int(os.environ["PHASE06_ARTIFACT_RETENTION"])
+                if "PHASE06_ARTIFACT_RETENTION" in os.environ
+                else None
+            ),
+            run_artifact_cleanup_batch_size=1,
         ),
         authorizer=auth,
         engine=engine,
@@ -490,12 +530,51 @@ def main():
         client.__enter__()
     elif role == "scheduler":
         owner_id = f"scheduler-{os.getpid()}"
-        worker = backend.create_scheduler(owner_id=owner_id, clock=clock)
+        worker = backend.create_scheduler(
+            owner_id=owner_id,
+            clock=clock,
+            ttl_seconds=int(os.environ.get("PHASE06_LEASE_SECONDS", "30")),
+        )
     elif role == "run-worker":
         owner_id = f"run-{os.getpid()}"
-        worker = backend.create_execution_host(owner_id=owner_id)
+        worker = backend.create_execution_host(
+            owner_id=owner_id,
+            ttl_seconds=int(os.environ.get("PHASE06_LEASE_SECONDS", "30")),
+        )
     elif role == "action-worker":
         owner_id = f"action-{os.getpid()}"
+        service_type = type(backend.managed_service)
+        execute_preparation = service_type.execute_run_preparation
+
+        def observe_preparation_failure(service, *args, **kwargs):
+            try:
+                return execute_preparation(service, *args, **kwargs)
+            except Exception as exc:
+                message = str(exc).replace(
+                    os.environ["PHASE06_RUNTIME_URL"], "<redacted-database-url>"
+                )
+                report = getattr(exc, "report", None)
+                (root / "preparation-error.json").write_text(
+                    json.dumps(
+                        {
+                            "type": type(exc).__name__,
+                            "message": message,
+                            "report": (
+                                {
+                                    "phases": list(report.phases),
+                                    "diagnostics": [
+                                        item.to_dict() for item in report.diagnostics
+                                    ],
+                                }
+                                if report is not None and hasattr(report, "diagnostics")
+                                else None
+                            ),
+                        }
+                    )
+                )
+                raise
+
+        service_type.execute_run_preparation = observe_preparation_failure
         worker = backend.create_action_execution_host(worker_id=owner_id)
     else:
         raise ValueError(role)
@@ -525,11 +604,275 @@ def main():
             command = json.loads(line)
             try:
                 op = command["op"]
-                if op == "definition":
+                if op == "fault-arm":
+                    # Test-wheel barriers around public calls. No production hooks,
+                    # storage repair, or replacement semantics are involved.
+                    target = {
+                        "durable": backend.durable_work,
+                        "schedule": backend.schedule_store,
+                        "submissions": backend.submissions,
+                        "reports": type(backend.report_store_factory(ctx)),
+                    }[command["target"]]
+                    method = command["method"]
+                    if method not in {
+                        "accept",
+                        "accept_action_job",
+                        "claim_action_job",
+                        "acquire_lease",
+                        "start_attempt",
+                        "finish_attempt",
+                        "record_result_publication",
+                        "mark_published",
+                        "claim_firing",
+                        "link_firing_submission",
+                        "put",
+                    }:
+                        raise ValueError("unsupported test barrier")
+                    original = getattr(target, method)
+                    when = command["when"]
+                    if when not in {"before", "after"}:
+                        raise ValueError("unsupported barrier position")
+
+                    def paused_call(
+                        *args,
+                        _target=target,
+                        _method=method,
+                        _original=original,
+                        _when=when,
+                        **kwargs,
+                    ):
+                        def pause():
+                            print(
+                                json.dumps({"barrier": _method, "when": _when}),
+                                flush=True,
+                            )
+                            assert json.loads(sys.stdin.readline()) == {"op": "release"}
+
+                        setattr(_target, _method, _original)
+                        if _when == "before":
+                            pause()
+                        value = _original(*args, **kwargs)
+                        if _when == "after":
+                            pause()
+                        return value
+
+                    setattr(target, method, paused_call)
+                    result = {"armed": method, "when": when}
+                elif op == "preparation":
+                    result = backend.managed_service.start_run_preparation(
+                        ctx,
+                        command.get("definition_id", "postgres-upsert-transfer"),
+                        idempotency_key=command["key"],
+                        deadline_seconds=command.get("deadline_seconds", 300),
+                        request=command.get("request"),
+                    )
+                elif op == "preparation-get":
+                    result = backend.managed_service.get_run_preparation(
+                        ctx, command["operation_id"]
+                    )
+                elif op == "action-job":
+                    record = backend.durable_work.get_action_job(
+                        ctx, command["action_id"]
+                    )
+                    result = asdict(record)
+                elif op == "preparation-error":
+                    error_path = root / "preparation-error.json"
+                    result = (
+                        json.loads(error_path.read_text())
+                        if error_path.exists()
+                        else None
+                    )
+                elif op == "lookup-submission":
+                    record = backend.durable_work.get_submission_by_idempotency(
+                        ctx, idempotency_key=command["key"], operation="run.submit"
+                    )
+                    result = (
+                        None
+                        if record is None
+                        else {
+                            "submission_id": record.submission_id,
+                            "status": record.status,
+                            "run_id": record.run_id,
+                        }
+                    )
+                elif op == "lookup-cp1":
+                    receipt = backend.submissions.lookup_idempotency(
+                        ctx, command["key"], operation="run.submit"
+                    )
+                    result = None if receipt is None else receipt.to_dict()
+                elif op == "submission-detail":
+                    record = backend.durable_work.get_submission(
+                        ctx, command["submission_id"]
+                    )
+                    result = {
+                        "submission": asdict(record),
+                        "attempts": [
+                            asdict(a)
+                            for a in backend.durable_work.list_attempts(
+                                ctx, record.submission_id
+                            )
+                        ],
+                    }
+                    try:
+                        result["effect"] = asdict(
+                            backend.durable_work.get_effect(
+                                ctx, record.submission_id + ":execution"
+                            )
+                        )
+                    except ControlPlaneError:
+                        result["effect"] = None
+                elif op == "cancel-submission":
+                    result = asdict(
+                        backend.durable_work.cancel_submission(
+                            ctx, command["submission_id"]
+                        )
+                    )
+                elif op == "run-command":
+                    methods = {
+                        "retry": "retry_run",
+                        "rerun": "rerun_run",
+                        "actions": "get_run_actions",
+                        "lineage": "get_run_lineage",
+                        "artifacts": "list_run_artifacts",
+                        "artifact-content": "get_run_artifact_content",
+                    }
+                    arguments = dict(command.get("arguments", {}))
+                    run_context = ctx
+                    if command.get("foreign_owner"):
+                        run_context = replace(
+                            ctx,
+                            principal=Principal(
+                                "foreign", issuer="reference", kind="service"
+                            ),
+                        )
+                    if command.get("foreign_scope"):
+                        run_context = replace(
+                            ctx, workspace=WorkspaceRef(ctx.tenant.tenant_id, "foreign")
+                        )
+                    try:
+                        value = getattr(
+                            backend.managed_service, methods[command["method"]]
+                        )(run_context, command["run_id"], **arguments)
+                        if command["method"] == "artifact-content":
+                            content, media_type = value
+                            value = {
+                                "sha256": hashlib.sha256(content).hexdigest(),
+                                "byte_length": len(content),
+                                "media_type": media_type,
+                            }
+                        result = {
+                            "status": 200,
+                            "value": value.to_dict()
+                            if hasattr(value, "to_dict")
+                            else value,
+                        }
+                    except ControlPlaneError as exc:
+                        result = {
+                            "status": exc.status,
+                            "code": exc.code,
+                            "detail": str(exc),
+                            "diagnostics": exc.extensions,
+                        }
+                elif op == "execution-options":
+                    from etlantic.control_plane.execution_envelope import (
+                        ExecutionEnvelope,
+                    )
+                    from etlantic.runtime.request import RunRequest
+
+                    submission = backend.durable_work.get_submission(
+                        ctx, command["submission_id"]
+                    )
+                    envelope = ExecutionEnvelope.from_json(submission.input_snapshot)
+                    requested = RunRequest.from_dict(envelope.run_request).to_dict()
+                    effective = RunRequest.from_dict(
+                        envelope.effective_request
+                    ).to_dict()
+                    assert RunRequest.from_dict(requested).to_dict() == requested
+                    assert RunRequest.from_dict(effective).to_dict() == effective
+                    result = {
+                        "requested": requested,
+                        "effective": effective,
+                        "roundtrip": True,
+                    }
+                elif op == "artifact-cleanup":
+                    assert worker is not None and role == "run-worker"
+                    result = worker.runner.cleanup_expired_run_artifacts(
+                        ctx,
+                        now=datetime.fromisoformat(command["now"]),
+                        limit=command["limit"],
+                    ).to_dict()
+                elif op == "input-resource":
+                    resource_context = ctx
+                    if command.get("foreign_owner"):
+                        resource_context = replace(
+                            ctx,
+                            principal=Principal(
+                                "foreign", issuer="reference", kind="service"
+                            ),
+                            resource_owner_id="foreign",
+                        )
+                    if command.get("foreign_scope"):
+                        resource_context = replace(
+                            ctx, workspace=WorkspaceRef(ctx.tenant.tenant_id, "foreign")
+                        )
+                    arguments = dict(command.get("arguments", {}))
+                    for name in ("expires_at", "now", "retain_until"):
+                        if name in arguments:
+                            arguments[name] = datetime.fromisoformat(arguments[name])
+                    if "reference" in arguments:
+                        arguments["reference"] = InputResourceReference.from_dict(
+                            arguments["reference"]
+                        )
+                    if "content" in arguments:
+                        arguments["content"] = arguments["content"].encode()
+                    try:
+                        value = getattr(backend.input_resources, command["method"])(
+                            resource_context, **arguments
+                        )
+                        result = {
+                            "status": 200,
+                            "value": (
+                                {
+                                    "sha256": hashlib.sha256(value).hexdigest(),
+                                    "byte_length": len(value),
+                                }
+                                if isinstance(value, bytes)
+                                else asdict(value)
+                                if hasattr(value, "__dataclass_fields__")
+                                else value
+                            ),
+                        }
+                    except ControlPlaneError as exc:
+                        result = {
+                            "status": exc.status,
+                            "code": exc.code,
+                            "detail": str(exc),
+                        }
+                elif op == "schedule-create":
+                    clock.set(
+                        datetime.fromisoformat(command["instant"])
+                        - timedelta(seconds=60)
+                    )
+                    result = backend.schedule_service.create(
+                        ctx,
+                        definition_id="postgres-upsert-transfer",
+                        profile_name="gate0",
+                        spec=ScheduleSpec(kind="interval", interval_seconds=60),
+                    ).to_dict()
+                elif op == "definition":
                     result = backend.managed_service.register_definition(
                         ctx,
                         "transfer",
                         pipeline_to_dict(definition_from_pipeline(Transfer)),
+                    )
+                    result = {"registered": True}
+                elif op == "definition-document":
+                    result = pipeline_to_dict(definition_from_pipeline(Transfer))
+                elif op == "host-code-digest":
+                    result = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+                elif op == "register-definition-document":
+                    backend.managed_service.register_definition(
+                        ctx, command["definition_id"], command["document"]
                     )
                     result = {"registered": True}
                 elif op == "definition-pg":
@@ -552,6 +895,17 @@ def main():
                         pipeline_to_dict(
                             definition_from_pipeline(PostgreSQLUpsertTransfer)
                         ),
+                    )
+                    result = {"registered": True}
+                elif op == "definition-input":
+                    reference = InputResourceReference.from_dict(command["reference"])
+                    (root / "uploaded-input.json").write_text(
+                        json.dumps(reference.to_dict())
+                    )
+                    backend.managed_service.register_definition(
+                        ctx,
+                        "uploaded-transfer",
+                        pipeline_to_dict(definition_from_pipeline(UploadedTransfer)),
                     )
                     result = {"registered": True}
                 elif op == "portable-conformance":
@@ -628,10 +982,19 @@ def main():
                         result = value.to_dict() if hasattr(value, "to_dict") else value
                     except ControlPlaneError as exc:
                         result = {"denial_status": exc.status}
-                elif op == "report":
-                    result = backend.managed_service.get_run_report(
-                        ctx, command["run_id"]
-                    )
+                elif op in {"report", "report-or-error"}:
+                    try:
+                        result = backend.managed_service.get_run_report(
+                            ctx, command["run_id"]
+                        )
+                    except ControlPlaneError as exc:
+                        if op == "report":
+                            raise
+                        result = {
+                            "status": exc.status,
+                            "code": exc.code,
+                            "detail": str(exc),
+                        }
                 elif op == "tick":
                     assert worker is not None
                     if "instant" in command:

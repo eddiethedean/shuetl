@@ -1,0 +1,82 @@
+{
+  "schema": "shuetl.etlantic_0_57_2.local_qualification/1",
+  "recorded_at": "2026-10-11T15:49:13.510577+00:00",
+  "base_commit": "a0b3a1258cf199e755e045cd9b6e9e8b4c218511",
+  "source_tree_dirty": true,
+  "tracked_diff_sha256": "400a0f25910ada180afc5d6b3dc4c2b72a1a8322dda9a881d7aca6164341dd73",
+  "changed_file_sha256": {
+    "CHANGELOG.md": "24ada63cce6a66e3af25018fe26807d863b4d1aebcb372a344d45aa1ea5e6085",
+    "README.md": "93728aefeff9462a39c2304c18fdc211e4734ad72f01bc2e51eeb2f75b2a625f",
+    "docs/evidence/0.6/README.md": "bf56b73481aba72eb1002321eefbb7b2b266458c18ac1da2f0bdaf5213fe2f63",
+    "docs/plans/PHASE_0_6_IMPLEMENTATION.md": "9a390cfd777a30ac792245afef782a4bbdd8d7a6c8b5b9e4d1740ad2fe58cd99",
+    "docs/plans/PHASE_0_6_VERIFICATION.md": "7744707e9637c170c978efd0b80bca619fefa17bd17e7cd2fcf10878a0943d11",
+    "docs/reviews/ETLANTIC_0_57_1_REQUIREMENTS_AUDIT.md": "c43fb5726a04980fc61f6c7248ae0a50ade6eb66b8b2f3836d7eef64cf04012d",
+    "docs/reviews/ETLANTIC_0_57_2_REQUIREMENTS_AUDIT.md": "0dc0843cc80cc253345f1375387b266b421ae56f3785f2f1e859bf810d8e6aee",
+    "docs/reviews/etlantic_0_57_1/gateway-probe.json": "d90522fa483a3897d4a1d80dd1ac774eae0013c816cbce44c19486a9e03c711c",
+    "docs/reviews/etlantic_0_57_1/headless-probe.json": "144d202fe1745fe662f4c053710e9c730e34aac7a6f70a9e92cd8a9ac4a56e14",
+    "docs/reviews/etlantic_0_57_1/requirements-probe.json": "a71d806dadb2fb34dec38f864bff3a58b9c28334b311179c70799328484abef8",
+    "docs/reviews/etlantic_0_57_1/requirements_probe.py": "e281dce5e5c93b80870b4073ef897cd135d80103752fcf548fa99d6d79dcb6d5",
+    "docs/reviews/etlantic_0_57_2/clean-wheel.log": "2448b78791eac2a02fa2dc978273e7f0943f97250a8f64a823f3517b5b51c867",
+    "docs/reviews/etlantic_0_57_2/cli-postgresql-3.11.json": "f89ce41752fb665205550f9efc47c1d96210e8742fce477f0d683ed456daf1a2",
+    "docs/reviews/etlantic_0_57_2/cli-postgresql-3.13.json": "bc877536ba07baf366a147ae50f5966bce8b6c05a57736a1d00314a241fff089",
+    "docs/reviews/etlantic_0_57_2/cli-postgresql.json": "e37f9e5021c02468a7cc4ae3fad36b6c4f057faf8c03c1a43998a5050b46cd5c",
+    "docs/reviews/etlantic_0_57_2/gateway-probe.json": "737670c963cd20ebafd709c1fe003a40fb207901318aa7a2c9f684bec0b58f2a",
+    "docs/reviews/etlantic_0_57_2/headless-probe.json": "f965204610d85e44aa0020be73b8e96f4d465071d1ac2a835ded36637ddee316",
+    "docs/reviews/etlantic_0_57_2/postgresql-gate0-3.11.json": "52a2fd0d1f1c264286f3bff0e9375387f4375175f01ddfff532e2e9d31561172",
+    "docs/reviews/etlantic_0_57_2/postgresql-gate0-3.13.json": "6a61f762d674da5512b9525dffd723e4682dbbe628bad103b048ac3a6068a282",
+    "docs/reviews/etlantic_0_57_2/postgresql-gate0.json": "7b83b5eff8aee4207e645bd4396c626f7df0432e3d3828ff9a6dd716d6167e9a",
+    "docs/reviews/etlantic_0_57_2/postgresql-tests.xml": "cf6f5cdfd7d06b97158a7d534eceaf73238cec223b60d5614400e56ccc077c3a",
+    "docs/reviews/etlantic_0_57_2/release-evidence-check.log": "b3fc6826d0d424cfc5bcdc00397219002b45ede1ea4375e55161ab21dd657add",
+    "docs/reviews/etlantic_0_57_2/requirements-probe-3.11.json": "c3cb3a8030db8b146528ee4d2bbb6f5a87c91891c7403838ca1f10efa9bd072e",
+    "docs/reviews/etlantic_0_57_2/requirements-probe-3.13.json": "529f3cc349b4d662724c02b39de21b0a88a39bf4db979da7bd67713f0cedaabe",
+    "docs/reviews/etlantic_0_57_2/requirements-probe.json": "417398987f6f4e588fbc091ba0fe3240556aafedf1f7fc7cfa54334b92f90c3d",
+    "docs/reviews/etlantic_0_57_2/requirements_probe.py": "d519f6a0b0af77f9fd628fc98b570ec01eaf1eb2eb3ca1ac73d06831b7418e9a",
+    "docs/reviews/etlantic_0_57_2/source-tests.xml": "bee5354fcaf0a80a258490ae1e37568eede724f1c76b54560a0bafe9d7342df5",
+    "pyproject.toml": "b6da3445e4646819beb9df35333dbd54ab78f6f8b898726f20a2142715be5930",
+    "scripts/check_artifact.py": "6797ca0990f263e0eb4039de1206c23af18d5788f2aaf3cf699a059162bc2b77",
+    "scripts/check_clean_wheel.py": "212bdad2c80825d1663c762c329eb8b7a0b08b43559df2e20819b4a41ce4a74c",
+    "scripts/check_evidence.py": "7eee7a67f3cc32d4e00e7ba88974f36b1ce0cc6c7a6b14649ad1c2e3042e2de1",
+    "spikes/phase_0_1_memory_mount.py": "3b5618eab784dc857dc96c5f963348e877003b1bb777b6d73f7afc8594b49857",
+    "src/shuetl/compatibility.py": "27b4f8c1724c270a049ad3d7b866dfa97f0999494e536b60575d46209f08bc69",
+    "src/shuetl/diagnostics.py": "f4ba8585e55044564b6a56d45df11fb0106d41d6dd8b73c2e8720c06cd81ec8d",
+    "tests/integration/test_runtime_supervision.py": "5155a3c54d0fcede04e8a730a91687a43743e7e27fe8ef6102c1fb3c8203f74a",
+    "tests/reference_phase06/phase06_reference/__main__.py": "a8dac318c519189132e9eb6cb3d95dd1cb56ac7f9a83ff5afbe022a7a729cea9",
+    "tests/reference_phase06/pyproject.toml": "e0b8747decb6ca3259eaa0010100d884967a4a4b98fc1caf697de3217356ccda",
+    "tests/reference_phase06_host/phase06_host/bindings.py": "119bc36c28ebd37ab541acbee15f632f93ec7b596dc873297febcfa45b118cf9",
+    "tests/reference_phase06_host/pyproject.toml": "7eca3022e18e53ff969e5ea30ec1f92e8b5f207383cb9a89c75cb152d5fe6271",
+    "tests/review/test_phase_0_3_contract.py": "9dd3575c2495e743b0fbd9ea34207480ca416559e2efb51b171063d789acf8e5",
+    "tests/unit/test_phase06_evidence.py": "8f44c6e2b4c99973e4099ce24405e4a35c3e492051753047a981d5f164ab71b5",
+    "tests/unit/test_runtime_failures.py": "4a02a542748c0beb638fdfea6bc1a88b213cf45170f0f392002db4eb7370abcf",
+    "uv.lock": "88d2fee7ea755fc1192da5ee1822a65ab013485c3e7dceb9e3d2caa007872362"
+  },
+  "artifacts": {
+    "shuetl-0.6.0-py3-none-any.whl": "ff797ef2a916154336e73181b1e599eae99b6f4f02f57338ba5d95ec549105b8",
+    "shuetl-0.6.0.tar.gz": "ff624ebfb0e3d443304e2fcd71efcc5deea8e8ae7eff9de221271c0171e9e2bb",
+    "shuetl_phase06_host-0.0.1-py3-none-any.whl": "bcf3585f07799caa238d5516cc3110266cb8e4267287e60f3c59fb9c76632888",
+    "shuetl_phase06_reference-0.0.1-py3-none-any.whl": "af32ef389178b8f20a3326850f4cc44fe1fe99a2b5df0bd373a9a88481f97b41"
+  },
+  "postgresql_image_digests": [
+    "postgres@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af"
+  ],
+  "uv_version": "uv 0.11.3 (45da18ac3 2026-04-01 aarch64-apple-darwin)",
+  "matrix": {
+    "requirements": "Python 3.11/3.12/3.13 PASS",
+    "installed_gate0": "Python 3.11/3.12/3.13 PASS",
+    "installed_cli": "Python 3.11/3.12/3.13 PASS"
+  },
+  "source_tests": {
+    "passed": 260,
+    "skipped": 10
+  },
+  "postgresql_tests": {
+    "passed": 9,
+    "skipped": 0
+  },
+  "release_evidence_status": "OPEN: historical ledger, missing proofs.json, 33 OPEN criteria and Gates A-C",
+  "live_preflight_tracker": "https://github.com/eddiethedean/etlantic/issues/121#issuecomment-6110747363",
+  "limitations": [
+    "Local macOS ARM64 qualification of uncommitted changes",
+    "Static preflight is not live provider readiness",
+    "No active-work drain/crash/fault or hosted final-release PASS"
+  ]
+}

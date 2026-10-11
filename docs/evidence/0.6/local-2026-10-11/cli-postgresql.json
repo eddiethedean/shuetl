@@ -1,0 +1,756 @@
+{
+  "schema": "shuetl.phase06.cli-gate/1",
+  "result": "PASS",
+  "python": "3.12.13",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "shuetl_version": "0.6.0",
+  "shuetl_origin": "/private/tmp/shuetl-phase06-py312/lib/python3.12/site-packages/shuetl/__init__.py",
+  "reference_host_origin": "/private/tmp/shuetl-phase06-py312/lib/python3.12/site-packages/phase06_host/bindings.py",
+  "etlantic_sql_version": "0.57.2",
+  "etlantic_version": "0.57.2",
+  "etlantic_sqlmodel_version": "0.57.2",
+  "source_commit": "a0b3a1258cf199e755e045cd9b6e9e8b4c218511",
+  "shuetl_wheel_sha256": "7a22a8b51f65af9150481fbc897a9858e2ff8d249f86db703926bdcc3808b826",
+  "reference_wheel_sha256": "2585ce1ab66bbfea536cbd81d725b63ff0efdf970082ae77f6da16ee17e1a2ef",
+  "roles": [
+    {
+      "role": "gateway",
+      "pid": 70575,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "gateway"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "gateway"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": 53518
+    },
+    {
+      "role": "scheduler",
+      "pid": 70590,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "scheduler"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "scheduler"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    },
+    {
+      "role": "run_worker",
+      "pid": 70595,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "run_worker"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "run_worker"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    },
+    {
+      "role": "action_worker",
+      "pid": 70602,
+      "ready": {
+        "process_state": "running",
+        "ready": true,
+        "reason_code": null,
+        "role": "action_worker"
+      },
+      "live": {
+        "live": true,
+        "process_state": "running",
+        "reason_code": null,
+        "role": "action_worker"
+      },
+      "probe_host": "127.0.0.1",
+      "gateway_port": null
+    }
+  ],
+  "postgresql_version": "18.6 (Debian 18.6-1.pgdg12+2)",
+  "runtime_grants": {
+    "public_schema_create": false,
+    "sink_schema_create": false,
+    "migration_role_membership": false,
+    "owned_objects": 0
+  },
+  "construction_preflight": "PASS",
+  "role_imports": [
+    {
+      "etlantic_fastapi_imported": true,
+      "fastapi_imported": true,
+      "pid": 70575,
+      "role": "gateway"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 70590,
+      "role": "scheduler"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 70595,
+      "role": "worker-runs"
+    },
+    {
+      "etlantic_fastapi_imported": false,
+      "fastapi_imported": false,
+      "pid": 70602,
+      "role": "worker-actions"
+    }
+  ],
+  "connector_actions": [
+    {
+      "case": "cli-connection-test",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-0d1cdcfd018244dc91d51bc6",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.test",
+        "created_at": "2026-10-11T18:10:22.760612Z",
+        "deadline_at": "2026-10-11T18:10:32.758088Z",
+        "status": "succeeded",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:22.929362Z",
+        "completed_at": "2026-10-11T18:10:22.941501Z",
+        "result_expires_at": null,
+        "result": {
+          "ok": true,
+          "provider": "postgresql",
+          "schema": "etlantic.connector_test/1"
+        },
+        "error_code": null
+      },
+      "result": "PASS"
+    },
+    {
+      "case": "cli-schema-inspect",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-c59c57c593e34cd5b18ff3f4",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.schema.inspect",
+        "created_at": "2026-10-11T18:10:22.987547Z",
+        "deadline_at": "2026-10-11T18:10:32.986243Z",
+        "status": "succeeded",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:23.155931Z",
+        "completed_at": "2026-10-11T18:10:23.171982Z",
+        "result_expires_at": null,
+        "result": {
+          "fields": [
+            {
+              "name": "effect_id",
+              "nullable": false,
+              "primary_key": true,
+              "table": "effects",
+              "type": "text"
+            },
+            {
+              "name": "intent_fingerprint",
+              "nullable": false,
+              "primary_key": false,
+              "table": "effects",
+              "type": "text"
+            }
+          ],
+          "has_more": true,
+          "metadata": {
+            "inspection": "read_only",
+            "schema_scope": "current_schema"
+          },
+          "provider": "postgresql",
+          "schema": "etlantic.connector_schema_inspection/1"
+        },
+        "error_code": null
+      },
+      "result": "PASS"
+    },
+    {
+      "case": "cli-resource-rotation",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-4dcde0be5c4348beacd7e9dc",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.test",
+        "created_at": "2026-10-11T18:10:23.226493Z",
+        "deadline_at": "2026-10-11T18:10:33.225094Z",
+        "status": "succeeded",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:23.388892Z",
+        "completed_at": "2026-10-11T18:10:23.407965Z",
+        "result_expires_at": null,
+        "result": {
+          "ok": true,
+          "provider": "postgresql",
+          "schema": "etlantic.connector_test/1"
+        },
+        "error_code": null
+      },
+      "result": "PASS"
+    },
+    {
+      "case": "cli-resource-revocation",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-dd6b85dcb2f04b779aafeb83",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.test",
+        "created_at": "2026-10-11T18:10:23.467272Z",
+        "deadline_at": "2026-10-11T18:10:33.464528Z",
+        "status": "failed",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:23.630311Z",
+        "completed_at": "2026-10-11T18:10:23.638769Z",
+        "result_expires_at": null,
+        "result": null,
+        "error_code": "action_failed"
+      },
+      "result": "PASS"
+    },
+    {
+      "case": "cli-resource-deadline",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-c39cdff02c6543018a1198ab",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.test",
+        "created_at": "2026-10-11T18:10:23.649697Z",
+        "deadline_at": "2026-10-11T18:10:25.646366Z",
+        "status": "timed_out",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:23.875494Z",
+        "completed_at": "2026-10-11T18:10:25.651148Z",
+        "result_expires_at": null,
+        "result": null,
+        "error_code": "deadline_exceeded"
+      },
+      "result": "PASS"
+    },
+    {
+      "case": "cli-connector-outage",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-c9d20fac12be42e2819c1f0e",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.test",
+        "created_at": "2026-10-11T18:10:25.661469Z",
+        "deadline_at": "2026-10-11T18:10:35.658531Z",
+        "status": "failed",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:25.869366Z",
+        "completed_at": "2026-10-11T18:10:25.876180Z",
+        "result_expires_at": null,
+        "result": null,
+        "error_code": "action_failed"
+      },
+      "result": "PASS"
+    },
+    {
+      "case": "cli-resource-recovery",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-1b4b5c59392d4a9a8f4c3223",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.test",
+        "created_at": "2026-10-11T18:10:25.900082Z",
+        "deadline_at": "2026-10-11T18:10:35.898260Z",
+        "status": "succeeded",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:26.093431Z",
+        "completed_at": "2026-10-11T18:10:26.100218Z",
+        "result_expires_at": null,
+        "result": {
+          "ok": true,
+          "provider": "postgresql",
+          "schema": "etlantic.connector_test/1"
+        },
+        "error_code": null
+      },
+      "result": "PASS"
+    },
+    {
+      "case": "cli-static-preflight",
+      "receipt": {
+        "schema": "etlantic.control_plane.action_job/1",
+        "action_id": "act-e0d1c3043567406a8337bcd6",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "action": "connector.preflight",
+        "created_at": "2026-10-11T18:10:26.133296Z",
+        "deadline_at": "2026-10-11T18:10:36.130658Z",
+        "status": "succeeded",
+        "attempt": 1,
+        "started_at": "2026-10-11T18:10:26.324695Z",
+        "completed_at": "2026-10-11T18:10:27.308518Z",
+        "result_expires_at": null,
+        "result": {
+          "definition_id": "cli-transfer",
+          "diagnostics": [],
+          "fingerprint": "8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382",
+          "metadata": {
+            "mode": "read_only_plan",
+            "selected_revision_id": "defrev-a408e3ca74d24128"
+          },
+          "ok": true,
+          "revision_id": "defrev-a408e3ca74d24128",
+          "schema": "etlantic.connector_preflight/1"
+        },
+        "error_code": null
+      },
+      "result": "PASS"
+    }
+  ],
+  "action_limits": "Published worker-isolated connection/schema actions; test host rotates a resource version and rejects revoked references. Preflight is explicitly static; live pipeline readiness remains ETLantic #121.",
+  "active_drain": [
+    {
+      "role": "scheduler",
+      "boundary": "acquire_leader_lease",
+      "signals": [
+        "SIGTERM",
+        "SIGINT"
+      ],
+      "ready_after_grace": {
+        "process_state": "draining",
+        "ready": false,
+        "reason_code": "grace_expired",
+        "role": "scheduler"
+      },
+      "live_after_grace": {
+        "live": true,
+        "process_state": "draining",
+        "reason_code": "grace_expired",
+        "role": "scheduler"
+      },
+      "cleanup_before_release": false,
+      "exit_code": 0
+    },
+    {
+      "role": "action_worker",
+      "boundary": "claim_action_job",
+      "signals": [
+        "SIGTERM",
+        "SIGINT"
+      ],
+      "ready_after_grace": {
+        "process_state": "draining",
+        "ready": false,
+        "reason_code": "grace_expired",
+        "role": "action_worker"
+      },
+      "live_after_grace": {
+        "live": true,
+        "process_state": "draining",
+        "reason_code": "grace_expired",
+        "role": "action_worker"
+      },
+      "cleanup_before_release": false,
+      "exit_code": 0
+    },
+    {
+      "role": "run_worker",
+      "boundary": "acquire_lease",
+      "signals": [
+        "SIGTERM",
+        "SIGINT"
+      ],
+      "ready_after_grace": {
+        "process_state": "draining",
+        "ready": false,
+        "reason_code": "grace_expired",
+        "role": "run_worker"
+      },
+      "live_after_grace": {
+        "live": true,
+        "process_state": "draining",
+        "reason_code": "grace_expired",
+        "role": "run_worker"
+      },
+      "cleanup_before_release": false,
+      "exit_code": 0
+    },
+    {
+      "role": "gateway",
+      "boundary": "",
+      "signals": [
+        "SIGTERM",
+        "SIGINT"
+      ],
+      "ready_after_grace": {
+        "process_state": "draining",
+        "ready": false,
+        "reason_code": "grace_expired",
+        "role": "gateway"
+      },
+      "live_after_grace": {
+        "live": true,
+        "process_state": "draining",
+        "reason_code": "grace_expired",
+        "role": "gateway"
+      },
+      "cleanup_before_release": false,
+      "exit_code": 0
+    }
+  ],
+  "gateway_active_request": {
+    "status": 200,
+    "body": {
+      "completed": true
+    }
+  },
+  "active_execution": {
+    "first": {
+      "schema": "etlantic.control_plane.preparation_operation/1",
+      "action_id": "act-da162fb5e8f949febe905657",
+      "tenant_id": "phase06",
+      "workspace_id": "cli-qualification",
+      "action": "run.prepare",
+      "created_at": "2026-10-11T18:10:27.332091Z",
+      "deadline_at": "2026-10-11T18:15:27.329681Z",
+      "status": "succeeded",
+      "attempt": 1,
+      "started_at": "2026-10-11T18:10:27.520865Z",
+      "completed_at": "2026-10-11T18:10:38.255430Z",
+      "result_expires_at": null,
+      "result": {
+        "acceptance_id": "acc-7e38bbb0d33e46a6",
+        "created_at": "2026-10-11T18:10:38.227450Z",
+        "events_url": null,
+        "idempotency_key": "preparation-act-da162fb5e8f949febe905657",
+        "resource_id": "run-d8eb78ded5d3e25d8c6fffb8",
+        "resource_type": "run",
+        "schema": "etlantic.control_plane.accept_receipt/1",
+        "status": "accepted",
+        "status_url": null,
+        "submission_id": "sub-f514d5cb96b04675",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification"
+      },
+      "error_code": null,
+      "operation_id": "act-da162fb5e8f949febe905657"
+    },
+    "queued_at_shutdown": {
+      "schema": "etlantic.control_plane.preparation_operation/1",
+      "action_id": "act-d1ce6ce3262d42ad99c6c7ad",
+      "tenant_id": "phase06",
+      "workspace_id": "cli-qualification",
+      "action": "run.prepare",
+      "created_at": "2026-10-11T18:10:27.345762Z",
+      "deadline_at": "2026-10-11T18:15:27.343204Z",
+      "status": "queued",
+      "attempt": 0,
+      "started_at": null,
+      "completed_at": null,
+      "result_expires_at": null,
+      "result": null,
+      "error_code": null,
+      "operation_id": "act-d1ce6ce3262d42ad99c6c7ad"
+    },
+    "replacement": {
+      "schema": "etlantic.control_plane.preparation_operation/1",
+      "action_id": "act-d1ce6ce3262d42ad99c6c7ad",
+      "tenant_id": "phase06",
+      "workspace_id": "cli-qualification",
+      "action": "run.prepare",
+      "created_at": "2026-10-11T18:10:27.345762Z",
+      "deadline_at": "2026-10-11T18:15:27.343204Z",
+      "status": "succeeded",
+      "attempt": 1,
+      "started_at": "2026-10-11T18:10:50.651775Z",
+      "completed_at": "2026-10-11T18:10:50.867746Z",
+      "result_expires_at": null,
+      "result": {
+        "acceptance_id": "acc-68ab19ed61e5479e",
+        "created_at": "2026-10-11T18:10:50.845437Z",
+        "events_url": null,
+        "idempotency_key": "preparation-act-d1ce6ce3262d42ad99c6c7ad",
+        "resource_id": "run-63f83eb1ef93eeb7f9e93e04",
+        "resource_type": "run",
+        "schema": "etlantic.control_plane.accept_receipt/1",
+        "status": "accepted",
+        "status_url": null,
+        "submission_id": "sub-a431c31168394eca",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification"
+      },
+      "error_code": null,
+      "operation_id": "act-d1ce6ce3262d42ad99c6c7ad"
+    },
+    "rows_before_replacement": [
+      [
+        "001",
+        "phase06-cli"
+      ]
+    ],
+    "effects_before_replacement": 1,
+    "result": "PASS"
+  },
+  "forced_termination": [
+    {
+      "role": "scheduler",
+      "pid": 70734,
+      "signals": [
+        "SIGTERM",
+        "SIGKILL"
+      ],
+      "ready_after_grace": {
+        "process_state": "draining",
+        "ready": false,
+        "reason_code": "grace_expired",
+        "role": "scheduler"
+      },
+      "before": null,
+      "after": null,
+      "cleanup_events": [],
+      "result": "PASS"
+    },
+    {
+      "role": "worker-actions",
+      "pid": 70803,
+      "signals": [
+        "SIGTERM",
+        "SIGKILL"
+      ],
+      "ready_after_grace": {
+        "process_state": "draining",
+        "ready": false,
+        "reason_code": "grace_expired",
+        "role": "action_worker"
+      },
+      "before": {
+        "action_id": "act-76517b507c194d2a85865a76",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "owner_id": "phase06-service",
+        "principal_subject": "phase06-service",
+        "principal_issuer": "reference-host",
+        "principal_kind": "service",
+        "environment": "test",
+        "security_domain_id": "phase06",
+        "action": "run.prepare",
+        "idempotency_key": "cli-force-actions",
+        "request_fingerprint": "66b4a2d666f25c301eae919634286bff57c8df46c29e8a698d716113db9d7ec8",
+        "request_json": "{\"definition_id\":\"cli-transfer\",\"definition_revision_id\":\"defrev-a408e3ca74d24128\",\"profile_name\":\"phase06-reference\",\"revision_selector\":\"current\",\"run_request\":{\"asset_overrides\":{},\"cancellation\":{\"abandon_after_seconds\":null,\"cooperative\":true},\"explicit_settings\":[],\"extensions\":{},\"implementation_overrides\":{},\"intent\":\"standard\",\"invalidation\":\"none\",\"materialization\":\"default\",\"metadata\":{},\"no_write\":false,\"parameter_overrides\":{},\"retry\":{\"backoff_seconds\":0.0,\"max_attempts\":1,\"retry_on\":[]},\"selection\":{\"end\":null,\"kind\":\"all\",\"nodes\":[],\"start\":null,\"tags\":[]},\"timeout\":{\"run_seconds\":null,\"step_seconds\":null}}}",
+        "created_at": "2026-10-11T18:11:04.195660Z",
+        "deadline_at": "2026-10-11T18:11:14.193229Z",
+        "status": "running",
+        "phase": "preparing",
+        "attempt": 1,
+        "fencing_token": 1,
+        "worker_id": "actions-phase06-cli-31bf87273fe10061",
+        "lease_expires_at": "2026-10-11T18:16:34.372758Z",
+        "started_at": "2026-10-11T18:11:04.372758Z",
+        "completed_at": null,
+        "result_json": null,
+        "result_expires_at": null,
+        "error_code": null
+      },
+      "after": {
+        "action_id": "act-76517b507c194d2a85865a76",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "owner_id": "phase06-service",
+        "principal_subject": "phase06-service",
+        "principal_issuer": "reference-host",
+        "principal_kind": "service",
+        "environment": "test",
+        "security_domain_id": "phase06",
+        "action": "run.prepare",
+        "idempotency_key": "cli-force-actions",
+        "request_fingerprint": "66b4a2d666f25c301eae919634286bff57c8df46c29e8a698d716113db9d7ec8",
+        "request_json": "{\"definition_id\":\"cli-transfer\",\"definition_revision_id\":\"defrev-a408e3ca74d24128\",\"profile_name\":\"phase06-reference\",\"revision_selector\":\"current\",\"run_request\":{\"asset_overrides\":{},\"cancellation\":{\"abandon_after_seconds\":null,\"cooperative\":true},\"explicit_settings\":[],\"extensions\":{},\"implementation_overrides\":{},\"intent\":\"standard\",\"invalidation\":\"none\",\"materialization\":\"default\",\"metadata\":{},\"no_write\":false,\"parameter_overrides\":{},\"retry\":{\"backoff_seconds\":0.0,\"max_attempts\":1,\"retry_on\":[]},\"selection\":{\"end\":null,\"kind\":\"all\",\"nodes\":[],\"start\":null,\"tags\":[]},\"timeout\":{\"run_seconds\":null,\"step_seconds\":null}}}",
+        "created_at": "2026-10-11T18:11:04.195660Z",
+        "deadline_at": "2026-10-11T18:11:14.193229Z",
+        "status": "running",
+        "phase": "preparing",
+        "attempt": 1,
+        "fencing_token": 1,
+        "worker_id": "actions-phase06-cli-31bf87273fe10061",
+        "lease_expires_at": "2026-10-11T18:16:34.372758Z",
+        "started_at": "2026-10-11T18:11:04.372758Z",
+        "completed_at": null,
+        "result_json": null,
+        "result_expires_at": null,
+        "error_code": null
+      },
+      "cleanup_events": [],
+      "result": "PASS"
+    },
+    {
+      "role": "worker-runs",
+      "pid": 70819,
+      "signals": [
+        "SIGTERM",
+        "SIGKILL"
+      ],
+      "ready_after_grace": {
+        "process_state": "draining",
+        "ready": false,
+        "reason_code": "grace_expired",
+        "role": "run_worker"
+      },
+      "before": {
+        "submission_id": "sub-4b9372be333f4356",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "principal_subject": "phase06-service",
+        "operation": "run.submit",
+        "idempotency_key": "preparation-act-4422627d837c48acb62c7862",
+        "created_at": "2026-10-11T18:11:10.926423Z",
+        "plan_fingerprint": "8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382",
+        "revision_id": "defrev-a408e3ca74d24128",
+        "plugin_fingerprint": "cdfcdd7ab4494c81401cf28ffc6c95134f7f8bca789fe08fab5b5c95ecd4af8c",
+        "policy_fingerprint": null,
+        "input_snapshot": "{\"definition_document\":{\"contracts\":[{\"authoring_id\":\"phase06_host.workload:Row\",\"fields\":[{\"name\":\"id\",\"nullable\":false,\"required\":true,\"type\":\"string\"},{\"name\":\"payload\",\"nullable\":false,\"required\":true,\"type\":\"string\"}],\"identity\":\"row\",\"metadata\":{},\"name\":\"Row\",\"version\":\"1.0.0\"}],\"edges\":[{\"consumer_contract_id\":\"phase06_host.workload:Row\",\"consumer_node\":\"sink\",\"consumer_port\":\"input\",\"producer_contract_id\":\"phase06_host.workload:Row\",\"producer_node\":\"source\",\"producer_port\":\"result\"}],\"extensions\":{},\"fingerprint\":\"33a0573a5b375851929e967e829d431d999c7a4aa70f3b8fa1a294f0e66d1e30\",\"metadata\":{},\"nodes\":[{\"asset\":\"source\",\"bindings\":{},\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/source\",\"inputs\":[],\"kind\":\"source\",\"metadata\":{},\"name\":\"source\",\"nested\":null,\"nested_pipeline_id\":null,\"outputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"output\",\"has_default\":false,\"has_value\":false,\"name\":\"result\",\"required\":true,\"role\":\"valid\",\"value_type\":null}],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null},{\"asset\":\"sink\",\"bindings\":{},\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/sink\",\"inputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"input\",\"has_default\":false,\"has_value\":false,\"name\":\"input\",\"required\":true,\"role\":\"valid\",\"value_type\":null}],\"kind\":\"sink\",\"metadata\":{},\"name\":\"sink\",\"nested\":null,\"nested_pipeline_id\":null,\"outputs\":[],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null}],\"pipeline_id\":\"phase06_host.workload:Transfer\",\"pipeline_name\":\"Transfer\",\"policy_refs\":{},\"profile_ref\":null,\"provenance\":{\"kind\":\"python\",\"source_identity\":\"phase06_host.workload:Transfer\"},\"reliability\":{},\"schema\":\"etlantic.pipeline/1\",\"transformations\":[],\"version\":null},\"definition_fingerprint\":\"33a0573a5b375851929e967e829d431d999c7a4aa70f3b8fa1a294f0e66d1e30\",\"definition_id\":\"cli-transfer\",\"effective_request\":{\"asset_overrides\":{},\"cancellation\":{\"abandon_after_seconds\":null,\"cooperative\":true},\"explicit_settings\":[],\"extensions\":{},\"implementation_overrides\":{},\"intent\":\"standard\",\"invalidation\":\"none\",\"materialization\":\"default\",\"metadata\":{},\"no_write\":false,\"parameter_overrides\":{},\"retry\":{\"backoff_seconds\":0.0,\"max_attempts\":1,\"retry_on\":[]},\"selection\":{\"end\":null,\"kind\":\"all\",\"nodes\":[],\"start\":null,\"tags\":[]},\"timeout\":{\"run_seconds\":null,\"step_seconds\":null}},\"effective_settings\":{\"allow_trusted_sql\":false,\"concurrency\":null,\"dataframe_engine\":\"local\",\"orchestrator\":\"local\",\"retry_max_attempts\":null,\"spark_engine\":null,\"spark_streaming\":false,\"spark_udf_policy\":\"warn\",\"sql_engine\":null,\"timeout_seconds\":null},\"evidence_refs\":{},\"plan_document\":{\"bindings\":{\"sink\":{\"binding\":\"sink\",\"config\":{\"effect_table\":\"sink.effects\",\"mode\":\"append\",\"schema\":\"sink\"},\"kind\":\"sink\",\"location\":\"target\",\"metadata\":{},\"provider\":\"postgresql\",\"secret_ref\":null},\"source\":{\"binding\":\"source\",\"config\":{\"format\":\"csv\",\"glob\":\"*.csv\",\"mode\":\"snapshot\",\"root\":\".\",\"root_ref\":\"gate0-input\"},\"kind\":\"source\",\"location\":null,\"metadata\":{},\"provider\":\"local-files\",\"secret_ref\":null}},\"capability_decisions\":[],\"contract_versions\":{\"phase06_host.workload:Row\":\"1.0.0\",\"row\":\"1.0.0\"},\"execution_settings\":{\"allow_trusted_sql\":false,\"concurrency\":null,\"dataframe_engine\":\"local\",\"orchestrator\":\"local\",\"retry_max_attempts\":null,\"spark_engine\":null,\"spark_streaming\":false,\"spark_udf_policy\":\"warn\",\"sql_engine\":null,\"timeout_seconds\":null},\"fingerprint\":\"8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382\",\"implementations\":{},\"intents\":{},\"logical_graph\":{\"edges\":[{\"consumer_contract_id\":\"phase06_host.workload:Row\",\"consumer_node\":\"sink\",\"consumer_port\":\"input\",\"producer_contract_id\":\"phase06_host.workload:Row\",\"producer_node\":\"source\",\"producer_port\":\"result\"}],\"metadata\":{\"selected\":[\"source\",\"sink\"],\"sliced\":true},\"nodes\":[{\"binding\":\"source\",\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/source\",\"inputs\":[],\"kind\":\"source\",\"metadata\":{},\"name\":\"source\",\"nested_pipeline_id\":null,\"outputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"output\",\"name\":\"result\",\"required\":true,\"role\":\"valid\"}],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null},{\"binding\":\"sink\",\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/sink\",\"inputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"input\",\"name\":\"input\",\"required\":true,\"role\":\"valid\"}],\"kind\":\"sink\",\"metadata\":{},\"name\":\"sink\",\"nested_pipeline_id\":null,\"outputs\":[],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null}],\"pipeline_id\":\"phase06_host.workload:Transfer\",\"pipeline_name\":\"Transfer\"},\"logical_to_physical\":{\"sink\":\"unit:region:default:local\",\"source\":\"unit:region:default:local\"},\"materialization_boundaries\":[{\"identity\":\"boundary:sink:sink\",\"metadata\":{},\"producer_node\":\"source\",\"producer_port\":\"result\",\"reason\":\"sink_publication\",\"security_domain\":\"default\"}],\"metadata\":{\"collection_points\":[{\"identity\":\"boundary:sink:sink\",\"interchange\":null,\"producer_node\":\"source\",\"producer_port\":\"result\",\"reason\":\"sink_publication\"}],\"conversion_boundaries\":[],\"dataframe_protocol\":\"etlantic.dataframe/1\",\"etlantic.provenance\":{\"kind\":\"python\",\"source_identity\":\"phase06_host.workload:Transfer\"},\"etlantic.quality\":{\"fallback_evidence\":[],\"gates\":[],\"validation_cost\":0,\"validation_policy\":{\"quality_gate_count\":0}},\"planner\":\"etlantic.plan.planner\",\"planner_version\":\"0.57.2\",\"plugin_trust_records\":[],\"spark_fusion\":[],\"spark_protocol\":\"etlantic.spark/1\",\"spark_streaming_stability\":\"experimental\",\"sql_fusion\":[],\"sql_protocol\":\"etlantic.sql/1\",\"sql_schema_mutations\":[{\"identity\":\"boundary:sink:sink\",\"producer_node\":\"source\",\"reason\":\"sink_publication\"}],\"sql_transaction_scopes\":[],\"validation_policy\":{\"input_outcome\":\"fail\",\"output_outcome\":\"fail\",\"quality_gate_count\":0}},\"output_resolutions\":[{\"artifact\":{\"cache_key\":\"cache:default/default/default/phase06-reference/phase06_host.workload_Transfer/source.result@8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382\",\"identity\":\"artifact:default/default/default/phase06-reference/phase06_host.workload_Transfer/source.result\",\"logical_output\":\"source.result\",\"metadata\":{},\"security_domain\":\"default\",\"strategy\":\"durable\"},\"node_name\":\"source\",\"port_name\":\"result\"}],\"physical_units\":[{\"engine\":\"local\",\"identity\":\"unit:region:default:local\",\"logical_nodes\":[\"source\",\"sink\"],\"metadata\":{\"capabilities\":{\"arrow_export\":false,\"arrow_import\":false,\"async_execution\":true,\"cancellation\":true,\"checkpoints\":false,\"dataframe\":false,\"eager\":true,\"engine\":\"local\",\"extras\":[\"python\",\"quality.compare\",\"quality.length\",\"quality.membership\",\"quality.not_null\",\"quality.range\",\"quality.regex\",\"quality.uniqueness\",\"records\",\"write.append\",\"write.merge\",\"write.overwrite\",\"write.partition_replace\",\"write.skip_if_exists\",\"write.upsert\"],\"interchange_mechanisms\":[],\"invalid_row_separation\":true,\"lazy\":false,\"orch_artifacts_only_xcom\":false,\"orch_parallel\":false,\"orch_retries\":false,\"orch_scheduling\":false,\"orch_sensors\":false,\"orch_timeouts\":false,\"orchestration\":false,\"schema_inspection\":true,\"secret_provider\":false,\"spark\":false,\"spark_cache\":false,\"spark_checkpoint\":false,\"spark_delta\":false,\"spark_merge\":false,\"spark_native_exprs\":false,\"spark_streaming\":false,\"spark_udf\":false,\"sql\":false,\"sql_atomic_rename\":false,\"sql_catalog_inspect\":false,\"sql_cte\":false,\"sql_merge\":false,\"sql_returning\":false,\"sql_transactional_ddl\":false,\"sql_trusted_fragments\":false,\"streaming\":false,\"thread_safe\":false,\"transactions\":false,\"vocabulary_version\":\"etlantic.capabilities/1\",\"zero_copy\":false},\"ownership\":\"copied\",\"plugin_version\":\"0.57.2\"},\"region_id\":\"region:default:local\"}],\"pipeline_id\":\"phase06_host.workload:Transfer\",\"pipeline_name\":\"Transfer\",\"plan_id\":\"plan:8b28555cac0e3358\",\"plugin_versions\":{\"env-secrets\":\"0.57.2\",\"local\":\"0.57.2\",\"null\":\"0.57.2\"},\"profile_name\":\"phase06-reference\",\"profile_snapshot\":{\"allow_trusted_sql\":false,\"bindings\":{},\"concurrency\":null,\"dataframe_engine\":\"local\",\"environment\":\"default\",\"event_consumers\":{},\"execution\":{},\"implementation_overrides\":{},\"metadata\":{},\"name\":\"phase06-reference\",\"observability_delivery\":\"best_effort\",\"observability_providers\":{},\"optimization_pass_allowlist\":{},\"optimization_policy\":\"off\",\"orchestrator\":\"local\",\"outbound\":{},\"plugin_allowlist\":{\"etlantic\":\"0.57.2\",\"etlantic-local\":\"0.50.0\",\"etlantic-sql\":\"0.57.2\",\"local-files\":\"0.57.2\",\"postgresql\":\"0.57.2\"},\"portable_transform_policy\":\"prefer\",\"require_plugin_probe\":false,\"required_orchestrator_capabilities\":[],\"required_spark_capabilities\":[],\"required_sql_capabilities\":[],\"resource_provider_allowlist\":{},\"resources\":{},\"retry_max_attempts\":null,\"run_history_provider\":null,\"safe_io\":{\"compute_integrity_digest\":true,\"enable_locking\":true,\"environment\":\"default\",\"fail_on_symlink\":true,\"lock_timeout_seconds\":30.0,\"max_read_bytes\":10485760,\"overwrite_policy\":\"atomic_replace\",\"require_regular_files\":true,\"retention_seconds\":null,\"root_refs\":[],\"security_domain\":\"default\",\"symlink_policy\":\"reject\",\"tenant\":\"default\",\"version\":\"safe_io_plan/1\"},\"schedule\":{},\"schema_registry_allowlist\":{},\"secret_providers\":{},\"secrets\":{},\"security_domain\":\"default\",\"security_mode\":\"production\",\"spark_engine\":null,\"spark_streaming\":false,\"spark_udf_policy\":\"warn\",\"sql_engine\":null,\"tenant\":\"default\",\"timeout_seconds\":null,\"validation_policy\":\"default\"},\"regions\":[{\"engine\":\"local\",\"identity\":\"region:default:local\",\"metadata\":{},\"node_names\":[\"source\",\"sink\"],\"security_domain\":\"default\"}],\"resource_refs\":{\"sink\":{\"binding\":\"sink\",\"provider\":\"postgresql\"},\"source\":{\"binding\":\"source\",\"provider\":\"local-files\"}},\"schema\":\"etlantic.plan/1\",\"security_domain\":\"default\",\"selected_nodes\":[\"source\",\"sink\"]},\"plan_fingerprint\":\"8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382\",\"plugin_fingerprint\":\"cdfcdd7ab4494c81401cf28ffc6c95134f7f8bca789fe08fab5b5c95ecd4af8c\",\"policy_fingerprint\":null,\"profile_name\":\"phase06-reference\",\"resource_versions\":{},\"revision_id\":\"defrev-a408e3ca74d24128\",\"revision_selector\":\"defrev-a408e3ca74d24128\",\"run_request\":{\"asset_overrides\":{},\"cancellation\":{\"abandon_after_seconds\":null,\"cooperative\":true},\"explicit_settings\":[],\"extensions\":{},\"implementation_overrides\":{},\"intent\":\"standard\",\"invalidation\":\"none\",\"materialization\":\"default\",\"metadata\":{},\"no_write\":false,\"parameter_overrides\":{},\"retry\":{\"backoff_seconds\":0.0,\"max_attempts\":1,\"retry_on\":[]},\"selection\":{\"end\":null,\"kind\":\"all\",\"nodes\":[],\"start\":null,\"tags\":[]},\"timeout\":{\"run_seconds\":null,\"step_seconds\":null}},\"schema\":\"etlantic.execution_envelope/2\",\"setting_provenance\":{\"execution_settings.allow_trusted_sql\":\"profile:phase06-reference\",\"execution_settings.concurrency\":\"profile:phase06-reference\",\"execution_settings.dataframe_engine\":\"profile:phase06-reference\",\"execution_settings.orchestrator\":\"profile:phase06-reference\",\"execution_settings.retry_max_attempts\":\"profile:phase06-reference\",\"execution_settings.spark_engine\":\"profile:phase06-reference\",\"execution_settings.spark_streaming\":\"profile:phase06-reference\",\"execution_settings.spark_udf_policy\":\"profile:phase06-reference\",\"execution_settings.sql_engine\":\"profile:phase06-reference\",\"execution_settings.timeout_seconds\":\"profile:phase06-reference\",\"request.asset_overrides\":\"runtime.default\",\"request.cancellation\":\"runtime.default\",\"request.extensions\":\"runtime.default\",\"request.implementation_overrides\":\"runtime.default\",\"request.intent\":\"runtime.default\",\"request.invalidation\":\"runtime.default\",\"request.materialization\":\"runtime.default\",\"request.metadata\":\"runtime.default\",\"request.no_write\":\"runtime.default\",\"request.parameter_overrides\":\"runtime.default\",\"request.retry.backoff_seconds\":\"runtime.default\",\"request.retry.max_attempts\":\"runtime.default\",\"request.retry.retry_on\":\"runtime.default\",\"request.selection\":\"runtime.default\",\"request.timeout.run_seconds\":\"runtime.default\",\"request.timeout.step_seconds\":\"runtime.default\"}}",
+        "principal_issuer": "reference-host",
+        "principal_kind": "service",
+        "status": "accepted",
+        "schema_observation_fingerprint": null,
+        "schema_baseline_id": null,
+        "metadata": {},
+        "environment": "test",
+        "security_domain_id": "phase06",
+        "resource_owner_id": "phase06-service",
+        "run_id": "run-52e62f8f676ba46de779981e"
+      },
+      "after": {
+        "submission_id": "sub-4b9372be333f4356",
+        "tenant_id": "phase06",
+        "workspace_id": "cli-qualification",
+        "principal_subject": "phase06-service",
+        "operation": "run.submit",
+        "idempotency_key": "preparation-act-4422627d837c48acb62c7862",
+        "created_at": "2026-10-11T18:11:10.926423Z",
+        "plan_fingerprint": "8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382",
+        "revision_id": "defrev-a408e3ca74d24128",
+        "plugin_fingerprint": "cdfcdd7ab4494c81401cf28ffc6c95134f7f8bca789fe08fab5b5c95ecd4af8c",
+        "policy_fingerprint": null,
+        "input_snapshot": "{\"definition_document\":{\"contracts\":[{\"authoring_id\":\"phase06_host.workload:Row\",\"fields\":[{\"name\":\"id\",\"nullable\":false,\"required\":true,\"type\":\"string\"},{\"name\":\"payload\",\"nullable\":false,\"required\":true,\"type\":\"string\"}],\"identity\":\"row\",\"metadata\":{},\"name\":\"Row\",\"version\":\"1.0.0\"}],\"edges\":[{\"consumer_contract_id\":\"phase06_host.workload:Row\",\"consumer_node\":\"sink\",\"consumer_port\":\"input\",\"producer_contract_id\":\"phase06_host.workload:Row\",\"producer_node\":\"source\",\"producer_port\":\"result\"}],\"extensions\":{},\"fingerprint\":\"33a0573a5b375851929e967e829d431d999c7a4aa70f3b8fa1a294f0e66d1e30\",\"metadata\":{},\"nodes\":[{\"asset\":\"source\",\"bindings\":{},\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/source\",\"inputs\":[],\"kind\":\"source\",\"metadata\":{},\"name\":\"source\",\"nested\":null,\"nested_pipeline_id\":null,\"outputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"output\",\"has_default\":false,\"has_value\":false,\"name\":\"result\",\"required\":true,\"role\":\"valid\",\"value_type\":null}],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null},{\"asset\":\"sink\",\"bindings\":{},\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/sink\",\"inputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"input\",\"has_default\":false,\"has_value\":false,\"name\":\"input\",\"required\":true,\"role\":\"valid\",\"value_type\":null}],\"kind\":\"sink\",\"metadata\":{},\"name\":\"sink\",\"nested\":null,\"nested_pipeline_id\":null,\"outputs\":[],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null}],\"pipeline_id\":\"phase06_host.workload:Transfer\",\"pipeline_name\":\"Transfer\",\"policy_refs\":{},\"profile_ref\":null,\"provenance\":{\"kind\":\"python\",\"source_identity\":\"phase06_host.workload:Transfer\"},\"reliability\":{},\"schema\":\"etlantic.pipeline/1\",\"transformations\":[],\"version\":null},\"definition_fingerprint\":\"33a0573a5b375851929e967e829d431d999c7a4aa70f3b8fa1a294f0e66d1e30\",\"definition_id\":\"cli-transfer\",\"effective_request\":{\"asset_overrides\":{},\"cancellation\":{\"abandon_after_seconds\":null,\"cooperative\":true},\"explicit_settings\":[],\"extensions\":{},\"implementation_overrides\":{},\"intent\":\"standard\",\"invalidation\":\"none\",\"materialization\":\"default\",\"metadata\":{},\"no_write\":false,\"parameter_overrides\":{},\"retry\":{\"backoff_seconds\":0.0,\"max_attempts\":1,\"retry_on\":[]},\"selection\":{\"end\":null,\"kind\":\"all\",\"nodes\":[],\"start\":null,\"tags\":[]},\"timeout\":{\"run_seconds\":null,\"step_seconds\":null}},\"effective_settings\":{\"allow_trusted_sql\":false,\"concurrency\":null,\"dataframe_engine\":\"local\",\"orchestrator\":\"local\",\"retry_max_attempts\":null,\"spark_engine\":null,\"spark_streaming\":false,\"spark_udf_policy\":\"warn\",\"sql_engine\":null,\"timeout_seconds\":null},\"evidence_refs\":{},\"plan_document\":{\"bindings\":{\"sink\":{\"binding\":\"sink\",\"config\":{\"effect_table\":\"sink.effects\",\"mode\":\"append\",\"schema\":\"sink\"},\"kind\":\"sink\",\"location\":\"target\",\"metadata\":{},\"provider\":\"postgresql\",\"secret_ref\":null},\"source\":{\"binding\":\"source\",\"config\":{\"format\":\"csv\",\"glob\":\"*.csv\",\"mode\":\"snapshot\",\"root\":\".\",\"root_ref\":\"gate0-input\"},\"kind\":\"source\",\"location\":null,\"metadata\":{},\"provider\":\"local-files\",\"secret_ref\":null}},\"capability_decisions\":[],\"contract_versions\":{\"phase06_host.workload:Row\":\"1.0.0\",\"row\":\"1.0.0\"},\"execution_settings\":{\"allow_trusted_sql\":false,\"concurrency\":null,\"dataframe_engine\":\"local\",\"orchestrator\":\"local\",\"retry_max_attempts\":null,\"spark_engine\":null,\"spark_streaming\":false,\"spark_udf_policy\":\"warn\",\"sql_engine\":null,\"timeout_seconds\":null},\"fingerprint\":\"8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382\",\"implementations\":{},\"intents\":{},\"logical_graph\":{\"edges\":[{\"consumer_contract_id\":\"phase06_host.workload:Row\",\"consumer_node\":\"sink\",\"consumer_port\":\"input\",\"producer_contract_id\":\"phase06_host.workload:Row\",\"producer_node\":\"source\",\"producer_port\":\"result\"}],\"metadata\":{\"selected\":[\"source\",\"sink\"],\"sliced\":true},\"nodes\":[{\"binding\":\"source\",\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/source\",\"inputs\":[],\"kind\":\"source\",\"metadata\":{},\"name\":\"source\",\"nested_pipeline_id\":null,\"outputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"output\",\"name\":\"result\",\"required\":true,\"role\":\"valid\"}],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null},{\"binding\":\"sink\",\"contract_id\":\"phase06_host.workload:Row\",\"identity\":\"phase06_host.workload:Transfer/sink\",\"inputs\":[{\"contract_id\":\"phase06_host.workload:Row\",\"direction\":\"input\",\"name\":\"input\",\"required\":true,\"role\":\"valid\"}],\"kind\":\"sink\",\"metadata\":{},\"name\":\"sink\",\"nested_pipeline_id\":null,\"outputs\":[],\"parameters\":[],\"transformation_id\":null,\"transformation_name\":null}],\"pipeline_id\":\"phase06_host.workload:Transfer\",\"pipeline_name\":\"Transfer\"},\"logical_to_physical\":{\"sink\":\"unit:region:default:local\",\"source\":\"unit:region:default:local\"},\"materialization_boundaries\":[{\"identity\":\"boundary:sink:sink\",\"metadata\":{},\"producer_node\":\"source\",\"producer_port\":\"result\",\"reason\":\"sink_publication\",\"security_domain\":\"default\"}],\"metadata\":{\"collection_points\":[{\"identity\":\"boundary:sink:sink\",\"interchange\":null,\"producer_node\":\"source\",\"producer_port\":\"result\",\"reason\":\"sink_publication\"}],\"conversion_boundaries\":[],\"dataframe_protocol\":\"etlantic.dataframe/1\",\"etlantic.provenance\":{\"kind\":\"python\",\"source_identity\":\"phase06_host.workload:Transfer\"},\"etlantic.quality\":{\"fallback_evidence\":[],\"gates\":[],\"validation_cost\":0,\"validation_policy\":{\"quality_gate_count\":0}},\"planner\":\"etlantic.plan.planner\",\"planner_version\":\"0.57.2\",\"plugin_trust_records\":[],\"spark_fusion\":[],\"spark_protocol\":\"etlantic.spark/1\",\"spark_streaming_stability\":\"experimental\",\"sql_fusion\":[],\"sql_protocol\":\"etlantic.sql/1\",\"sql_schema_mutations\":[{\"identity\":\"boundary:sink:sink\",\"producer_node\":\"source\",\"reason\":\"sink_publication\"}],\"sql_transaction_scopes\":[],\"validation_policy\":{\"input_outcome\":\"fail\",\"output_outcome\":\"fail\",\"quality_gate_count\":0}},\"output_resolutions\":[{\"artifact\":{\"cache_key\":\"cache:default/default/default/phase06-reference/phase06_host.workload_Transfer/source.result@8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382\",\"identity\":\"artifact:default/default/default/phase06-reference/phase06_host.workload_Transfer/source.result\",\"logical_output\":\"source.result\",\"metadata\":{},\"security_domain\":\"default\",\"strategy\":\"durable\"},\"node_name\":\"source\",\"port_name\":\"result\"}],\"physical_units\":[{\"engine\":\"local\",\"identity\":\"unit:region:default:local\",\"logical_nodes\":[\"source\",\"sink\"],\"metadata\":{\"capabilities\":{\"arrow_export\":false,\"arrow_import\":false,\"async_execution\":true,\"cancellation\":true,\"checkpoints\":false,\"dataframe\":false,\"eager\":true,\"engine\":\"local\",\"extras\":[\"python\",\"quality.compare\",\"quality.length\",\"quality.membership\",\"quality.not_null\",\"quality.range\",\"quality.regex\",\"quality.uniqueness\",\"records\",\"write.append\",\"write.merge\",\"write.overwrite\",\"write.partition_replace\",\"write.skip_if_exists\",\"write.upsert\"],\"interchange_mechanisms\":[],\"invalid_row_separation\":true,\"lazy\":false,\"orch_artifacts_only_xcom\":false,\"orch_parallel\":false,\"orch_retries\":false,\"orch_scheduling\":false,\"orch_sensors\":false,\"orch_timeouts\":false,\"orchestration\":false,\"schema_inspection\":true,\"secret_provider\":false,\"spark\":false,\"spark_cache\":false,\"spark_checkpoint\":false,\"spark_delta\":false,\"spark_merge\":false,\"spark_native_exprs\":false,\"spark_streaming\":false,\"spark_udf\":false,\"sql\":false,\"sql_atomic_rename\":false,\"sql_catalog_inspect\":false,\"sql_cte\":false,\"sql_merge\":false,\"sql_returning\":false,\"sql_transactional_ddl\":false,\"sql_trusted_fragments\":false,\"streaming\":false,\"thread_safe\":false,\"transactions\":false,\"vocabulary_version\":\"etlantic.capabilities/1\",\"zero_copy\":false},\"ownership\":\"copied\",\"plugin_version\":\"0.57.2\"},\"region_id\":\"region:default:local\"}],\"pipeline_id\":\"phase06_host.workload:Transfer\",\"pipeline_name\":\"Transfer\",\"plan_id\":\"plan:8b28555cac0e3358\",\"plugin_versions\":{\"env-secrets\":\"0.57.2\",\"local\":\"0.57.2\",\"null\":\"0.57.2\"},\"profile_name\":\"phase06-reference\",\"profile_snapshot\":{\"allow_trusted_sql\":false,\"bindings\":{},\"concurrency\":null,\"dataframe_engine\":\"local\",\"environment\":\"default\",\"event_consumers\":{},\"execution\":{},\"implementation_overrides\":{},\"metadata\":{},\"name\":\"phase06-reference\",\"observability_delivery\":\"best_effort\",\"observability_providers\":{},\"optimization_pass_allowlist\":{},\"optimization_policy\":\"off\",\"orchestrator\":\"local\",\"outbound\":{},\"plugin_allowlist\":{\"etlantic\":\"0.57.2\",\"etlantic-local\":\"0.50.0\",\"etlantic-sql\":\"0.57.2\",\"local-files\":\"0.57.2\",\"postgresql\":\"0.57.2\"},\"portable_transform_policy\":\"prefer\",\"require_plugin_probe\":false,\"required_orchestrator_capabilities\":[],\"required_spark_capabilities\":[],\"required_sql_capabilities\":[],\"resource_provider_allowlist\":{},\"resources\":{},\"retry_max_attempts\":null,\"run_history_provider\":null,\"safe_io\":{\"compute_integrity_digest\":true,\"enable_locking\":true,\"environment\":\"default\",\"fail_on_symlink\":true,\"lock_timeout_seconds\":30.0,\"max_read_bytes\":10485760,\"overwrite_policy\":\"atomic_replace\",\"require_regular_files\":true,\"retention_seconds\":null,\"root_refs\":[],\"security_domain\":\"default\",\"symlink_policy\":\"reject\",\"tenant\":\"default\",\"version\":\"safe_io_plan/1\"},\"schedule\":{},\"schema_registry_allowlist\":{},\"secret_providers\":{},\"secrets\":{},\"security_domain\":\"default\",\"security_mode\":\"production\",\"spark_engine\":null,\"spark_streaming\":false,\"spark_udf_policy\":\"warn\",\"sql_engine\":null,\"tenant\":\"default\",\"timeout_seconds\":null,\"validation_policy\":\"default\"},\"regions\":[{\"engine\":\"local\",\"identity\":\"region:default:local\",\"metadata\":{},\"node_names\":[\"source\",\"sink\"],\"security_domain\":\"default\"}],\"resource_refs\":{\"sink\":{\"binding\":\"sink\",\"provider\":\"postgresql\"},\"source\":{\"binding\":\"source\",\"provider\":\"local-files\"}},\"schema\":\"etlantic.plan/1\",\"security_domain\":\"default\",\"selected_nodes\":[\"source\",\"sink\"]},\"plan_fingerprint\":\"8b28555cac0e33582741045ec6edbb73bc0bbe910e13595e58af1925a77cf382\",\"plugin_fingerprint\":\"cdfcdd7ab4494c81401cf28ffc6c95134f7f8bca789fe08fab5b5c95ecd4af8c\",\"policy_fingerprint\":null,\"profile_name\":\"phase06-reference\",\"resource_versions\":{},\"revision_id\":\"defrev-a408e3ca74d24128\",\"revision_selector\":\"defrev-a408e3ca74d24128\",\"run_request\":{\"asset_overrides\":{},\"cancellation\":{\"abandon_after_seconds\":null,\"cooperative\":true},\"explicit_settings\":[],\"extensions\":{},\"implementation_overrides\":{},\"intent\":\"standard\",\"invalidation\":\"none\",\"materialization\":\"default\",\"metadata\":{},\"no_write\":false,\"parameter_overrides\":{},\"retry\":{\"backoff_seconds\":0.0,\"max_attempts\":1,\"retry_on\":[]},\"selection\":{\"end\":null,\"kind\":\"all\",\"nodes\":[],\"start\":null,\"tags\":[]},\"timeout\":{\"run_seconds\":null,\"step_seconds\":null}},\"schema\":\"etlantic.execution_envelope/2\",\"setting_provenance\":{\"execution_settings.allow_trusted_sql\":\"profile:phase06-reference\",\"execution_settings.concurrency\":\"profile:phase06-reference\",\"execution_settings.dataframe_engine\":\"profile:phase06-reference\",\"execution_settings.orchestrator\":\"profile:phase06-reference\",\"execution_settings.retry_max_attempts\":\"profile:phase06-reference\",\"execution_settings.spark_engine\":\"profile:phase06-reference\",\"execution_settings.spark_streaming\":\"profile:phase06-reference\",\"execution_settings.spark_udf_policy\":\"profile:phase06-reference\",\"execution_settings.sql_engine\":\"profile:phase06-reference\",\"execution_settings.timeout_seconds\":\"profile:phase06-reference\",\"request.asset_overrides\":\"runtime.default\",\"request.cancellation\":\"runtime.default\",\"request.extensions\":\"runtime.default\",\"request.implementation_overrides\":\"runtime.default\",\"request.intent\":\"runtime.default\",\"request.invalidation\":\"runtime.default\",\"request.materialization\":\"runtime.default\",\"request.metadata\":\"runtime.default\",\"request.no_write\":\"runtime.default\",\"request.parameter_overrides\":\"runtime.default\",\"request.retry.backoff_seconds\":\"runtime.default\",\"request.retry.max_attempts\":\"runtime.default\",\"request.retry.retry_on\":\"runtime.default\",\"request.selection\":\"runtime.default\",\"request.timeout.run_seconds\":\"runtime.default\",\"request.timeout.step_seconds\":\"runtime.default\"}}",
+        "principal_issuer": "reference-host",
+        "principal_kind": "service",
+        "status": "accepted",
+        "schema_observation_fingerprint": null,
+        "schema_baseline_id": null,
+        "metadata": {},
+        "environment": "test",
+        "security_domain_id": "phase06",
+        "resource_owner_id": "phase06-service",
+        "run_id": "run-52e62f8f676ba46de779981e"
+      },
+      "cleanup_events": [],
+      "result": "PASS"
+    }
+  ],
+  "force_limits": "Native CLI processes killed after committed claims. Published lease/deadline recovery is qualified separately by the installed fault matrix; SIGKILL cannot run cleanup.",
+  "shutdown": [
+    {
+      "role": "action_worker",
+      "signal": "SIGTERM",
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
+    },
+    {
+      "role": "run_worker",
+      "signal": "SIGTERM",
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
+    },
+    {
+      "role": "scheduler",
+      "signal": "SIGTERM",
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
+    },
+    {
+      "role": "gateway",
+      "signal": "SIGTERM",
+      "exit_code": 0,
+      "cleanup_events": [
+        "backend.engine_disposed",
+        "bindings.close"
+      ]
+    }
+  ],
+  "resource_bridge": {
+    "calls": [
+      {
+        "connection_id": "saved-connection",
+        "version": "1",
+        "pid": 70602,
+        "timeout_seconds": 9.825891,
+        "authority_matches": true
+      },
+      {
+        "connection_id": "saved-connection",
+        "version": "1",
+        "pid": 70602,
+        "timeout_seconds": 9.825037,
+        "authority_matches": true
+      },
+      {
+        "connection_id": "saved-connection",
+        "version": "2",
+        "pid": 70602,
+        "timeout_seconds": 9.832194,
+        "authority_matches": true
+      },
+      {
+        "connection_id": "unavailable-connection",
+        "version": "unavailable",
+        "pid": 70602,
+        "timeout_seconds": 9.785551,
+        "authority_matches": true
+      },
+      {
+        "connection_id": "saved-connection",
+        "version": "2",
+        "pid": 70602,
+        "timeout_seconds": 9.80153,
+        "authority_matches": true
+      }
+    ],
+    "cleanup": {
+      "engines_disposed": 3
+    },
+    "worker_only": true
+  },
+  "credential_sentinels_absent": true,
+  "cleanup_errors": []
+}

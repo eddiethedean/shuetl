@@ -3,8 +3,8 @@ name = "shuetl-phase06-host"
 version = "0.0.1"
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "shuetl[postgresql,server]==0.6.0",
-    "etlantic-sql==0.57.0",
+    "shuetl[postgresql,server,test]==0.6.0",
+    "etlantic-sql==0.57.2",
 ]
 
 [build-system]

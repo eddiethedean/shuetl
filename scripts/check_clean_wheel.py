@@ -106,8 +106,8 @@ for name in modules:
     origins[name] = pathlib.Path(spec.origin).resolve()
 assert all(path.is_relative_to(purelib) for path in origins.values()), origins
 assert metadata.version("shuetl") == "{VERSION}"
-assert metadata.version("etlantic") == "0.57.0"
-assert metadata.version("etlantic-fastapi") == "0.57.0"
+assert metadata.version("etlantic") == "0.57.2"
+assert metadata.version("etlantic-fastapi") == "0.57.2"
 print(origins)
 """,
                 ],

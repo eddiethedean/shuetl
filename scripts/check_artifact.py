@@ -63,8 +63,8 @@ def check_wheel(path: Path) -> None:
             line for line in metadata.splitlines() if line.startswith("Requires-Dist:")
         ]
         expected = {
-            "etlantic==0.57.0",
-            "etlantic-fastapi==0.57.0",
+            "etlantic==0.57.2",
+            "etlantic-fastapi==0.57.2",
             "fastapi==0.141.1",
             "pydantic==2.13.5",
             "pydantic-settings==2.15.0",
@@ -97,10 +97,10 @@ def check_wheel(path: Path) -> None:
             or 'extra == "postgresql"' in line
         }
         if not any(
-            line.startswith("etlantic-sqlmodel==0.57.0") for line in optional_train
+            line.startswith("etlantic-sqlmodel==0.57.2") for line in optional_train
         ):
             raise ValueError(
-                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.57.0"
+                "SQLite/PostgreSQL extras must pin etlantic-sqlmodel 0.57.2"
             )
         forbidden_auth_dependencies = {
             "authlib",

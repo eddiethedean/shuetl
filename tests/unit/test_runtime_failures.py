@@ -32,7 +32,7 @@ def bindings(**overrides):
     return RuntimeBindings(
         authorizer=MemoryAuthorizer(),
         profile=Profile(
-            "test", security_mode="production", plugin_allowlist={"etlantic": "0.57.0"}
+            "test", security_mode="production", plugin_allowlist={"etlantic": "0.57.2"}
         ),
         planning_context_factory=lambda ctx, profile: None,  # type: ignore[arg-type]
         context=ControlPlaneContext(

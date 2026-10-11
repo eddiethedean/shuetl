@@ -1,0 +1,135 @@
+{
+  "packages": {
+    "etlantic": "0.57.2",
+    "etlantic-sql": "0.57.2",
+    "etlantic-sqlmodel": "0.57.2"
+  },
+  "python": "3.11.15 (main, Mar 25 2026, 02:58:47) [Clang 22.1.1 ]",
+  "sort_dedup": {
+    "forward": [
+      {
+        "id": 1,
+        "quantity": 3
+      }
+    ],
+    "reversed": [
+      {
+        "id": 1,
+        "quantity": 3
+      }
+    ],
+    "deterministic": true
+  },
+  "actions": {
+    "postgresql_version": "18.6 (Debian 18.6-1.pgdg12+2)",
+    "gateway_pid": 49097,
+    "worker": {
+      "pid": 49229,
+      "count": 5,
+      "resolver_calls": [
+        {
+          "connection_id": "saved-connection",
+          "pid": 49229,
+          "timeout_seconds": 29.360704
+        },
+        {
+          "connection_id": "saved-connection",
+          "pid": 49229,
+          "timeout_seconds": 29.33801
+        },
+        {
+          "connection_id": "revoked-connection",
+          "pid": 49229,
+          "timeout_seconds": 29.288473
+        },
+        {
+          "connection_id": "slow-connection",
+          "pid": 49229,
+          "timeout_seconds": 1.844313
+        }
+      ],
+      "handler_names": [
+        "connector.catalog",
+        "connector.catalog.postgresql",
+        "connector.preflight",
+        "connector.provision",
+        "connector.provision.cleanup",
+        "connector.schema.inspect",
+        "connector.test",
+        "run.prepare"
+      ],
+      "http_imports_absent": true
+    },
+    "results": {
+      "connector.test": {
+        "status": "succeeded",
+        "error_code": null,
+        "result": {
+          "ok": true,
+          "provider": "postgresql",
+          "schema": "etlantic.connector_test/1"
+        }
+      },
+      "connector.schema.inspect": {
+        "status": "succeeded",
+        "error_code": null,
+        "result": {
+          "fields": [
+            {
+              "name": "id",
+              "nullable": false,
+              "primary_key": false,
+              "table": "sample",
+              "type": "integer"
+            },
+            {
+              "name": "quantity",
+              "nullable": true,
+              "primary_key": false,
+              "table": "sample",
+              "type": "integer"
+            }
+          ],
+          "has_more": true,
+          "metadata": {
+            "inspection": "read_only",
+            "schema_scope": "current_schema"
+          },
+          "provider": "postgresql",
+          "schema": "etlantic.connector_schema_inspection/1"
+        }
+      },
+      "connector.preflight": {
+        "status": "succeeded",
+        "error_code": null,
+        "result": {
+          "definition_id": "saved-pipeline",
+          "diagnostics": [],
+          "fingerprint": "f8b09836319d854097322cb81527bd2b2a563b581490483ad4c333bcd5f9e300",
+          "metadata": {
+            "mode": "read_only_plan",
+            "selected_revision_id": "defrev-549508c88a174fd4"
+          },
+          "ok": true,
+          "revision_id": "defrev-549508c88a174fd4",
+          "schema": "etlantic.connector_preflight/1"
+        }
+      },
+      "revoked": {
+        "status": "failed",
+        "error_code": "action_failed",
+        "result": null
+      },
+      "deadline": {
+        "status": "timed_out",
+        "error_code": "deadline_exceeded",
+        "result": null
+      }
+    },
+    "revision_pin_preserved": true,
+    "cross_owner_hidden": true,
+    "data_schema_and_rows_unchanged": true,
+    "sentinels_absent": true
+  },
+  "status": "passed"
+}

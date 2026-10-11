@@ -37,6 +37,8 @@ class HostBindings:
         default=None, repr=False, compare=False, kw_only=True
     )
     artifact_root: str | None = field(default=None, kw_only=True)
+    run_artifact_retention_seconds: int | None = field(default=None, kw_only=True)
+    run_artifact_cleanup_batch_size: int | None = field(default=None, kw_only=True)
     close: CloseCallback = field(default=_noop, repr=False, compare=False, kw_only=True)
 
 
